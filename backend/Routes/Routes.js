@@ -1,11 +1,16 @@
 const express = require("express");
 const router = express.Router();
-const User = require("../Models/User.js");
 // const cors = require('cors');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const { register, login,logout, addReunion, allReunion, addInvite, allInvite, oneInvite, editReunion, deleteReunion, editInvite, deleteInvite, user, editProfil, editPassword, presence } = require("../Controllers/Controllers.js");
+const { addReunion, allReunion, addInvite, allInvite, oneInvite, editReunion, deleteReunion, editInvite, deleteInvite, editPassword, presence } = require("../Controllers/Controllers.js");
 const upload= require("./UploadImage.js"); // Importation du middleware multer pour l'upload d'images
+const {default: Login} = require("../Controllers/UserControllers/Login.js");
+const { default: Register } = require("../Controllers/UserControllers/Register.js");
+const { default: Logout } = require("../Controllers/UserControllers/Logout.js");
+const { default: UserConnect } = require("../Controllers/UserControllers/UserConnect.js");
+const { default: EditProfil } = require("../Controllers/UserControllers/EditProfil.js");
+
 const authenticate = require("./AuthMiddleware.js").default;
 
 // router.use(cors({ origin: 'http://localhost:5173', credentials: true }));
@@ -14,12 +19,12 @@ router.use(express.json());
 
 // Routes
 
-router.post("/register", register);
-router.post("/login", login);
+router.post("/register", Register);
+router.post("/login", Login);
 
 // Route pour récupérer les informations de l'utilisateur connecté
-router.get("/profil", authenticate,user);
-router.put("/profil", authenticate,editProfil)
+router.get("/profil", authenticate,UserConnect);
+router.put("/profil", authenticate,EditProfil)
 router.put("/profil-password", authenticate,editPassword )
 
 // Routes pour les invitations
@@ -41,7 +46,7 @@ router.delete('/delete-reunion/:reunionId', authenticate, deleteReunion);
 
 
 // Route de déconnexion
-router.post('/logout', logout);
+router.post('/logout', Logout);
 
 
 
