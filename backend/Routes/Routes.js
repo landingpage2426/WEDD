@@ -3,13 +3,14 @@ const router = express.Router();
 // const cors = require('cors');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const { addReunion, allReunion, addInvite, allInvite, oneInvite, editReunion, deleteReunion, editInvite, deleteInvite, editPassword, presence } = require("../Controllers/Controllers.js");
+const { addReunion, allReunion, addInvite, allInvite, oneInvite, editReunion, deleteReunion, editInvite, deleteInvite, presence } = require("../Controllers/Controllers.js");
 const upload= require("./UploadImage.js"); // Importation du middleware multer pour l'upload d'images
 const {default: Login} = require("../Controllers/UserControllers/Login.js");
 const { default: Register } = require("../Controllers/UserControllers/Register.js");
 const { default: Logout } = require("../Controllers/UserControllers/Logout.js");
 const { default: UserConnect } = require("../Controllers/UserControllers/UserConnect.js");
 const { default: EditProfil } = require("../Controllers/UserControllers/EditProfil.js");
+const { default: EditPassword } = require("../Controllers/UserControllers/EditPassword.js");
 
 const authenticate = require("./AuthMiddleware.js").default;
 
@@ -25,7 +26,7 @@ router.post("/login", Login);
 // Route pour récupérer les informations de l'utilisateur connecté
 router.get("/profil", authenticate,UserConnect);
 router.put("/profil", authenticate,EditProfil)
-router.put("/profil-password", authenticate,editPassword )
+router.put("/profil-password", authenticate,EditPassword )
 
 // Routes pour les invitations
 router.post("/invite", authenticate, upload.single('image'), addInvite);
