@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import ReactApexChart from 'react-apexcharts';
 import { motion } from 'framer-motion';
-
 function Graphe({ invites }) {
   const [series, setSeries] = useState([0, 0]);
   const [totalInvites, setTotalInvites] = useState(0);

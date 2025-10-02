@@ -1,4 +1,4 @@
-function CalculateTimeLeft(dateMariage) {
+export default function CalculateTimeLeft(dateMariage) {
         if (!dateMariage) return {};
 
         const weddingDate = new Date(dateMariage);
@@ -18,5 +18,4 @@ function CalculateTimeLeft(dateMariage) {
     
         return timeLeft;
       }
-
-export default CalculateTimeLeft
+ 

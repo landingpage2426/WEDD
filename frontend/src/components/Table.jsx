@@ -219,7 +219,7 @@ function Table({ invites, apiUrl, onEditInvite, handleDeleteInvite }) {
                       </span>
                     </td>
                     <td className="px-4 py-4 whitespace-nowrap text-right text-sm font-medium">
-                      <div className="flex justify-end space-x-2 hidden">
+                      <div className="flex justify-end space-x-2">
                         <button
                           onClick={(e) => {
                             e.stopPropagation();

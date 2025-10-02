@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import alarm from '../assets/icons/alarm.svg';
 import { FiBell } from 'react-icons/fi';
-
+import { formatDate } from '../services/FormatDate';
 function Notification() {
   const [reunionsList, setReunionsList] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -39,17 +39,6 @@ function Notification() {
   useEffect(() => {
     fetchReunions();
   }, []);
-
-  const formatDate = (dateString) => {
-    const options = { 
-      weekday: 'short', 
-      day: 'numeric', 
-      month: 'short',
-      hour: '2-digit',
-      minute: '2-digit'
-    };
-    return new Date(dateString).toLocaleDateString('fr-FR', options);
-  };
 
   return (
     <motion.div 
