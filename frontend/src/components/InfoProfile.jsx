@@ -4,7 +4,6 @@ import Image from './Image';
 import emoji from '../assets/img/user.jpg';
 import Bouton from './Bouton';
 import { Link } from 'react-router-dom';
-import axios from 'axios';
 import Countdown from './Countdown';
 function InfoProfile() {
   const [nom, setNom] = useState('');

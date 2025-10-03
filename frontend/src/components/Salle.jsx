@@ -6,7 +6,7 @@ import couple1 from '../assets/img/stephane_illana1.png';
 import couple2 from '../assets/img/stephane_illana2.png';
 import couple3 from '../assets/img/stephane_illana3.png';
 import couple4 from '../assets/img/stephane_illana4.png';
-
+import { planTables } from "../services/PlanTables";
 // Fonction pour créer une étiquette de texte en 3D
 function createLabel(text) {
   const canvas = document.createElement("canvas");
@@ -26,36 +26,7 @@ function createLabel(text) {
   return sprite;
 }
 
-// Liste des tables / zones avec position et dimensions
-const planTables = [
-  { nom: "TABLE MARIES", x: -16, z: 0, w: 1.5, h: 5, rotation: Math.PI / 2 },
-  { nom: "B737", x: 15, z: 20 },
-  { nom: "EMBRAER170", x: 15, z: 15 },
-  { nom: "AN124", x: 10, z: 20 },
-  { nom: "EMBRAER190", x: 15, z: 10 },
-  { nom: "A340", x: -5, z: 6 },
-  { nom: "B717", x: 10, z: 15 },
-  { nom: "AN225", x: 15, z: 5 },
-  { nom: "BUFFET 2", x: -16, z: 20 },
-  { nom: "B777", x: -10, z: 6 },
-  { nom: "B747", x: -10, z: -6 },
-  { nom: "A350", x: -5, z: -6 },
-  { nom: "A320NEO", x: -5, z: 13 },
-  { nom: "A380", x: -5, z: -13 },
-  { nom: "A300", x: 0, z: -6 },
-  { nom: "B787", x: -10, z: 20 },
-  { nom: "CJR1000", x: -10, z: -20 },
-  { nom: "B767", x: -10, z: 13 },
-  { nom: "CJR700", x: -10, z: -13 },
-  { nom: "BUFFET 1", x: 15, z: -6 },
-  { nom: "A320", x: 0, z: -20 },
-  { nom: "B707", x: 5, z: -20 },
-  { nom: "A310", x: 0, z: -13 },
-  { nom: "B727", x: 5, z: -13 },
-  { nom: "TUPOLEV144", x: -5, z: 20 },
-  { nom: "A330", x: -5, z: -20 },
-  { nom: "CONCORDE", x: 5, z: -6 },
-];
+
 
 export default function Salle({
   clignoter = false,

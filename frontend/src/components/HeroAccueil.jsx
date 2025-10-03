@@ -1,36 +1,17 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
+import calculateTimeLeft from '../services/CalculateTimeLeft';
 
 const HeroAccueil = () => {
-  const [timeLeft, setTimeLeft] = useState(calculateTimeLeft());
+  const [timeLeft, setTimeLeft] = useState(calculateTimeLeft('2025-12-20T20:00:00'));
 
   useEffect(() => {
     const timer = setTimeout(() => {
-      setTimeLeft(calculateTimeLeft());
+      setTimeLeft(calculateTimeLeft('2025-11-20T20:00:00'));
     }, 1000);
 
     return () => clearTimeout(timer);
   });
-
-  function calculateTimeLeft() {
-    // Vous pouvez remplacer cette date par la date du mariage
-    const weddingDate = new Date('2025-09-20T20:00:00');
-    const now = new Date();
-    const difference = weddingDate - now;
-
-    let timeLeft = {};
-
-    if (difference > 0) {
-      timeLeft = {
-        jours: Math.floor(difference / (1000 * 60 * 60 * 24)),
-        heures: Math.floor((difference / (1000 * 60 * 60)) % 24),
-        minutes: Math.floor((difference / 1000 / 60) % 60),
-        secondes: Math.floor((difference / 1000) % 60),
-      };
-    }
-
-    return timeLeft;
-  }
 
   const timerComponents = Object.keys(timeLeft).map((interval) => {
     if (!timeLeft[interval]) {

@@ -2,14 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
-import home from '../assets/icons/home.svg';
-import edit from '../assets/icons/edit.svg';
-import invite from '../assets/icons/invite.svg';
-import reunion from '../assets/icons/reunion.svg';
-import help from '../assets/img/help.svg';
-import search from '../assets/icons/search.png';
-import Image from './Image';
 
+import help from '../assets/img/help.svg';
+import Image from './Image';
+import { navItems } from '../services/NavItems';
 function NavLink() {
   const [activeLink, setActiveLink] = useState('dashboard');
   const [isHovered, setIsHovered] = useState(null);
@@ -35,13 +31,7 @@ function NavLink() {
     }
   }
 
-  const navItems = [
-    { id: 'dashboard', icon: home, label: 'Dashboard', path: '/dashboard' },
-    { id: 'liste-reunions', icon: reunion, label: 'Réunions', path: '/liste-reunions' },
-    { id: 'ajout-invite', icon: invite, label: 'Ajouter un invité', path: '/ajout-invite' },
-    { id: 'profil', icon: edit, label: 'Profil', path: '/profil' },
-    { id: 'recherche-invite', icon: search, label: 'Recherche invité', path: '/recherche-invite' }
-  ];
+ 
 
   return (
     <motion.div 
