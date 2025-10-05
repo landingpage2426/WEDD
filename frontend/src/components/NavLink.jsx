@@ -2,10 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
-
 import help from '../assets/img/help.svg';
 import Image from './Image';
-import { navItems } from '../services/NavItems';
+import { navItems } from '../utils/NavItems';
 function NavLink() {
   const [activeLink, setActiveLink] = useState('dashboard');
   const [isHovered, setIsHovered] = useState(null);

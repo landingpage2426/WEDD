@@ -1,45 +1,12 @@
-import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import alarm from '../assets/icons/alarm.svg';
 import { FiBell } from 'react-icons/fi';
-import { formatDate } from '../services/FormatDate';
+import { formatDate } from '../utils/FormatDate';
+import FetchReunion from '../services/FetchReunion';
 function Notification() {
-  const [reunionsList, setReunionsList] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const apiUrl = import.meta.env.VITE_API_URL;
-
-  const fetchReunions = async () => {
-    try {
-      setIsLoading(true);
-      const token = localStorage.getItem('token');
-      const response = await fetch(`${apiUrl}/api/reunions`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
-      });
-
-      if (!response.ok) {
-        throw new Error('Erreur lors de la récupération des réunions');
-      }
-
-      const data = await response.json();
-      setReunionsList(data.reunions || []);
-    } catch (err) {
-      console.error(err);
-      setError(err.message);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchReunions();
-  }, []);
-
+  const { reunionsList, isLoading, error } = FetchReunion();
+  
   return (
     <motion.div 
       className=""

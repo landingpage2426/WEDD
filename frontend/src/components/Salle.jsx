@@ -6,7 +6,7 @@ import couple1 from '../assets/img/stephane_illana1.png';
 import couple2 from '../assets/img/stephane_illana2.png';
 import couple3 from '../assets/img/stephane_illana3.png';
 import couple4 from '../assets/img/stephane_illana4.png';
-import { planTables } from "../services/PlanTables";
+import { planTables } from "../utils/PlanTables";
 // Fonction pour créer une étiquette de texte en 3D
 function createLabel(text) {
   const canvas = document.createElement("canvas");

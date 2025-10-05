@@ -1,29 +1,9 @@
 import { useEffect, useState } from 'react';
 import download from "../assets/icons/download.png";
-
+import useInstallPrompt from '../hooks/UseInstallPrompt.jsx';
 function InstallPWAButton() {
-  const [deferredPrompt, setDeferredPrompt] = useState(null);
-  const [isVisible, setIsVisible] = useState(true);
+  const { deferredPrompt, isVisible,setDeferredPrompt } = useInstallPrompt();
   const [show, setShow] = useState(true);
-
-  // Gérer l'affichage du bouton d'installation
-  useEffect(() => {
-    const handleBeforeInstall = (e) => {
-      e.preventDefault();
-      setDeferredPrompt(e);
-    };
-    window.addEventListener('beforeinstallprompt', handleBeforeInstall);
-
-    const handleClickOutside = () => {
-      setIsVisible(false);
-    };
-    document.addEventListener('click', handleClickOutside);
-
-    return () => {
-      window.removeEventListener('beforeinstallprompt', handleBeforeInstall);
-      document.removeEventListener('click', handleClickOutside);
-    };
-  }, []);
 
   // Masquer le bouton après 10 secondes
   useEffect(() => {

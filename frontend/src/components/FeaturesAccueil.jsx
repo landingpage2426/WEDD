@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { features } from '../services/Features';
+import { features } from '../utils/Features';
 
 
 const FeaturesAccueil = () => {

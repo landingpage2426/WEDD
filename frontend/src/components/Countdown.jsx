@@ -1,19 +1,11 @@
 import { motion } from 'framer-motion';
 import { useEffect, useState } from 'react';
 import axios from 'axios';
-import calculateTimeLeft from '../services/CalculateTimeLeft';
+import CountDownHook from '../hooks/CountDownHook.jsx';
 function Countdown() {
-  const [formData, setFormData] = useState({ dateMariage: '' });
-  const [timeLeft, setTimeLeft] = useState({});
+
+  const { timeLeft, setFormData } = CountDownHook();
   const apiUrl = import.meta.env.VITE_API_URL;
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setTimeLeft(calculateTimeLeft(formData.dateMariage));
-    }, 1000);
-
-    return () => clearTimeout(timer);
-  }, [formData.dateMariage, timeLeft]);
 
   const getUser = async () => {
     try {

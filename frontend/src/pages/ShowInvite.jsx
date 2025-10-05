@@ -8,7 +8,7 @@ import Salle from '../components/Salle';
 import Countdown from '../components/Countdown';
 import logo from "../assets/img/logo.png";
 import { AnimatePresence, motion } from 'framer-motion';
-import { nomsTables } from '../services/NomsTables';
+import { nomsTables } from '../utils/NomsTables';
 
 
 function ShowInvite() {

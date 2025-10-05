@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import calculateTimeLeft from '../services/CalculateTimeLeft';
+import calculateTimeLeft from '../utils/CalculateTimeLeft';
 
 const HeroAccueil = () => {
   const [timeLeft, setTimeLeft] = useState(calculateTimeLeft('2025-12-20T20:00:00'));
