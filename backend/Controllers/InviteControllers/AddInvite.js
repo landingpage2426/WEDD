@@ -1,7 +1,7 @@
 import Invite from "../../Models/Invite.js";
 
 const AddInvite = async (req, res) => {
-    const {titre ,nom, prenom, telephone, nomTable, status} = req.body;
+    const {titre ,nom, prenom, telephone, email, nomTable, status} = req.body;
     //console.log("Données de l'invité :", req.body);
     try {
         if (!nom || !prenom || !telephone) {
@@ -16,6 +16,7 @@ const AddInvite = async (req, res) => {
             nom,
             prenom,
             telephone,
+            email,
             nomTable,
             status,
             image: req.file ? req.file.filename : null,

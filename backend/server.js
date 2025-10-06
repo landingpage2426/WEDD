@@ -7,6 +7,7 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 const routes = require("./Routes/Routes");
 const uploadRoutes = require('./Routes/UploadPDF.js');
+const uploadPdfMail = require('./Routes/UploadPdfMail.js');
 // Liste des origines autorisées
 
 const allowedOrigins = [
@@ -50,7 +51,8 @@ app.use('/uploadPDF', express.static(path.join(__dirname, 'uploadPDF')));
 
 app.use('/api/uploadPDF', uploadRoutes);
 
-
+// Route pour envoyer le PDF et l'email
+app.use('/api/send-email', uploadPdfMail);
 
 // Lancement du serveur
 app.listen(PORT, () => {

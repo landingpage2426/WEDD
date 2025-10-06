@@ -59,5 +59,4 @@ router.delete('/delete-reunion/:reunionId', authenticate, DeleteReunion);
 router.post('/logout', Logout);
 
 
-
 module.exports = router;

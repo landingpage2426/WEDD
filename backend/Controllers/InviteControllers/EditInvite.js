@@ -4,7 +4,7 @@ import Invite from "../../Models/Invite.js";
 const EditInvite = async (req, res) => {
 
   const { id } = req.params; 
-  const { titre ,nom, prenom, telephone, nomTable, status } = req.body;
+  const { titre ,nom, prenom, telephone,email, nomTable, status } = req.body;
 
   try {
     if (!nom || !prenom || !telephone) {
@@ -19,6 +19,7 @@ const EditInvite = async (req, res) => {
       nom,
       prenom,
       telephone,
+      email,
       nomTable,
       status,
     };
