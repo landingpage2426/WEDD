@@ -11,6 +11,7 @@ function AjoutInvite({ onClose }) {
   const [nom, setNom] = useState('');
   const [prenom, setPrenom] = useState('');
   const [telephone, setTelephone] = useState('');
+  const [email,setEmail] = useState('');
   const [nomTable, setNomTable] = useState('');
   const [titre, setTitre] = useState('');
   const [status, setStatus] = useState('A');
@@ -49,6 +50,7 @@ const handleLogout = async () => {
     formData.append('nom', nom);
     formData.append('prenom', prenom);
     formData.append('telephone', telephone);
+    formData.append('email', email);
     formData.append('nomTable', nomTable);
     formData.append('status', status);
     if (image) {
@@ -176,24 +178,36 @@ const handleLogout = async () => {
           />
         </div>
       </div>
-
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">Téléphone</label>
-        <div className="relative">
-          <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-            <span className="text-gray-500">+237</span>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Téléphone</label>
+            <div className="relative">
+              <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                <span className="text-gray-500">+237</span>
+              </div>
+              <input
+                type="tel"
+                placeholder="6 12 34 56 78"
+                value={telephone}
+                onChange={(e) => setTelephone(e.target.value)}
+                className="w-full pl-14 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                required
+              />
+            </div>
           </div>
+       <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
           <input
-            type="tel"
-            placeholder="6 12 34 56 78"
-            value={telephone}
-            onChange={(e) => setTelephone(e.target.value)}
-            className="w-full pl-14 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            type="text"
+            placeholder="contact@exemple.com"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             required
           />
         </div>
+      
       </div>
-
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">Table attribuée</label>
         <input

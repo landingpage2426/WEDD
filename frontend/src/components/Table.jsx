@@ -5,6 +5,9 @@ import { FaWhatsapp } from 'react-icons/fa';
 import { ImSpinner8 } from 'react-icons/im';
 import { handleWhatsAppShare } from '../utils/HandleWhatsAppShare';
 import { handleDownload } from '../utils/HandleDownload';
+import { handleSendEmail } from '../utils/HandleSendEmail';
+import { FiMail } from 'react-icons/fi';
+
 function Table({ invites, apiUrl, onEditInvite, handleDeleteInvite }) {
   const [loadingStates, setLoadingStates] = useState({});
   const [expandedRow, setExpandedRow] = useState(null);
@@ -122,9 +125,10 @@ function Table({ invites, apiUrl, onEditInvite, handleDeleteInvite }) {
                             <h4 className="text-sm font-medium text-gray-900 mb-2">Détails de l'invité</h4>
                             <div className="text-sm text-gray-500 space-y-1">
                               <p><span className="font-medium">Titre:</span> {invite.titre || 'Non spécifié'}</p>
-                              <p><span className="font-medium">Nom complet:</span> {invite.prenom} {invite.nom}</p>
-                              <p><span className="font-medium">ID:</span> {invite.inviteId}</p>
-                              <p><span className="font-medium">Téléphone:</span> +237 {invite.telephone}</p>
+                              <p><span className="font-medium">Nom complet:</span> {invite.prenom || 'Non spécifié' } {invite.nom || 'Non spécifié'}</p>
+                              <p><span className="font-medium">ID:</span> {invite.inviteId || 'Non spécifié'}</p>
+                              <p><span className="font-medium">Téléphone:</span> +237 {invite.telephone || 'Non spécifié'}</p>
+                              <p><span className="font-medium">Email:</span> {invite.email || "Non spécifié"}</p>
                               <p><span className="font-medium">Table:</span> {invite.nomTable || 'À définir'}</p>
                             </div>
                           </div>
@@ -154,6 +158,20 @@ function Table({ invites, apiUrl, onEditInvite, handleDeleteInvite }) {
                                 )}
                                 Envoyer par WhatsApp
                               </button>
+                              
+                              <button
+                                  onClick={() => handleSendEmail(invite, apiUrl, setLoadingStates)}
+                                  disabled={loadingStates[invite._id] === 'email'}
+                                  className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded shadow-sm text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500"
+                                >
+                                  {loadingStates[invite._id] === 'email' ? (
+                                    <ImSpinner8 className="animate-spin mr-2" />
+                                  ) : (
+                                    <FiMail className="mr-2" />
+                                  )}
+                                  Envoyer Email
+                                </button>
+
                             </div>
                           </div>
                         </div>
