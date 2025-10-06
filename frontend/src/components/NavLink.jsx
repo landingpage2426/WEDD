@@ -1,36 +1,20 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import axios from 'axios';
 import help from '../assets/img/help.svg';
 import Image from './Image';
 import { navItems } from '../utils/NavItems';
+import { handleLogout } from '../services/HandleLogout';
 function NavLink() {
   const [activeLink, setActiveLink] = useState('dashboard');
   const [isHovered, setIsHovered] = useState(null);
-  const navigate = useNavigate();
   const location = useLocation();
-
+  const navigate = useNavigate();
   // Synchronisation de l'état actif avec l'URL
   useEffect(() => {
     const path = location.pathname.split('/')[1];
     setActiveLink(path || 'dashboard');
   }, [location]);
-
-  const handleLogout = async () => {
-    try {
-      localStorage.removeItem('token');
-      await axios.post(`${import.meta.env.VITE_API_URL}/api/logout`, {}, {
-        headers: { 'Content-Type': 'application/json' }
-      });
-      navigate('/');
-    } catch (error) {
-      console.error('Erreur lors de la déconnexion:', error);
-      alert("Erreur lors de la déconnexion");
-    }
-  }
-
- 
 
   return (
     <motion.div 
@@ -97,7 +81,7 @@ function NavLink() {
           </div>
 
           <motion.button
-            onClick={() => { setActiveLink('logout'); handleLogout(); }}
+            onClick={() => { setActiveLink('logout'); handleLogout(navigate); }}
             className="w-full flex items-center justify-center gap-2 p-3 text-red-600 hover:text-red-800 rounded-lg hover:bg-blue-50 transition-colors"
             whileHover={{ x: 2 }}
             whileTap={{ scale: 0.95 }}

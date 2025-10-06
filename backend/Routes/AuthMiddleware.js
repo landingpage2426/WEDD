@@ -1,6 +1,4 @@
 
-
-
 import jwt from "jsonwebtoken";
 import User from "../Models/User.js"; // Ajuste le chemin si besoin
 

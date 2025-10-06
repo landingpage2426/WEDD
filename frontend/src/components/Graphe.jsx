@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import ReactApexChart from 'react-apexcharts';
 import { motion } from 'framer-motion';
 function Graphe({ invites }) {

@@ -84,10 +84,6 @@ export default function Salle({
       scene.add(floor);
     });
 
-
-
-
-
     const group = new THREE.Group();
     scene.add(group);
 
