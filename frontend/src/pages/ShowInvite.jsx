@@ -174,7 +174,7 @@ function ShowInvite() {
               )}
 
               <div className="space-y-4">
-                {invite?.nomTable && (
+                { invite?.nomTable &&(
                   <button
                     onClick={handleVoirTable}
                     className="w-full py-3 px-6 text-white font-medium rounded-lg bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 transition-all shadow-md flex items-center justify-center"
