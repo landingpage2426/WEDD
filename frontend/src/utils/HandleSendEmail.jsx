@@ -2,6 +2,8 @@ import { generatePdf } from '../utils/GeneratePdf';
 import axios from 'axios';
 
 export const handleSendEmail = async (invite, apiUrl, setLoadingStates) => {
+
+  
   try {
     setLoadingStates(prev => ({ ...prev, [invite._id]: 'email' }));
 
@@ -18,14 +20,14 @@ export const handleSendEmail = async (invite, apiUrl, setLoadingStates) => {
   `Merci de confirmer votre présence et nous espérons vous voir à cette occasion spéciale.\n\n` +
   `Cordialement,\n`);
     formData.append("pdf", pdfBlob, `Invitation-${invite.inviteId}.pdf`);
-
+ 
     // Envoyer au backend
     const response = await axios.post(`${apiUrl}/api/send-email`, formData, {
       headers: {
         "Content-Type": "multipart/form-data",
       },
     });
-
+    console.log("formData",formData);
     alert(response.data.message || "Email envoyé avec succès !");
   } catch (err) {
     console.error(err);
