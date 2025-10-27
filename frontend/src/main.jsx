@@ -12,7 +12,6 @@ import AjoutInvite from './pages/AjoutInvite.jsx'
 import MesReunions from './pages/MesReunions.jsx'
 import RechercheInvite from './pages/RechercheInvite.jsx'
 import ShowInvite from './pages/ShowInvite.jsx'
-import ModifierReunion from './pages/ModifierReunion.jsx'
 import Root from './components/Root.jsx'
 import Salle from './components/Salle.jsx';
 

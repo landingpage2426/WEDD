@@ -1,8 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import AjoutReunion from './AjoutReunion'; // chemin à ajuster si nécessaire
-import deleteIcon from '../assets/icons/deleteIcon.svg';
-import edit from '../assets/icons/edit.svg';
-import tri from '../assets/icons/tri.svg';
+import  { useEffect, useState } from 'react';
+import AjoutReunion from './AjoutReunion'; 
 import ModifierReunion from './ModifierReunion';
 import NavLink from '../components/NavLink';
 import BlogRight from '../components/BlogRight';
@@ -13,7 +10,9 @@ import { Link, useNavigate } from 'react-router-dom';
 import PlanifierNotification from './PlanifierNotification';
 import { AnimatePresence, motion } from 'framer-motion';
 import Countdown from '../components/Countdown';
-
+import { AddToCalendarButton } from 'add-to-calendar-button-react';
+import { atcb_action } from 'add-to-calendar-button-react';
+import { FaCalendarPlus } from 'react-icons/fa';
 function MesReunions() {
   const [reunionsList, setReunionsList] = useState([]);
   const [filteredReunions, setFilteredReunions] = useState([]);
@@ -130,6 +129,28 @@ const handleLogout = async () => {
     }
   }
 
+
+function AjouterAuCalendrierIcon({ reunion }) {
+  const handleClick = () => {
+    atcb_action({
+      name: reunion.titre,
+      location: reunion.lieu,
+      startDate: new Date(reunion.dateHeure).toISOString().split('T')[0],
+      endDate: new Date(reunion.dateHeure).toISOString().split('T')[0],
+      startTime: new Date(reunion.dateHeure).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }),
+      endTime: new Date(reunion.dateHeure).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }),
+      options: ['Apple', 'Google', 'iCal', 'Outlook.com', 'Yahoo'],
+      description: `Réunion: ${reunion.titre} au ${reunion.lieu}`,
+      timeZone: "Europe/Paris"
+    });
+  };
+
+  return (
+    <button onClick={handleClick} title="Ajouter au calendrier" className="text-blue-600 hover:text-blue-800 p-1">
+      <FaCalendarPlus size={20} />
+    </button>
+  );
+}
 
   return (
     <>
@@ -305,6 +326,10 @@ const handleLogout = async () => {
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                         </svg>
                       </button>
+                      <div className="inline-block w-6 h-6 overflow-hidden">
+                         
+                        <AjouterAuCalendrierIcon reunion={reunion} />
+                      </div>
                     </div>
                   </td>
                 </tr>
