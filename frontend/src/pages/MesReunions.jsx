@@ -10,9 +10,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import PlanifierNotification from './PlanifierNotification';
 import { AnimatePresence, motion } from 'framer-motion';
 import Countdown from '../components/Countdown';
-import { AddToCalendarButton } from 'add-to-calendar-button-react';
-import { atcb_action } from 'add-to-calendar-button-react';
-import { FaCalendarPlus } from 'react-icons/fa';
+import AjouterAuCalendrierIcon from '../components/AjouterAuCalendrierIcon';
 function MesReunions() {
   const [reunionsList, setReunionsList] = useState([]);
   const [filteredReunions, setFilteredReunions] = useState([]);
@@ -130,27 +128,27 @@ const handleLogout = async () => {
   }
 
 
-function AjouterAuCalendrierIcon({ reunion }) {
-  const handleClick = () => {
-    atcb_action({
-      name: reunion.titre,
-      location: reunion.lieu,
-      startDate: new Date(reunion.dateHeure).toISOString().split('T')[0],
-      endDate: new Date(reunion.dateHeure).toISOString().split('T')[0],
-      startTime: new Date(reunion.dateHeure).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }),
-      endTime: new Date(reunion.dateHeure).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }),
-      options: ['Apple', 'Google', 'iCal', 'Outlook.com', 'Yahoo'],
-      description: `Réunion: ${reunion.titre} au ${reunion.lieu}`,
-      timeZone: "Europe/Paris"
-    });
-  };
+// function AjouterAuCalendrierIcon({ reunion }) {
+//   const handleClick = () => {
+//     atcb_action({
+//       name: reunion.titre,
+//       location: reunion.lieu,
+//       startDate: new Date(reunion.dateHeure).toISOString().split('T')[0],
+//       endDate: new Date(reunion.dateHeure).toISOString().split('T')[0],
+//       startTime: new Date(reunion.dateHeure).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }),
+//       endTime: new Date(reunion.dateHeure).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }),
+//       options: ['Apple', 'Google', 'iCal', 'Outlook.com', 'Yahoo'],
+//       description: `Réunion: ${reunion.titre} au ${reunion.lieu}`,
+//       timeZone: "Europe/Paris"
+//     });
+//   };
 
-  return (
-    <button onClick={handleClick} title="Ajouter au calendrier" className="text-blue-600 hover:text-blue-800 p-1">
-      <FaCalendarPlus size={20} />
-    </button>
-  );
-}
+//   return (
+//     <button onClick={handleClick} title="Ajouter au calendrier" className="text-blue-600 hover:text-blue-800 p-1">
+//       <FaCalendarPlus size={20} />
+//     </button>
+//   );
+// }
 
   return (
     <>

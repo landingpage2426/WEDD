@@ -57,6 +57,13 @@ function Dashboard() {
       setInvitesList(data);
       setFilteredInvites(data);
     } catch (error) {
+       if (error.response && (error.response.status === 401 || error.response.status === 403)) {
+      // Token invalide ou expiré
+      localStorage.removeItem("user");
+      localStorage.removeItem("token");
+      navigate("/"); 
+      return;
+    }
       console.error('Erreur lors de la récupération des Invités:', error);
     }
   };
