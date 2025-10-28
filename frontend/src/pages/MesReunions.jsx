@@ -11,6 +11,7 @@ import PlanifierNotification from './PlanifierNotification';
 import { AnimatePresence, motion } from 'framer-motion';
 import Countdown from '../components/Countdown';
 import AjouterAuCalendrierIcon from '../components/AjouterAuCalendrierIcon';
+import { formatDate } from '../utils/FormatDate';
 function MesReunions() {
   const [reunionsList, setReunionsList] = useState([]);
   const [filteredReunions, setFilteredReunions] = useState([]);
@@ -127,28 +128,6 @@ const handleLogout = async () => {
     }
   }
 
-
-// function AjouterAuCalendrierIcon({ reunion }) {
-//   const handleClick = () => {
-//     atcb_action({
-//       name: reunion.titre,
-//       location: reunion.lieu,
-//       startDate: new Date(reunion.dateHeure).toISOString().split('T')[0],
-//       endDate: new Date(reunion.dateHeure).toISOString().split('T')[0],
-//       startTime: new Date(reunion.dateHeure).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }),
-//       endTime: new Date(reunion.dateHeure).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }),
-//       options: ['Apple', 'Google', 'iCal', 'Outlook.com', 'Yahoo'],
-//       description: `Réunion: ${reunion.titre} au ${reunion.lieu}`,
-//       timeZone: "Europe/Paris"
-//     });
-//   };
-
-//   return (
-//     <button onClick={handleClick} title="Ajouter au calendrier" className="text-blue-600 hover:text-blue-800 p-1">
-//       <FaCalendarPlus size={20} />
-//     </button>
-//   );
-// }
 
   return (
     <>
@@ -269,11 +248,11 @@ const handleLogout = async () => {
                 Titre
               </th>
               <th scope="col" className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
-                Date
+                Date et Heure
               </th>
-              <th scope="col" className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
+              {/* <th scope="col" className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
                 Heure
-              </th>
+              </th> */}
               <th scope="col" className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
                 Lieu
               </th>
@@ -290,11 +269,9 @@ const handleLogout = async () => {
                     <div className="font-medium text-gray-900">{reunion.titre}</div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-gray-500">
-                    {new Date(reunion.dateHeure).toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric', month: 'short' })}
+                  {formatDate(reunion.dateHeure)} 
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-gray-500">
-                    {new Date(reunion.dateHeure).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
-                  </td>
+                
                   <td className="px-6 py-4 text-gray-500">
                     <div className="max-w-xs truncate">{reunion.lieu}</div>
                   </td>

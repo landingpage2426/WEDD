@@ -21,6 +21,7 @@ const { default:  OneInvite } = require( './../Controllers/InviteControllers/One
 const { default:  EditInvite } = require( './../Controllers/InviteControllers/EditInvite');
 const { default:  DeleteInvite } = require( './../Controllers/InviteControllers/DeleteInvite');
 const { default:  Presence } = require('./../Controllers/InviteControllers/Presence');
+const { default: UsersGet } = require("../Controllers/UserControllers/UsersGet.js");
 const authenticate = require("./AuthMiddleware.js").default;
 
 // router.use(cors({ origin: 'http://localhost:5173', credentials: true }));
@@ -31,6 +32,9 @@ router.use(express.json());
 
 router.post("/register", Register);
 router.post("/login", Login);
+
+// Route pour récupérer les informations de les utilisateurs 
+router.get("/users", UsersGet)
 
 // Route pour récupérer les informations de l'utilisateur connecté
 router.get("/profil", authenticate,UserConnect);

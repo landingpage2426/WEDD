@@ -14,6 +14,7 @@ import RechercheInvite from './pages/RechercheInvite.jsx'
 import ShowInvite from './pages/ShowInvite.jsx'
 import Root from './components/Root.jsx'
 import Salle from './components/Salle.jsx';
+import AdminPage from './pages/AdminPage.jsx'
 
 const router = createBrowserRouter (
   createRoutesFromElements (
@@ -29,6 +30,7 @@ const router = createBrowserRouter (
         <Route path="/liste-reunions" element={< MesReunions />}/>
         <Route path="/recherche-invite" element={<RechercheInvite />} />
         <Route path="/invites/:inviteId" element={<ShowInvite />} /> 
+        <Route path="/admin" element={<AdminPage />} /> 
         <Route path="*" element={<PageNotFound/>} />
       </Route>
       </>
