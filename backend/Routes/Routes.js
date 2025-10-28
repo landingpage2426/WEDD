@@ -22,6 +22,9 @@ const { default:  EditInvite } = require( './../Controllers/InviteControllers/Ed
 const { default:  DeleteInvite } = require( './../Controllers/InviteControllers/DeleteInvite');
 const { default:  Presence } = require('./../Controllers/InviteControllers/Presence');
 const { default: UsersGet } = require("../Controllers/UserControllers/UsersGet.js");
+const User = require("../Models/User.js");
+const { default: UsersDelete } = require("../Controllers/UserControllers/UsersDelete.js");
+const { default: UsersEdit } = require("../Controllers/UserControllers/UsersEdit.js");
 const authenticate = require("./AuthMiddleware.js").default;
 
 // router.use(cors({ origin: 'http://localhost:5173', credentials: true }));
@@ -34,7 +37,9 @@ router.post("/register", Register);
 router.post("/login", Login);
 
 // Route pour récupérer les informations de les utilisateurs 
-router.get("/users", UsersGet)
+router.get("/users",UsersGet)
+router.delete("/delete-user/:id", authenticate, UsersDelete);
+router.put("/edit-user/:id", authenticate, UsersEdit);
 
 // Route pour récupérer les informations de l'utilisateur connecté
 router.get("/profil", authenticate,UserConnect);

@@ -22,7 +22,9 @@ const UserConnect = async (req, res) => {
                 dateMariage: user.dateMariage,
                 lieuMariage: user.lieuMariage,
                 couleurSite: user.couleurSite,
-                themeMariage: user.themeMariage
+                themeMariage: user.themeMariage,
+                role: user.role,
+                createdAt: user.createdAt,
             }
         });
     } catch (err) {

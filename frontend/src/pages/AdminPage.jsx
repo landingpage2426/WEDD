@@ -2,7 +2,8 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { Link, useNavigate } from "react-router-dom";
 import { formatDate } from "../utils/FormatDate";
-// import { handleDeleteUser } from "../services/HandleDeleteUser";
+import { handleDeleteUser } from "../utils/HandleDeleteUser";
+
 const apiUrl = import.meta.env.VITE_API_URL;
 const api = axios.create({ baseURL: apiUrl });
 function AdminPage() {
@@ -21,8 +22,7 @@ function AdminPage() {
   const fetchUsers = async () => {
     try {
       const res = await api.get("/api/users");
-      console.log(res.data.users);
-      
+      // console.log(res.data.users);
       setMyUsers(res.data.users);
     } catch (err) {
       console.error("Erreur lors du chargement des chants", err);
@@ -67,6 +67,21 @@ function AdminPage() {
                 <th className="px-4 py-3 text-left text-xs font-medium text-white uppercase tracking-wider ">
                   Email
                 </th>
+                 <th className="px-4 py-3 text-left text-xs font-medium text-white uppercase tracking-wider ">
+                  Telephone
+                </th>
+                 <th className="px-4 py-3 text-left text-xs font-medium text-white uppercase tracking-wider ">
+                  Date mariage
+                </th>
+                 <th className="px-4 py-3 text-left text-xs font-medium text-white uppercase tracking-wider ">
+                  Lieu mariage
+                </th>
+                 <th className="px-4 py-3 text-left text-xs font-medium text-white uppercase tracking-wider ">
+                  Couleur site
+                </th>
+                 <th className="px-4 py-3 text-left text-xs font-medium text-white uppercase tracking-wider ">
+                  Thème mariage
+                </th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">
                   Rôle
                 </th>
@@ -97,6 +112,21 @@ function AdminPage() {
                     <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500 ">
                       <div>{u.email}</div>
                     </td>
+                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500 ">
+                      <div>{u.telephone}</div>
+                    </td>
+                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500 ">
+                      <div>{formatDate(u.dateMariage)}</div>
+                    </td>
+                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500 ">
+                      <div>{u.lieuMariage}</div>
+                    </td>
+                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500 ">
+                      <div>{u.couleurSite}</div>
+                    </td>
+                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500 ">
+                      <div>{u.themeMariage}</div>
+                    </td>
                     <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500">
                       <div>{u.role}</div>
                     </td>
@@ -106,11 +136,11 @@ function AdminPage() {
                     <td className="px-4 py-4 whitespace-nowrap text-right text-sm font-medium">
                       <div className="flex justify-end space-x-2">
                         <Link
-                          to={`/editUser/${u._id}`}
+                          to={`/edit-user/${u._id}`}
                           className="bg-yellow-400 hover:bg-yellow-500 text-white font-semibold py-2 px-4 rounded-lg transition"
                         >
                           modifier
-                        </Link>{" "}
+                        </Link>
                         <button
                           className="text-red-600 bg-red-600 text-white rounded-lg hover:text-red-900 p-1"
                           onClick={(e) => {

@@ -7,6 +7,7 @@ const Login = async (req, res) => {
   try {
     // Vérification si l'utilisateur existe
     const user = await User.findOne({ email });
+    
     if (!user) {
       return res.status(400).json({
         message: "Email ou mot de passe incorrect",
@@ -45,6 +46,7 @@ const Login = async (req, res) => {
         lieuMariage: user.lieuMariage,
         couleurSite: user.couleurSite,
         themeMariage: user.themeMariage,
+        role: user.role
       },
     });
   } catch (err) {

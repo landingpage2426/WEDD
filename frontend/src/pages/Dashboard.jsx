@@ -19,6 +19,7 @@ function Dashboard() {
   const [searchTerm, setSearchTerm] = useState('');
   const [nom, setNom] = useState('');
   const [prenom, setPrenom] = useState('');
+  const [user, setUser] = useState();
   const [successMessage, setSuccessMessage] = useState('');
   const [menuOpen, setMenuOpen] = useState(false);
   const [showPopupUpdateInvite, setShowPopupUpdateInvite] = useState(false);
@@ -29,7 +30,7 @@ function Dashboard() {
   const location = useLocation();
   const apiUrl = import.meta.env.VITE_API_URL;
   
-
+console.log(user)
   const handleLogout = async () => {
     try {
       localStorage.removeItem('token');
@@ -89,10 +90,12 @@ function Dashboard() {
     fetchReunions();
     
     const userString = localStorage.getItem('user');
+    
     if (userString) {
       const user = JSON.parse(userString);
       setNom(user.nom);
       setPrenom(user.prenom);
+      setUser(user);
     }
   }, [location.pathname]);
 
@@ -177,7 +180,13 @@ function Dashboard() {
               <p className="text-gray-600">Un mariage inoubliable vous attend 🎉</p>
             </div>
 
-            <Link to="/ajout-invite" className="w-full md:w-auto">
+            <Link to="/ajout-invite" className="w-full flex  md:w-auto ">
+             {/* {user?.role === "admin" && (  <Link to={"/admin"} className="flex items-center justify-center text-lg font-bold text-gray-700 bg-green-500 border-2 border-gray-600 rounded-lg w-17 h-10  sm:mx-6 cursor-pointer">
+               Admin
+            </Link> )} */}
+             {user?.role === "admin" && (<Link to={"/admin"} className="flex items-center justify-center text-lg font-bold text-gray-700 bg-green-500 border-2 border-gray-600 rounded-lg w-20 h-12  sm:mx-6 cursor-pointer">
+               Admin
+              </Link> )}
               <Bouton
                 width="w-full md:w-48"
                 height="h-auto"
