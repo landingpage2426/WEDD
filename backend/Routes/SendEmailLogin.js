@@ -26,6 +26,7 @@ export async function sendLoginEmail(email) {
 
     `,
   };
-
+  console.log("email envoyé avec succès");
+  
   await transporter.sendMail(mailOptions);
 }
