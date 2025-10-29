@@ -1,9 +1,6 @@
 const express = require("express");
 
 const router = express.Router();
-// const cors = require('cors');
-const bcrypt = require('bcryptjs');
-const jwt = require('jsonwebtoken');
 const upload= require("./UploadImage.js"); // Importation du middleware multer pour l'upload d'images
 const { default: Login} = require("../Controllers/UserControllers/Login.js");
 const { default: Register } = require("../Controllers/UserControllers/Register.js");
@@ -22,7 +19,6 @@ const { default:  EditInvite } = require( './../Controllers/InviteControllers/Ed
 const { default:  DeleteInvite } = require( './../Controllers/InviteControllers/DeleteInvite');
 const { default:  Presence } = require('./../Controllers/InviteControllers/Presence');
 const { default: UsersGet } = require("../Controllers/UserControllers/UsersGet.js");
-const User = require("../Models/User.js");
 const { default: UsersDelete } = require("../Controllers/UserControllers/UsersDelete.js");
 const { default: UsersEdit } = require("../Controllers/UserControllers/UsersEdit.js");
 const authenticate = require("./AuthMiddleware.js").default;

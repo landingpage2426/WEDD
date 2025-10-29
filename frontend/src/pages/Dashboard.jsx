@@ -29,8 +29,7 @@ function Dashboard() {
   const navigate = useNavigate();
   const location = useLocation();
   const apiUrl = import.meta.env.VITE_API_URL;
-  
-console.log(user)
+
   const handleLogout = async () => {
     try {
       localStorage.removeItem('token');
@@ -58,13 +57,13 @@ console.log(user)
       setInvitesList(data);
       setFilteredInvites(data);
     } catch (error) {
-       if (error.response && (error.response.status === 401 || error.response.status === 403)) {
-      // Token invalide ou expiré
-      localStorage.removeItem("user");
-      localStorage.removeItem("token");
-      navigate("/"); 
-      return;
-    }
+      if (error.response && (error.response.status === 401 || error.response.status === 403)) {
+        // Token invalide ou expiré
+        localStorage.removeItem("user");
+        localStorage.removeItem("token");
+        navigate("/");
+        return;
+      }
       console.error('Erreur lors de la récupération des Invités:', error);
     }
   };
@@ -88,9 +87,9 @@ console.log(user)
   useEffect(() => {
     fetchInvites();
     fetchReunions();
-    
+
     const userString = localStorage.getItem('user');
-    
+
     if (userString) {
       const user = JSON.parse(userString);
       setNom(user.nom);
@@ -144,7 +143,7 @@ console.log(user)
       {/* Mobile Navigation */}
       <AnimatePresence>
         {menuOpen && (
-          <motion.nav 
+          <motion.nav
             className="bg-gray-200 text-dark flex flex-col gap-4 p-4 w-full md:hidden"
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
@@ -162,7 +161,7 @@ console.log(user)
           </motion.nav>
         )}
       </AnimatePresence>
-    
+
       <div className="flex flex-col md:flex-row">
         {/* Desktop Navigation */}
         <div className="hidden md:block md:w-64">
@@ -179,26 +178,23 @@ console.log(user)
               </h1>
               <p className="text-gray-600">Un mariage inoubliable vous attend 🎉</p>
             </div>
-
-            <Link to="/ajout-invite" className="w-full flex  md:w-auto ">
-             {/* {user?.role === "admin" && (  <Link to={"/admin"} className="flex items-center justify-center text-lg font-bold text-gray-700 bg-green-500 border-2 border-gray-600 rounded-lg w-17 h-10  sm:mx-6 cursor-pointer">
-               Admin
-            </Link> )} */}
-             {user?.role === "admin" && (<Link to={"/admin"} className="flex items-center justify-center text-lg font-bold text-gray-700 bg-green-500 border-2 border-gray-600 rounded-lg w-20 h-12  sm:mx-6 cursor-pointer">
-               Admin
-              </Link> )}
-              <Bouton
-                width="w-full md:w-48"
-                height="h-auto"
-                bg="bg-blue-600 hover:bg-blue-700"
-                color="text-white"
-                fontSize="text-base"
-                rounded="rounded-lg"
-                shadow="shadow hover:shadow-md"
-              >
-                Ajouter un invité
-              </Bouton>
-            </Link>
+            <div className="flex flex-col  md:flex-row md:w-auto gap-4">
+              {user?.role === "admin" && (<Link to={"/admin"} className="flex items-center justify-center  w-full p-6 text-lg font-bold text-gray-700 bg-green-500 border-2 border-gray-600 rounded-lg w-25 h-12  sm:mx-6 cursor-pointer">
+                Admin
+              </Link>)}
+              <Link to="/ajout-invite" className="w-full flex  md:w-auto">
+                <Bouton
+                  width="w-full md:w-48"
+                  height="h-auto"
+                  bg="bg-blue-600 hover:bg-blue-700"
+                  color="text-white"
+                  fontSize="text-base"
+                  rounded="rounded-lg"
+                  shadow="shadow hover:shadow-md"
+                >
+                  Ajouter un invité
+                </Bouton>
+              </Link></div>
           </section>
 
           {/* Stats Section */}
@@ -240,7 +236,7 @@ console.log(user)
 
           {/* Success Message */}
           {successMessage && (
-            <motion.div 
+            <motion.div
               className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-6"
               initial={{ opacity: 0, y: -20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -306,13 +302,13 @@ console.log(user)
         )}
 
         {showConfirmDelete && (
-          <motion.div 
+          <motion.div
             className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
           >
-            <motion.div 
+            <motion.div
               className="bg-white p-6 rounded-xl shadow-lg w-full max-w-sm"
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}

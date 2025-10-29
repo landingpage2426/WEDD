@@ -7,8 +7,6 @@ const UsersEdit = async (req, res) => {
     prenom,
     email,
     telephone,
-    nomTable,
-    status,
     dateMariage,
     lieuMariage,
     couleurSite,
@@ -22,15 +20,12 @@ const UsersEdit = async (req, res) => {
       prenom,
       email,
       telephone,
-      nomTable,
-      status,
       dateMariage,
       lieuMariage,
       couleurSite,
       themeMariage,
       role,
     };
-
     const updatedUsers = await User.findByIdAndUpdate(id, updatedFields, {
       new: true,
     });
@@ -41,11 +36,10 @@ const UsersEdit = async (req, res) => {
         type: "danger",
       });
     }
-
     res.status(200).json({
       message: "Utilisateur mis à jour avec succès !",
       type: "success",
-      invite: updatedUsers,
+      users: updatedUsers,
     });
   } catch (err) {
     console.error("Erreur lors de la mise à jour de l'utilisateur :", err);
