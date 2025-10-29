@@ -1,5 +1,4 @@
-const mongoose = require('mongoose');
-
+import mongoose from 'mongoose';
 
 
 // Schéma Réunion
@@ -16,4 +15,4 @@ const reunionSchema = new mongoose.Schema({
 const Reunion = mongoose.model('Reunion', reunionSchema);
 
 
-module.exports =  Reunion
+export default Reunion

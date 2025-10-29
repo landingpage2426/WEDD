@@ -1,6 +1,4 @@
-const mongoose = require('mongoose');
-
-
+import mongoose from 'mongoose';
 
 // Schéma Invité
 const inviteSchema = new mongoose.Schema({
@@ -34,4 +32,4 @@ const inviteSchema = new mongoose.Schema({
 
 const Invite = mongoose.model('Invite', inviteSchema);
 
-module.exports =  Invite 
+export default  Invite 

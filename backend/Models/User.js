@@ -20,7 +20,7 @@
 
 
 
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 // Définition des rôles possibles dans l'application
 const ROLES = ['admin', 'client', 'manager', 'chef_protocole', 'protocole'];
@@ -58,4 +58,4 @@ const userSchema = new mongoose.Schema({
 
 const User = mongoose.model('User', userSchema);
 
-module.exports = User;
+export default User;

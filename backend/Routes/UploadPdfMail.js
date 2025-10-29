@@ -52,13 +52,22 @@
 
 
 // module.exports = router;
-const express = require('express');
-require('dotenv').config();
-const nodemailer = require("nodemailer");
-const multer = require('multer');
-const fs = require('fs');
-const path = require('path');
-const { Storage } = require('megajs');
+// const express = require('express');
+// require('dotenv').config();
+// const nodemailer = require("nodemailer");
+// const multer = require('multer');
+// const fs = require('fs');
+// const path = require('path');
+// const { Storage } = require('megajs');
+import express from 'express';
+import dotenv from 'dotenv';
+dotenv.config();
+import nodemailer from 'nodemailer';
+import multer from 'multer';
+import fs from 'fs';
+import path from 'path';
+import { Storage } from 'megajs';
+
 
 const router = express.Router();
 
@@ -140,4 +149,4 @@ router.post("/", upload.single("pdf"), async (req, res) => {
   }
 });
 
-module.exports = router;
+export default router;

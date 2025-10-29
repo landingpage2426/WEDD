@@ -1,29 +1,30 @@
-const express = require("express");
-
+import express from 'express';
 const router = express.Router();
-const upload= require("./UploadImage.js"); // Importation du middleware multer pour l'upload d'images
-const { default: Login} = require("../Controllers/UserControllers/Login.js");
-const { default: Register } = require("../Controllers/UserControllers/Register.js");
-const { default: Logout } = require("../Controllers/UserControllers/Logout.js");
-const { default: UserConnect } = require("../Controllers/UserControllers/UserConnect.js");
-const { default: EditProfil } = require("../Controllers/UserControllers/EditProfil.js");
-const { default: EditPassword } = require("../Controllers/UserControllers/EditPassword.js");
-const { default: AddReunion } = require("../Controllers/ReunionControllers/AddReunion.js");
-const { default: AllReunion } = require("../Controllers/ReunionControllers/AllReunion.js");
-const { default: EditReunion } = require("../Controllers/ReunionControllers/EditReunion.js");
-const { default: DeleteReunion } = require("../Controllers/ReunionControllers/DeleteReunion.js");
-const { default:  AddInvite } = require( './../Controllers/InviteControllers/AddInvite');
-const { default:  AllInvite } = require( './../Controllers/InviteControllers/AllInvite');
-const { default:  OneInvite } = require( './../Controllers/InviteControllers/OneInvite');
-const { default:  EditInvite } = require( './../Controllers/InviteControllers/EditInvite');
-const { default:  DeleteInvite } = require( './../Controllers/InviteControllers/DeleteInvite');
-const { default:  Presence } = require('./../Controllers/InviteControllers/Presence');
-const { default: UsersGet } = require("../Controllers/UserControllers/UsersGet.js");
-const { default: UsersDelete } = require("../Controllers/UserControllers/UsersDelete.js");
-const { default: UsersEdit } = require("../Controllers/UserControllers/UsersEdit.js");
-const authenticate = require("./AuthMiddleware.js").default;
+import upload from "./UploadImage.js"; // Import du middleware multer pour l'upload d'images
+import Login from "../Controllers/UserControllers/Login.js";
+import Register from "../Controllers/UserControllers/Register.js";
+import Logout from "../Controllers/UserControllers/Logout.js";
+import UserConnect from "../Controllers/UserControllers/UserConnect.js";
+import EditProfil from "../Controllers/UserControllers/EditProfil.js";
+import EditPassword from "../Controllers/UserControllers/EditPassword.js";
 
-// router.use(cors({ origin: 'http://localhost:5173', credentials: true }));
+import AddReunion from "../Controllers/ReunionControllers/AddReunion.js";
+import AllReunion from "../Controllers/ReunionControllers/AllReunion.js";
+import EditReunion from "../Controllers/ReunionControllers/EditReunion.js";
+import DeleteReunion from "../Controllers/ReunionControllers/DeleteReunion.js";
+
+import AddInvite from '../Controllers/InviteControllers/AddInvite.js';
+import AllInvite from '../Controllers/InviteControllers/AllInvite.js';
+import OneInvite from '../Controllers/InviteControllers/OneInvite.js';
+import EditInvite from '../Controllers/InviteControllers/EditInvite.js';
+import DeleteInvite from '../Controllers/InviteControllers/DeleteInvite.js';
+import Presence from '../Controllers/InviteControllers/Presence.js';
+
+import UsersGet from "../Controllers/UserControllers/UsersGet.js";
+import UsersDelete from "../Controllers/UserControllers/UsersDelete.js";
+import UsersEdit from "../Controllers/UserControllers/UsersEdit.js";
+
+import authenticate from "./AuthMiddleware.js";
 
 router.use(express.json());
 
@@ -64,4 +65,4 @@ router.delete('/delete-reunion/:reunionId', authenticate, DeleteReunion);
 router.post('/logout', Logout);
 
 
-module.exports = router;
+export default router;

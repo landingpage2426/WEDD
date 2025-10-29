@@ -1,13 +1,19 @@
-const cors = require('cors');
-require('dotenv').config();
-const express = require('express');
-const mongoose = require('mongoose');
-const path = require('path');
+import cors from 'cors';
+import dotenv from 'dotenv';
+dotenv.config();
+import express from 'express';
+import mongoose from 'mongoose';
+import path from 'path';
 const app = express();
+import routes from "./Routes/Routes.js";
+import uploadRoutes from './Routes/UploadPDF.js';
+import uploadPdfMail from './Routes/UploadPdfMail.js';
 const PORT = process.env.PORT || 5000;
-const routes = require("./Routes/Routes");
-const uploadRoutes = require('./Routes/UploadPDF.js');
-const uploadPdfMail = require('./Routes/UploadPdfMail.js');
+import { fileURLToPath } from 'url';
+
+// Obtenir __dirname en ES modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 // Liste des origines autorisées
 
 const allowedOrigins = [
