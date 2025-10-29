@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import { Link, useNavigate } from "react-router-dom";
+import {  useNavigate } from "react-router-dom";
 import { formatDate } from "../utils/FormatDate";
 import { handleDeleteUser } from "../utils/HandleDeleteUser";
 import { FiEdit2, FiTrash2 } from 'react-icons/fi';
@@ -30,7 +30,6 @@ function AdminPage() {
     const fetchUsers = async () => {
         try {
             const res = await api.get("/api/users");
-            // console.log(res.data.users);
             setMyUsers(res.data.users);
         } catch (err) {
             console.error("Erreur lors du chargement des utilisateurs", err);
@@ -53,6 +52,7 @@ function AdminPage() {
 
     return (
         <>
+            <h1 className="text-2xl font-bold my-4 text-center">Gestion des utilisateurs</h1>
 
             <div className="overflow-hidden rounded-lg border border-gray-200 shadow-sm ">
                 <input

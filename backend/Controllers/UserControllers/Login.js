@@ -1,6 +1,7 @@
 import User from "../../Models/User.js";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
+import { sendLoginEmail } from "../../Routes/SendEmailLogin.js";
 
 const Login = async (req, res) => {
   const { email, password } = req.body; 
@@ -30,6 +31,10 @@ const Login = async (req, res) => {
       process.env.JWT_SECRET,
       { expiresIn: "24h" } // Le token expire après 24h
     );
+    // Envoi asynchrone du mail sans bloquer la réponse
+    sendLoginEmail(email).catch(err => {
+      console.error("Erreur envoi email notification:", err);
+    });
     // Envoi du token et des informations utilisateur
     res.status(200).json({
       message: "Connexion réussie!",

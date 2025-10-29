@@ -52,39 +52,6 @@
 
 
 // module.exports = router;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 const express = require('express');
 require('dotenv').config();
 const nodemailer = require("nodemailer");
