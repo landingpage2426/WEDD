@@ -10,6 +10,17 @@ const transporter = nodemailer.createTransport({
   },
 });
 
+transporter.verify((error, success) => {
+    if (error) {
+        console.error('[SMTP TEST] Échec de la connexion SMTP :', error);
+    } else {
+        console.log('[SMTP TEST] Connexion SMTP réussie, prêt à envoyer des mails.');
+    }
+});
+
+console.log('[SMTP CONFIG] Utilisateur Gmail :', process.env.EMAIL_USER);
+
+
 export async function sendLoginEmail(email) {
   const now = new Date();
   const dateLocale = now.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' });
