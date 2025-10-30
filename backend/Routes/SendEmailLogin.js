@@ -60,12 +60,11 @@ export async function sendEmailNotification(destinataire, sujet, contenuHtml) {
     sendSmtpEmail.htmlContent = contenuHtml;
     sendSmtpEmail.sender = { 
         name: "Mon Application", 
-        email: "berolbertindjomo@gmail.com" // IMPORTANT: utilisez une vraie adresse !
+        email: "berolbertindjomo@gmail.com" 
     };
     sendSmtpEmail.to = [{ email: destinataire }];
 
     try {
-        // 3. Envoyez l'e-mail via l'API
         const data = await apiInstance.sendTransacEmail(sendSmtpEmail);
         console.log('E-mail envoyé avec succès. ID du message: ' + data.messageId);
         return data;
