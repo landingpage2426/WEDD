@@ -14,12 +14,12 @@ const Footer = () => {
   const socialLinks = [
     { icon: <FaFacebookF />, label: "Facebook", url: "#" },
     { icon: <FaInstagram />, label: "Instagram", url: "#" },
-    { icon: <FaWhatsapp />, label: "WhatsApp", url: "https://wa.me/237659545017" }
+    { icon: <FaWhatsapp />, label: "WhatsApp", url: "https://wa.me/237687962949" }
   ];
 
   const contactInfos = [
-    { icon: <FaEnvelope />, text: "contact@wedd.com", url: "mailto:contact@wedd.com" },
-    { icon: <FaPhoneAlt />, text: "+237 659 545 017", url: "tel:+237659545017" },
+    { icon: <FaEnvelope />, text: "contact.wedd25@gmail.com", url: "mailto:contact.wedd25@gmail.com" },
+    { icon: <FaPhoneAlt />, text: "+237 6 87 96 29 49", url: "tel:+237687962949" },
     { icon: <FaMapMarkerAlt />, text: "Douala, Cameroun", url: "#" },
     { icon: <FaClock />, text: "Lun-Ven: 9h-18h", url: "#" }
   ];
@@ -66,10 +66,6 @@ const Footer = () => {
               />
               <span className="text-xl font-bold text-gray-800">WEDD</span>
             </div>
-            <p className="text-gray-600">
-              Deux passionnés du web créant des solutions digitales sur mesure pour votre présence en ligne.
-            </p>
-            
             {/* Réseaux sociaux */}
             <div className="flex gap-4 pt-2">
               {socialLinks.map((social, index) => (

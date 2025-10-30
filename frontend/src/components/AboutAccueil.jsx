@@ -21,13 +21,12 @@ const AboutAccueil = () => {
             }}
           >
             <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-6">
-              <span className="text-indigo-600">Deux passionnés</span> du web à votre service
+              <span className="text-indigo-600">Notre mission</span>
             </h2>
             
-            <p className="text-lg text-gray-600 mb-6">
-              Nous sommes un duo de développeurs full-stack passionnés par la création de solutions web sur mesure. 
-              Notre mission ? Vous aider à <span className="font-semibold text-indigo-600">marquer votre présence en ligne</span> 
-              avec des sites uniques et performants.
+            <p className="text-lg text-gray-600 mb-6"> 
+              Notre mission ? Vous aider à <span className="font-semibold text-indigo-600">marquer votre présence en ligne </span> 
+               avec des sites uniques et performants.
             </p>
             
             <div className="space-y-6">

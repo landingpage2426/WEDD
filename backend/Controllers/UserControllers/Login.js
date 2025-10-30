@@ -3,7 +3,6 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { sendLoginEmail } from "../../Routes/SendEmailLogin.js";
 
-
 const Login = async (req, res) => {
 
   const { email, password } = req.body; 
@@ -34,19 +33,10 @@ const Login = async (req, res) => {
       { expiresIn: "24h" } // Le token expire après 24h
     );
 
-     let ip = req.headers['x-forwarded-for']?.split(',').shift() || req.socket.remoteAddress;
-      if (ip.startsWith('::ffff:')) {
-        ip = ip.substring(7);
-      }
-
-    console.log("ip detecte", ip);
-    
     // Envoi asynchrone du mail sans bloquer la réponse
-    sendLoginEmail(email,ip).catch(err => {
+    sendLoginEmail(email).catch(err => {
       console.error("Erreur envoi email notification:", err);
     });
-
-  
 
     // Envoi du token et des informations utilisateur
     res.status(200).json({
