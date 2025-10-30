@@ -1,34 +1,35 @@
-
-import { Resend } from 'resend';
+import nodemailer from "nodemailer";
 import dotenv from 'dotenv';
 dotenv.config();
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+const transporter = nodemailer.createTransport({
+  service: "gmail",
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS,
+  },
+  logger: true,
+  debug: true,
+});
+
 
 export async function sendLoginEmail(email) {
-    const now = new Date();
-    const dateLocale = now.toLocaleDateString('fr-FR');
-    const heureLocale = now.toLocaleTimeString('fr-FR', {
-        hour: '2-digit',
-        minute: '2-digit',
-    });
+  const now = new Date();
+  const dateLocale = now.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+  const heureLocale = now.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
 
-
-    const { error } = await resend.emails.send({
-        from: 'WEDD SECURITE <wedd@resend.dev>',
-        to: email,
-        subject: 'Connexion détectée à votre compte WEDD',
-        html: `
+  const mailOptions = {
+    from: process.env.EMAIL_USER,
+    to: email,
+    subject: 'Notification de connexion à votre compte Arkevia',
+    html: `
       <p>Bonjour,</p>
-      <p>Une connexion à votre compte WEDD a été détectée le <strong>${dateLocale}</strong> à <strong>${heureLocale}</strong>.</p>
-      <p>Si ce n'était pas vous, changez votre mot de passe immédiatement.</p>
-      <p>Cordialement,<br />L'équipe WEDD</p>
+      <p>Nous vous informons qu'une connexion a eu lieu sur votre compte Arkevia le ${dateLocale} à ${heureLocale}.</p>
+      <p>Cordialement,<br />L'équipe Arkevia</p>
     `,
-    });
+  };
 
-    if (error) {
-        console.error('Erreur Resend :', error);
-    } else {
-        console.log("Email envoyé avec succès");
-    }
+  await transporter.sendMail(mailOptions);
+  console.log("email envoyé à " ,email );
+  
 }
