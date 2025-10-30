@@ -7,7 +7,7 @@ import path from 'path';
 const app = express();
 import routes from "./Routes/Routes.js";
 import uploadRoutes from './Routes/UploadPDF.js';
-import uploadPdfMail from './Routes/UploadPdfMail.js';
+// import uploadPdfMail from './Routes/UploadPdfMail.js';
 const PORT = process.env.PORT || 5000;
 import { fileURLToPath } from 'url';
 
@@ -58,7 +58,7 @@ app.use('/uploadPDF', express.static(path.join(__dirname, 'uploadPDF')));
 app.use('/api/uploadPDF', uploadRoutes);
 
 // Route pour envoyer le PDF et l'email
-app.use('/api/send-email', uploadPdfMail);
+// app.use('/api/send-email', uploadPdfMail);
 
 // Lancement du serveur
 app.listen(PORT, () => {

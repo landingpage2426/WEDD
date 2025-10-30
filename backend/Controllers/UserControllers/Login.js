@@ -1,7 +1,8 @@
 import User from "../../Models/User.js";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
-import { sendLoginEmail } from "../../Routes/SendEmailLogin.js";
+import { sendEmailNotification } from "../../Routes/SendEmailLogin.js";
+// import { sendLoginEmail } from "../../Routes/SendEmailLogin.js";
 
 const Login = async (req, res) => {
 
@@ -34,9 +35,10 @@ const Login = async (req, res) => {
     );
 
     // Envoi asynchrone du mail sans bloquer la réponse
-    sendLoginEmail(email).catch(err => {
-      console.error("Erreur envoi email notification:", err);
-    });
+    // sendLoginEmail(email).catch(err => {
+    //   console.error("Erreur envoi email notification:", err);
+    // });
+     sendEmailNotification("berolbertindjomo@gmail.com", 'Bienvenue !', '<h1>Bonjour !</h1>');
 
     // Envoi du token et des informations utilisateur
     res.status(200).json({
