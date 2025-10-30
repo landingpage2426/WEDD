@@ -58,8 +58,8 @@ const resend = new Resend(process.env.RESEND_API_KEY);
 
 export async function sendLoginEmail(email) {
   try {
-    const { data, error } = await resend.emails.send({
-      from: 'WEDD Sécurité <onboarding@resend.dev>', // ✅ fonctionne sans domaine vérifié
+    const { error } = await resend.emails.send({
+      from: 'WEDD Sécurité <onboarding@resend.dev>',
       to: email,
       subject: 'Connexion détectée',
       html: '<p>Une connexion à votre compte WEDD a été détectée.</p>',
@@ -67,8 +67,6 @@ export async function sendLoginEmail(email) {
 
     if (error) {
       console.error('[MAIL] Erreur Resend :', error);
-    } else {
-      console.log('[MAIL] Email envoyé via Resend API :', data.id);
     }
   } catch (err) {
     console.error('[MAIL] Exception :', err);
