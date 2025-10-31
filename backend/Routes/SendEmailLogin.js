@@ -53,11 +53,14 @@ dotenv.config();
 // Création du transporteur SMTP Gmail
 const transporter = nodemailer.createTransport({
   host: 'smtp.gmail.com',
-  port: 465,         // Port SSL
-  secure: true,      // Utilisation du SSL
+  port: 587,
+  secure: false,
   auth: {
-    user: process.env.EMAIL_USER,          // Ton adresse Gmail
-    pass: process.env.EMAIL_PASS,      // Mot de passe d’application généré sur Gmail
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS,
+  },
+  tls: {
+    rejectUnauthorized: false,
   },
 });
 
