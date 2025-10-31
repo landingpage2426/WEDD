@@ -14,6 +14,8 @@ function Table({ invites, apiUrl, onEditInvite, handleDeleteInvite }) {
   const toggleRowExpand = (id) => {
     setExpandedRow(expandedRow === id ? null : id);
   };
+  const [sendEmailMessage ,setSendEmailMessage] = useState("");
+
 
   return (
     <div className="overflow-hidden rounded-lg border border-gray-200 shadow-sm">
@@ -120,6 +122,11 @@ function Table({ invites, apiUrl, onEditInvite, handleDeleteInvite }) {
                       className="bg-blue-50"
                     >
                       <td colSpan="5" className="px-4 py-4">
+                        {sendEmailMessage && (
+                          <div className="mb-4 p-3 bg-green-100 text-green-800 rounded">
+                            {sendEmailMessage}
+                          </div>
+                        )}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                           <div>
                             <h4 className="text-sm font-medium text-gray-900 mb-2">Détails de l'invité</h4>
@@ -160,7 +167,7 @@ function Table({ invites, apiUrl, onEditInvite, handleDeleteInvite }) {
                               </button>
                               
                               <button
-                                  onClick={() => handleSendEmail(invite, apiUrl, setLoadingStates)}
+                                  onClick={() => handleSendEmail(invite, apiUrl, setLoadingStates,setSendEmailMessage)}
                                   disabled={loadingStates[invite._id] === 'email'}
                                   className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded shadow-sm text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500"
                                 >
