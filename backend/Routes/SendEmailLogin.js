@@ -30,7 +30,7 @@ export async function sendEmailNotification(destinataire) {
     `;
     sendSmtpEmail.sender = { 
         name: "WEDD SECURITE", 
-        email: "contact.wedd@gmail.com" 
+        email: "contact.wedd25@gmail.com" 
     };
     sendSmtpEmail.to = [{ email: destinataire }];
 
