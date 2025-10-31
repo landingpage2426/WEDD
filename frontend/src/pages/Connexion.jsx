@@ -225,7 +225,7 @@ function Connexion() {
               <div className="mt-3 flex justify-end">
                 <div className="text-sm">
                   <Link
-                    to="#"
+                    to="/forgot-password"
                     className="font-semibold text-rose-600 hover:text-rose-800 hover:underline underline-offset-8"
                   >
                     Mot de passe oublié?

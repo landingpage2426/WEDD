@@ -25,6 +25,7 @@ import UsersDelete from "../Controllers/UserControllers/UsersDelete.js";
 import UsersEdit from "../Controllers/UserControllers/UsersEdit.js";
 
 import authenticate from "./AuthMiddleware.js";
+import { forgotPassword } from '../Controllers/UserControllers/ForgotPassword.js';
 
 router.use(express.json());
 
@@ -37,6 +38,9 @@ router.post("/login", Login);
 router.get("/users",UsersGet)
 router.delete("/delete-user/:id", authenticate, UsersDelete);
 router.put("/edit-user/:id", authenticate, UsersEdit);
+
+// mot de passe oublié et réinitialisation
+router.post("/forgot-password", forgotPassword);
 
 // Route pour récupérer les informations de l'utilisateur connecté
 router.get("/profil", authenticate,UserConnect);
