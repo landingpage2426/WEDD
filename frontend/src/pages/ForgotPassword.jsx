@@ -56,12 +56,18 @@ function ForgotPassword() {
           className="w-full border p-2 rounded"
           required
         />
-        <button type="submit" className="w-full bg-blue-500 text-white py-2 rounded">
+        {/* <button type="submit" className="w-full bg-blue-500 text-white py-2 rounded">*/}
+        <button
+          type="submit"
+          className="flex w-full justify-center items-center rounded-md bg-gradient-to-r from-rose-500 to-pink-500 px-3 py-3 text-lg font-semibold text-white shadow-lg hover:shadow-xl transition-all duration-300"
+        >
           Mettre à jour
         </button>
       </form>
       {message && (
-        <p className={`mt-4 text-${type === "danger" ? "red" : "green"}-600`}>{message}</p>
+        <p className={`mt-4 text-${type === 'danger' ? 'red' : 'green'}-600`}>
+          {message}
+        </p>
       )}
     </div>
   );
