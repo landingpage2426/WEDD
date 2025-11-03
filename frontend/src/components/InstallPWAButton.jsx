@@ -27,7 +27,7 @@ function InstallPWAButton() {
   return (
     <button
       onClick={handleInstallClick}
-      className="fixed top-0 left-1/2 transform -translate-x-1/2 bg-white text-black px-4 py-2 rounded-b-lg shadow-lg transition-transform duration-300 ease-in-out hover:-translate-y-1 flex items-center justify-between gap-2 w-[80%] md:w-auto"
+      className="fixed top-0 left-1/2 transform -translate-x-1/2 bg-white text-black px-4 py-2 rounded-b-lg shadow-lg transition-transform duration-300 ease-in-out hover:-translate-y-1 flex items-center justify-between gap-2 w-[80%] md:w-auto z-100"
     >
       Installer
       <img src={download} alt="download_installation" className="w-5 h-5" />

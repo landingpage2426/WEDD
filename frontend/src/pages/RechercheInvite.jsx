@@ -117,7 +117,6 @@ const startScanner = () => {
       { facingMode: "environment" },
       { fps: 10, qrbox: 250 },
       async (decodedText) => {
-        //console.log("QR Code détecté :", decodedText);
         html5QrCode.stop().then(async () => {
           setIsScanning(false);
           try {
@@ -125,7 +124,7 @@ const startScanner = () => {
             const inviteId = url.pathname.split("/").pop();
             const token = localStorage.getItem("token");
 
-            // 🔐 Étape 1 : Vérifier que l'invité appartient bien à l'utilisateur
+            // Étape 1 : Vérifier que l'invité appartient bien à l'utilisateur
             const getInviteResponse = await axios.get(`${apiUrl}/api/invites/${inviteId}`, {
               headers: {
                 Authorization: `Bearer ${token}`,

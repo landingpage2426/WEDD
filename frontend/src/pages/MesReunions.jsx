@@ -43,7 +43,6 @@ const reunions = async () => {
     });
 
     const data = response.data.reunions || [];
-    //console.log('Réunions récupérées:', data);
     return data;
   } catch (error) {
     console.error('Erreur lors de la récupération des réunions:', error);

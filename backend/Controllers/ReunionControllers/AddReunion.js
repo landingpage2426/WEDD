@@ -24,7 +24,6 @@ const AddReunion = async (req, res) => {
 
 
         await newReunion.save();
-        //console.log("Réunion enregistrée :", newReunion);
         res.status(201).json({
             message: "Réunion créée avec succès!",
             type: "success",
