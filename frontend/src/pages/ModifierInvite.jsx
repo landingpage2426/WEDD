@@ -6,6 +6,7 @@ function ModifierInvite({ invite, onClose }) {
   const [nom, setNom] = useState('');
   const [prenom, setPrenom] = useState('');
   const [telephone, setTelephone] = useState('');
+  const [email, setEmail] = useState('');
   const [nomTable, setNomTable] = useState('');
   const [status, setStatus] = useState('P');
   const [image, setImage] = useState(null);
@@ -18,6 +19,7 @@ function ModifierInvite({ invite, onClose }) {
       setNom(invite.nom || '');
       setPrenom(invite.prenom || '');
       setTelephone(invite.telephone || '');
+      setEmail(invite.email || '');
       setNomTable(invite.nomTable || '');
       setStatus(invite.status || 'P');
     }
@@ -32,6 +34,7 @@ function ModifierInvite({ invite, onClose }) {
       formData.append('nom', nom);
       formData.append('prenom', prenom);
       formData.append('telephone', telephone);
+      formData.append('email', email);
       formData.append('nomTable', nomTable);
       formData.append('status', status);
       if (image) {
@@ -102,7 +105,7 @@ function ModifierInvite({ invite, onClose }) {
                 />
               </div>
             </div>
-
+          <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Téléphone</label>
               <input
@@ -113,7 +116,17 @@ function ModifierInvite({ invite, onClose }) {
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition"
               />
             </div>
-
+            <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                <input
+                  type="text"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="Email"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition"
+                />
+              </div>
+          </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Nom de la table</label>
               <input

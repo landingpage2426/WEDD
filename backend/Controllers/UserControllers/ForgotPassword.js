@@ -1,5 +1,5 @@
-import User from "../../Models/User.js";
 import bcrypt from "bcryptjs";
+import User from "../../Models/User.js";
 
 export const forgotPassword = async (req, res) => {
   const { email, password, confirmPassword } = req.body;
