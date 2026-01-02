@@ -23,7 +23,8 @@ const router = createBrowserRouter (
       <>
       <Route element={<Root />}>
         <Route path="/" element={<Accueil />} />
-        <Route path="/salle" element={<Salle />} />
+        <Route path="/salle" element={<Salle editable={false} />} />
+        <Route path="/salle/edit" element={<Salle editable={true} />} />
         <Route path="/login-page" element={<Connexion />} />
         <Route path="/register-page" element={<Inscription />} />
         <Route path="/dashboard" element={<Dashboard />} />

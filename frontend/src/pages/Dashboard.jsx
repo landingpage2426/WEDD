@@ -182,6 +182,19 @@ function Dashboard() {
               {user?.role === "admin" && (<Link to={"/admin"} className="flex items-center justify-center  w-full p-6 text-lg font-bold text-gray-700 bg-green-500 border-2 border-gray-600 rounded-lg w-25 h-12  sm:mx-6 cursor-pointer">
                 Admin
               </Link>)}
+              <Link to="/salle/edit" className="w-full flex  md:w-auto">
+                <Bouton
+                  width="w-full md:w-48"
+                  height="h-auto"
+                  bg="bg-purple-600 hover:bg-purple-700"
+                  color="text-white"
+                  fontSize="text-base"
+                  rounded="rounded-lg"
+                  shadow="shadow hover:shadow-md"
+                >
+                  Disposer la salle
+                </Bouton>
+              </Link>
               <Link to="/ajout-invite" className="w-full flex  md:w-auto">
                 <Bouton
                   width="w-full md:w-48"

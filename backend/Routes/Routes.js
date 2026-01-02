@@ -24,6 +24,9 @@ import UsersGet from "../Controllers/UserControllers/UsersGet.js";
 import UsersDelete from "../Controllers/UserControllers/UsersDelete.js";
 import UsersEdit from "../Controllers/UserControllers/UsersEdit.js";
 
+import GetRoomLayout from "../Controllers/RoomLayoutControllers/GetRoomLayout.js";
+import SaveRoomLayout from "../Controllers/RoomLayoutControllers/SaveRoomLayout.js";
+
 import authenticate from "./AuthMiddleware.js";
 import { forgotPassword } from '../Controllers/UserControllers/ForgotPassword.js';
 
@@ -64,6 +67,9 @@ router.get("/reunions", authenticate, AllReunion);
 router.put("/edit-reunion/:reunionId", authenticate, EditReunion);
 router.delete('/delete-reunion/:reunionId', authenticate, DeleteReunion);
 
+// Routes pour la disposition de la salle
+router.get("/room-layout", authenticate, GetRoomLayout);
+router.put("/room-layout", authenticate, SaveRoomLayout);
 
 // Route de déconnexion
 router.post('/logout', Logout);
