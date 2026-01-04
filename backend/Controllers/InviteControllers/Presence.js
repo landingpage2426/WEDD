@@ -30,8 +30,16 @@ const Presence = async (req, res) => {
       });
     }
 
-    // Vérification que l'invité appartient à l'utilisateur connecté
-    if (invite.userId.toString() !== req.user._id.toString()) {
+    // Vérification que l'invité appartient à l'utilisateur connecté ou au client qui a créé le staff
+    let hasAccess = false;
+    if (req.user.role === 'client') {
+      hasAccess = invite.userId.toString() === req.user._id.toString();
+    } else if (req.user.createdBy) {
+      // Pour les staff, vérifier qu'ils appartiennent au même client
+      hasAccess = invite.userId.toString() === req.user.createdBy.toString();
+    }
+    
+    if (!hasAccess) {
       return res.status(403).json({
         message: "Accès non autorisé à cet invité",
         type: "danger"

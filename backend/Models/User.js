@@ -45,6 +45,10 @@ const userSchema = new mongoose.Schema({
   // Référence au client qui a créé cet utilisateur (manager, protocole, etc.)
   createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
 
+  // Mot de passe en clair (temporaire, pour affichage dans l'administration)
+  // ⚠️ À utiliser uniquement pour l'affichage, ne jamais exposer via API publique
+  plainPassword: { type: String, default: null },
+
   // Date de création du compte
   createdAt: { type: Date, default: Date.now }
 });

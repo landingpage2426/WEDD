@@ -151,9 +151,18 @@ function Dashboard() {
             transition={{ duration: 0.3 }}
           >
             <Link to="/dashboard" onClick={() => setMenuOpen(false)} className="hover:text-blue-200 transition-colors">Dashboard</Link>
-            <Link to="/liste-reunions" onClick={() => setMenuOpen(false)} className="hover:text-blue-200 transition-colors">Réunions</Link>
-            <Link to="/ajout-invite" onClick={() => setMenuOpen(false)} className="hover:text-blue-200 transition-colors">Ajouter un invité</Link>
-            <Link to="/recherche-invite" onClick={() => setMenuOpen(false)} className="hover:text-blue-200 transition-colors">Recherche invité</Link>
+            {user?.role === 'client' || user?.role === 'chef_protocole' ? (
+              <Link to="/liste-reunions" onClick={() => setMenuOpen(false)} className="hover:text-blue-200 transition-colors">Réunions</Link>
+            ) : null}
+            {user?.role === 'client' || user?.role === 'manager' ? (
+              <Link to="/ajout-invite" onClick={() => setMenuOpen(false)} className="hover:text-blue-200 transition-colors">Ajouter un invité</Link>
+            ) : null}
+            {user?.role === 'client' || user?.role === 'manager' || user?.role === 'chef_protocole' || user?.role === 'protocole' ? (
+              <Link to="/recherche-invite" onClick={() => setMenuOpen(false)} className="hover:text-blue-200 transition-colors">Recherche invité</Link>
+            ) : null}
+            {user?.role === 'client' && (
+              <Link to="/administration" onClick={() => setMenuOpen(false)} className="hover:text-blue-200 transition-colors font-bold">Administration</Link>
+            )}
             <Link to="/profil" onClick={() => setMenuOpen(false)} className="hover:text-blue-200 transition-colors">Profil</Link>
             <button onClick={() => { setMenuOpen(false); handleLogout(); }} className="text-red-700 hover:text-red-700 text-left transition-colors">
               Déconnexion
@@ -182,32 +191,52 @@ function Dashboard() {
               {user?.role === "admin" && (<Link to={"/admin"} className="flex items-center justify-center  w-full p-6 text-lg font-bold text-gray-700 bg-green-500 border-2 border-gray-600 rounded-lg w-25 h-12  sm:mx-6 cursor-pointer">
                 Admin
               </Link>)}
-              <Link to="/salle/edit" className="w-full flex  md:w-auto">
-                <Bouton
-                  width="w-full md:w-48"
-                  height="h-auto"
-                  bg="bg-purple-600 hover:bg-purple-700"
-                  color="text-white"
-                  fontSize="text-base"
-                  rounded="rounded-lg"
-                  shadow="shadow hover:shadow-md"
-                >
-                  Disposer la salle
-                </Bouton>
-              </Link>
-              <Link to="/ajout-invite" className="w-full flex  md:w-auto">
-                <Bouton
-                  width="w-full md:w-48"
-                  height="h-auto"
-                  bg="bg-blue-600 hover:bg-blue-700"
-                  color="text-white"
-                  fontSize="text-base"
-                  rounded="rounded-lg"
-                  shadow="shadow hover:shadow-md"
-                >
-                  Ajouter un invité
-                </Bouton>
-              </Link></div>
+              {(user?.role === 'client' || user?.role === 'manager') && (
+                <Link to="/salle/edit" className="w-full flex  md:w-auto">
+                  <Bouton
+                    width="w-full md:w-48"
+                    height="h-auto"
+                    bg="bg-purple-600 hover:bg-purple-700"
+                    color="text-white"
+                    fontSize="text-base"
+                    rounded="rounded-lg"
+                    shadow="shadow hover:shadow-md"
+                  >
+                    Disposer la salle
+                  </Bouton>
+                </Link>
+              )}
+              {(user?.role === 'chef_protocole' || user?.role === 'protocole') && (
+                <Link to="/salle" className="w-full flex  md:w-auto">
+                  <Bouton
+                    width="w-full md:w-48"
+                    height="h-auto"
+                    bg="bg-purple-600 hover:bg-purple-700"
+                    color="text-white"
+                    fontSize="text-base"
+                    rounded="rounded-lg"
+                    shadow="shadow hover:shadow-md"
+                  >
+                    Voir la salle
+                  </Bouton>
+                </Link>
+              )}
+              {(user?.role === 'client' || user?.role === 'manager') && (
+                <Link to="/ajout-invite" className="w-full flex  md:w-auto">
+                  <Bouton
+                    width="w-full md:w-48"
+                    height="h-auto"
+                    bg="bg-blue-600 hover:bg-blue-700"
+                    color="text-white"
+                    fontSize="text-base"
+                    rounded="rounded-lg"
+                    shadow="shadow hover:shadow-md"
+                  >
+                    Ajouter un invité
+                  </Bouton>
+                </Link>
+              )}
+            </div>
           </section>
 
           {/* Stats Section */}
@@ -273,26 +302,29 @@ function Dashboard() {
                   setSelectedInvite(invite);
                   setShowPopupUpdateInvite(true);
                 }}
+                userRole={user?.role}
               />
             </div>
           </section>
 
           {/* Add Invite Button */}
-          <section className="text-center">
-            <Link to="/ajout-invite">
-              <Bouton
-                width="w-full md:w-48"
-                height="h-auto"
-                bg="bg-blue-600 hover:bg-blue-700"
-                color="text-white"
-                fontSize="text-base"
-                rounded="rounded-lg"
-                shadow="shadow hover:shadow-md"
-              >
-                Ajouter un invité
-              </Bouton>
-            </Link>
-          </section>
+          {(user?.role === 'client' || user?.role === 'manager') && (
+            <section className="text-center">
+              <Link to="/ajout-invite">
+                <Bouton
+                  width="w-full md:w-48"
+                  height="h-auto"
+                  bg="bg-blue-600 hover:bg-blue-700"
+                  color="text-white"
+                  fontSize="text-base"
+                  rounded="rounded-lg"
+                  shadow="shadow hover:shadow-md"
+                >
+                  Ajouter un invité
+                </Bouton>
+              </Link>
+            </section>
+          )}
         </main>
 
         {/* Right Sidebar (Desktop only) */}

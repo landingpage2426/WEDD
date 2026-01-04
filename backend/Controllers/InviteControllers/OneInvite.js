@@ -15,8 +15,16 @@ const OneInvite  = async (req, res) => {
       });
     }
 
-    // ✅ Vérification de propriété
-    if (invite.userId.toString() !== req.user._id.toString()) {
+    // ✅ Vérification de propriété ou accès via createdBy pour les staff
+    let hasAccess = false;
+    if (req.user.role === 'client') {
+      hasAccess = invite.userId.toString() === req.user._id.toString();
+    } else if (req.user.createdBy) {
+      // Pour les staff, vérifier qu'ils appartiennent au même client
+      hasAccess = invite.userId.toString() === req.user.createdBy.toString();
+    }
+    
+    if (!hasAccess) {
       return res.status(403).json({
         message: "Accès non autorisé à cet invité",
         type: "danger"

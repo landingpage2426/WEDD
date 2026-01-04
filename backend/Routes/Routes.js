@@ -23,6 +23,11 @@ import Presence from '../Controllers/InviteControllers/Presence.js';
 import UsersGet from "../Controllers/UserControllers/UsersGet.js";
 import UsersDelete from "../Controllers/UserControllers/UsersDelete.js";
 import UsersEdit from "../Controllers/UserControllers/UsersEdit.js";
+import CreateStaffUser from "../Controllers/UserControllers/CreateStaffUser.js";
+import GetStaffUsers from "../Controllers/UserControllers/GetStaffUsers.js";
+import EditStaffUser from "../Controllers/UserControllers/EditStaffUser.js";
+import DeleteStaffUser from "../Controllers/UserControllers/DeleteStaffUser.js";
+import RegeneratePassword from "../Controllers/UserControllers/RegeneratePassword.js";
 
 import GetRoomLayout from "../Controllers/RoomLayoutControllers/GetRoomLayout.js";
 import SaveRoomLayout from "../Controllers/RoomLayoutControllers/SaveRoomLayout.js";
@@ -41,6 +46,13 @@ router.post("/login", Login);
 router.get("/users",UsersGet)
 router.delete("/delete-user/:id", authenticate, UsersDelete);
 router.put("/edit-user/:id", authenticate, UsersEdit);
+
+// Routes pour la gestion des utilisateurs staff (créés par le client)
+router.post("/staff-user", authenticate, CreateStaffUser);
+router.get("/staff-users", authenticate, GetStaffUsers);
+router.put("/staff-user/:userId", authenticate, EditStaffUser);
+router.delete("/staff-user/:userId", authenticate, DeleteStaffUser);
+router.post("/staff-user/:userId/regenerate-password", authenticate, RegeneratePassword);
 
 // mot de passe oublié et réinitialisation
 router.post("/forgot-password", forgotPassword);

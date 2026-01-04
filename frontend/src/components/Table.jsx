@@ -8,7 +8,7 @@ import { handleDownload } from '../utils/HandleDownload';
 import { handleSendEmail } from '../utils/HandleSendEmail';
 import { FiMail } from 'react-icons/fi';
 
-function Table({ invites, apiUrl, onEditInvite, handleDeleteInvite }) {
+function Table({ invites, apiUrl, onEditInvite, handleDeleteInvite, userRole }) {
   const [loadingStates, setLoadingStates] = useState({});
   const [expandedRow, setExpandedRow] = useState(null);
   const toggleRowExpand = (id) => {
@@ -90,26 +90,33 @@ function Table({ invites, apiUrl, onEditInvite, handleDeleteInvite }) {
                     </td>
                     <td className="px-4 py-4 whitespace-nowrap text-right text-sm font-medium">
                       <div className="flex justify-end space-x-2">
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            onEditInvite(invite);
-                          }}
-                          className="text-blue-600 hover:text-blue-900 p-1"
-                          title="Modifier"
-                        >
-                          <FiEdit2 size={18} />
-                        </button>
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleDeleteInvite(invite._id);
-                          }}
-                          className="text-red-600 hover:text-red-900 p-1"
-                          title="Supprimer"
-                        >
-                          <FiTrash2 size={18} />
-                        </button>
+                        {(userRole === 'client' || userRole === 'manager') && (
+                          <>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                onEditInvite(invite);
+                              }}
+                              className="text-blue-600 hover:text-blue-900 p-1"
+                              title="Modifier"
+                            >
+                              <FiEdit2 size={18} />
+                            </button>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleDeleteInvite(invite._id);
+                              }}
+                              className="text-red-600 hover:text-red-900 p-1"
+                              title="Supprimer"
+                            >
+                              <FiTrash2 size={18} />
+                            </button>
+                          </>
+                        )}
+                        {(userRole === 'chef_protocole' || userRole === 'protocole') && (
+                          <span className="text-gray-400 text-xs">Lecture seule</span>
+                        )}
                       </div>
                     </td>
                   </tr>
@@ -140,46 +147,47 @@ function Table({ invites, apiUrl, onEditInvite, handleDeleteInvite }) {
                             </div>
                           </div>
                           <div className="flex flex-col justify-between">
-                            <div className="flex space-x-3">
-                              <button
-                                onClick={() => handleDownload(invite._id,invites,setLoadingStates)}
-                                disabled={loadingStates[invite._id]}
-                                className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                              >
-                                {loadingStates[invite._id] === 'pdf' ? (
-                                  <ImSpinner8 className="animate-spin mr-2" />
-                                ) : (
-                                  <FiDownload className="mr-2" />
-                                )}
-                                Télécharger PDF
-                              </button>
-                              <button
-                                onClick={() => handleWhatsAppShare(invite,apiUrl,setLoadingStates)}
-                                disabled={loadingStates[invite._id]}
-                                className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
-                              >
-                                {loadingStates[invite._id] === 'whatsapp' ? (
-                                  <ImSpinner8 className="animate-spin mr-2" />
-                                ) : (
-                                  <FaWhatsapp className="mr-2" />
-                                )}
-                                Envoyer par WhatsApp
-                              </button>
-                              
-                              <button
-                                  onClick={() => handleSendEmail(invite, apiUrl, setLoadingStates,setSendEmailMessage)}
-                                  disabled={loadingStates[invite._id] === 'email'}
-                                  className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded shadow-sm text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500"
+                            {(userRole === 'client' || userRole === 'manager') && (
+                              <div className="flex space-x-3">
+                                <button
+                                  onClick={() => handleDownload(invite._id,invites,setLoadingStates)}
+                                  disabled={loadingStates[invite._id]}
+                                  className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                                 >
-                                  {loadingStates[invite._id] === 'email' ? (
+                                  {loadingStates[invite._id] === 'pdf' ? (
                                     <ImSpinner8 className="animate-spin mr-2" />
                                   ) : (
-                                    <FiMail className="mr-2" />
+                                    <FiDownload className="mr-2" />
                                   )}
-                                  Envoyer Email
+                                  Télécharger PDF
                                 </button>
-
-                            </div>
+                                <button
+                                  onClick={() => handleWhatsAppShare(invite,apiUrl,setLoadingStates)}
+                                  disabled={loadingStates[invite._id]}
+                                  className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+                                >
+                                  {loadingStates[invite._id] === 'whatsapp' ? (
+                                    <ImSpinner8 className="animate-spin mr-2" />
+                                  ) : (
+                                    <FaWhatsapp className="mr-2" />
+                                  )}
+                                  Envoyer par WhatsApp
+                                </button>
+                                
+                                <button
+                                    onClick={() => handleSendEmail(invite, apiUrl, setLoadingStates,setSendEmailMessage)}
+                                    disabled={loadingStates[invite._id] === 'email'}
+                                    className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded shadow-sm text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500"
+                                  >
+                                    {loadingStates[invite._id] === 'email' ? (
+                                      <ImSpinner8 className="animate-spin mr-2" />
+                                    ) : (
+                                      <FiMail className="mr-2" />
+                                    )}
+                                    Envoyer Email
+                                  </button>
+                              </div>
+                            )}
                           </div>
                         </div>
                       </td>

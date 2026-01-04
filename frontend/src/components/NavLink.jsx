@@ -8,12 +8,21 @@ import { handleLogout } from '../services/HandleLogout';
 function NavLink() {
   const [activeLink, setActiveLink] = useState('dashboard');
   const [isHovered, setIsHovered] = useState(null);
+  const [userRole, setUserRole] = useState(null);
   const location = useLocation();
   const navigate = useNavigate();
+  
   // Synchronisation de l'état actif avec l'URL
   useEffect(() => {
     const path = location.pathname.split('/')[1];
     setActiveLink(path || 'dashboard');
+    
+    // Récupérer le rôle de l'utilisateur
+    const userString = localStorage.getItem('user');
+    if (userString) {
+      const user = JSON.parse(userString);
+      setUserRole(user.role);
+    }
   }, [location]);
 
   return (
@@ -29,7 +38,21 @@ function NavLink() {
 
       <div className="flex-1 flex flex-col justify-between overflow-y-auto">
         <div className="space-y-2 p-4">
-          {navItems.map((item) => (
+          {navItems
+            .filter(item => {
+              // Filtrer les éléments selon le rôle
+              if (item.id === 'liste-reunions' && !['client', 'manager', 'chef_protocole', 'protocole'].includes(userRole)) {
+                return false;
+              }
+              if (item.id === 'ajout-invite' && userRole !== 'client' && userRole !== 'manager') {
+                return false;
+              }
+              if (item.id === 'recherche-invite' && !['client', 'manager', 'chef_protocole', 'protocole'].includes(userRole)) {
+                return false;
+              }
+              return true;
+            })
+            .map((item) => (
             <motion.div
               key={item.id}
               whileHover={{ scale: 1.02 }}
@@ -67,6 +90,44 @@ function NavLink() {
               </Link>
             </motion.div>
           ))}
+          
+          {/* Lien Administration uniquement pour les clients */}
+          {userRole === 'client' && (
+            <motion.div
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              onHoverStart={() => setIsHovered('administration')}
+              onHoverEnd={() => setIsHovered(null)}
+            >
+              <Link
+                to="/administration"
+                className={`flex items-center gap-4 p-3 rounded-lg transition-all ${
+                  activeLink === 'administration' 
+                    ? 'bg-blue-50 text-blue-700 border-l-4 border-blue-500' 
+                    : 'text-gray-600 hover:bg-gray-50'
+                }`}
+              >
+                <motion.span 
+                  animate={{
+                    color: activeLink === 'administration' || isHovered === 'administration' ? '#be185d' : '#4b5563'
+                  }}
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                  </svg>
+                </motion.span>
+                <span className="font-medium">Administration</span>
+                {activeLink === 'administration' && (
+                  <motion.div 
+                    className="ml-auto w-2 h-2 bg-blue-500 rounded-full"
+                    layoutId="activeIndicator"
+                    transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+                  />
+                )}
+              </Link>
+            </motion.div>
+          )}
         </div>
 
         <div className="p-4 border-t border-gray-100 space-y-4">

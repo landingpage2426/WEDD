@@ -2,7 +2,19 @@ import RoomLayout from "../../Models/RoomLayout.js";
 
 const SaveRoomLayout = async (req, res) => {
     try {
-        const userId = req.user._id;
+        // Seuls les clients et les managers peuvent sauvegarder la disposition
+        if (req.user.role !== 'client' && req.user.role !== 'manager') {
+            return res.status(403).json({
+                message: "Accès refusé : seuls les clients et les managers peuvent modifier la disposition de la salle",
+                type: "danger"
+            });
+        }
+        
+        // Déterminer le userId : client ou client parent pour les managers
+        let userId = req.user._id;
+        if (req.user.role === 'manager' && req.user.createdBy) {
+            userId = req.user.createdBy;
+        }
         const { tables, colors } = req.body;
 
         if (!tables || !Array.isArray(tables)) {

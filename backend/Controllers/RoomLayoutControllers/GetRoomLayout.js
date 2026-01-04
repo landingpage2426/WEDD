@@ -2,7 +2,11 @@ import RoomLayout from "../../Models/RoomLayout.js";
 
 const GetRoomLayout = async (req, res) => {
     try {
-        const userId = req.user._id;
+        // Déterminer le userId : client ou client parent pour les staff
+        let userId = req.user._id;
+        if (req.user.role !== 'client' && req.user.createdBy) {
+            userId = req.user.createdBy;
+        }
 
         // Chercher la disposition de l'utilisateur
         let roomLayout = await RoomLayout.findOne({ userId });

@@ -52,7 +52,24 @@ export default function Salle({
     return !!token;
   };
 
-  const [isEditing, setIsEditing] = useState(editable || (isAuthenticated() && window.location.pathname === '/salle/edit'));
+  // Vérifier le rôle de l'utilisateur pour déterminer s'il peut éditer
+  const canEdit = () => {
+    const userString = localStorage.getItem('user');
+    if (!userString) return false;
+    const user = JSON.parse(userString);
+    // Seuls les clients et les managers peuvent éditer
+    return user.role === 'client' || user.role === 'manager';
+  };
+
+  // Initialiser isEditing en fonction de editable et du chemin
+  const initializeEditing = () => {
+    if (!canEdit()) return false;
+    if (editable) return true;
+    if (typeof window !== 'undefined' && window.location.pathname === '/salle/edit') return true;
+    return false;
+  };
+
+  const [isEditing, setIsEditing] = useState(initializeEditing());
   const [tablesData, setTablesData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -279,6 +296,18 @@ export default function Salle({
   useEffect(() => {
     loadRoomLayout();
   }, []);
+
+  // Mettre à jour isEditing si le chemin change ou si editable change
+  useEffect(() => {
+    if (canEdit()) {
+      const shouldBeEditing = editable || (typeof window !== 'undefined' && window.location.pathname === '/salle/edit');
+      if (isEditing !== shouldBeEditing) {
+        setIsEditing(shouldBeEditing);
+      }
+    } else {
+      setIsEditing(false);
+    }
+  }, [editable]);
 
   // Gérer le resize pour le responsive
   useEffect(() => {
@@ -1003,21 +1032,23 @@ export default function Salle({
             </button>
           </>
         )}
-        <button
-          onClick={handleToggleEdit}
-          style={{
-            padding: isMobile ? "8px 12px" : "10px 20px",
-            fontSize: isMobile ? "12px" : "14px",
-            backgroundColor: isEditing ? "#ff6b6b" : "#4CAF50",
-            color: "white",
-            border: "none",
-            borderRadius: "5px",
-            cursor: "pointer",
-            whiteSpace: "nowrap",
-          }}
-        >
-          {isEditing ? (isMobile ? "✕" : "Arrêter l'édition") : (isMobile ? "✏️" : "Éditer la salle")}
-        </button>
+        {canEdit() && (
+          <button
+            onClick={handleToggleEdit}
+            style={{
+              padding: isMobile ? "8px 12px" : "10px 20px",
+              fontSize: isMobile ? "12px" : "14px",
+              backgroundColor: isEditing ? "#ff6b6b" : "#4CAF50",
+              color: "white",
+              border: "none",
+              borderRadius: "5px",
+              cursor: "pointer",
+              whiteSpace: "nowrap",
+            }}
+          >
+            {isEditing ? (isMobile ? "✕" : "Arrêter l'édition") : (isMobile ? "✏️" : "Éditer la salle")}
+          </button>
+        )}
         {isEditing && (
           <button
             onClick={() => setShowColorPicker(!showColorPicker)}
