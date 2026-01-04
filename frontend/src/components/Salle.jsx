@@ -3,10 +3,6 @@ import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
-import couple1 from '../assets/img/stephane_illana1.png';
-import couple2 from '../assets/img/stephane_illana2.png';
-import couple3 from '../assets/img/stephane_illana3.png';
-import couple4 from '../assets/img/stephane_illana4.png';
 import { planTables } from "../utils/PlanTables";
 
 // Fonction pour créer une étiquette de texte en 3D
@@ -64,6 +60,14 @@ export default function Salle({
   const [showTableForm, setShowTableForm] = useState(false);
   const [editingTable, setEditingTable] = useState(null);
   const [tableFormData, setTableFormData] = useState({ nom: "", nbChaises: 10 });
+  const [showEditInstructions, setShowEditInstructions] = useState(false);
+  const [showColorPicker, setShowColorPicker] = useState(false);
+  const [colors, setColors] = useState({
+    floor: '#e8e8e8',
+    table: '#FFA500',
+    chair: '#405433'
+  });
+  const floorRef = useRef(null);
   
   // Détection de la taille d'écran pour le responsive (doit être avant tout return conditionnel)
   const [windowSize, setWindowSize] = useState({
@@ -94,6 +98,16 @@ export default function Salle({
       if (response.data.layout && response.data.layout.tables) {
         const tables = response.data.layout.tables.map(t => ({ ...t, nbChaises: t.nbChaises || 10 }));
         setTablesData(tables);
+        
+        // Charger les couleurs personnalisées si elles existent
+        if (response.data.layout.colors) {
+          setColors({
+            floor: response.data.layout.colors.floor || '#e8e8e8',
+            table: response.data.layout.colors.table || '#FFA500',
+            chair: response.data.layout.colors.chair || '#405433'
+          });
+        }
+        
         return tables;
       }
       const defaultTables = planTables.map(t => ({ ...t, nbChaises: t.nbChaises || 10 }));
@@ -110,7 +124,7 @@ export default function Salle({
   };
 
   // Fonction pour sauvegarder la disposition
-  const saveRoomLayout = async (tables, showMessage = true) => {
+  const saveRoomLayout = async (tables, customColors = null, showMessage = true) => {
     try {
       setSaving(true);
       const token = localStorage.getItem('token');
@@ -122,9 +136,15 @@ export default function Salle({
         return;
       }
 
+      // Toujours inclure les couleurs (soit celles passées en paramètre, soit celles de l'état actuel)
+      const payload = { 
+        tables,
+        colors: customColors || colors
+      };
+
       const response = await axios.put(
         `${apiUrl}/api/room-layout`,
-        { tables },
+        payload,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -150,14 +170,20 @@ export default function Salle({
     }
   };
 
+  // Fonction pour convertir une couleur hex en nombre
+  const hexToNumber = (hex) => {
+    return parseInt(hex.replace('#', ''), 16);
+  };
+
   // Fonction pour créer une table dans la scène
   const createTableInScene = useCallback((scene, group, { nom, x, z, rotation = 0, nbChaises = 10 }) => {
     const tableGroup = new THREE.Group();
     
+    const tableColor = isEditing && selectedTableRef.current === nom ? 0x00ff00 : hexToNumber(colors.table);
     const table = new THREE.Mesh(
       new THREE.CylinderGeometry(1.5, 1.5, 1, 32),
       new THREE.MeshPhongMaterial({ 
-        color: isEditing && selectedTableRef.current === nom ? 0x00ff00 : 0xFFA500 
+        color: tableColor
       })
     );
     table.position.set(0, 0.5, 0);
@@ -172,13 +198,14 @@ export default function Salle({
 
     const radius = 1.8;
     const chairs = [];
+    const chairColor = hexToNumber(colors.chair);
     for (let i = 0; i < nbChaises; i++) {
       const angle = (i / nbChaises) * Math.PI * 2;
       const cx = Math.cos(angle) * radius;
       const cz = Math.sin(angle) * radius;
       const chair = new THREE.Mesh(
         new THREE.BoxGeometry(0.5, 1, 0.5),
-        new THREE.MeshPhongMaterial({ color: 0x405433 })
+        new THREE.MeshPhongMaterial({ color: chairColor })
       );
       chair.position.set(cx, 0.5, cz);
       tableGroup.add(chair);
@@ -193,7 +220,7 @@ export default function Salle({
     group.add(tableGroup);
     
     return tableGroup;
-  }, [isEditing]);
+  }, [isEditing, colors]);
 
   // Fonction pour mettre à jour le nombre de chaises d'une table
   const updateTableChairs = useCallback((tableGroup, newNbChaises) => {
@@ -210,13 +237,14 @@ export default function Salle({
     // Créer les nouvelles chaises
     const radius = 1.8;
     const chairs = [];
+    const chairColor = hexToNumber(colors.chair);
     for (let i = 0; i < newNbChaises; i++) {
       const angle = (i / newNbChaises) * Math.PI * 2;
       const cx = Math.cos(angle) * radius;
       const cz = Math.sin(angle) * radius;
       const chair = new THREE.Mesh(
         new THREE.BoxGeometry(0.5, 1, 0.5),
-        new THREE.MeshPhongMaterial({ color: 0x405433 })
+        new THREE.MeshPhongMaterial({ color: chairColor })
       );
       chair.position.set(cx, 0.5, cz);
       tableGroup.add(chair);
@@ -224,7 +252,7 @@ export default function Salle({
     }
     chairRefsRef.current[nom] = chairs;
     tableGroup.userData.nbChaises = newNbChaises;
-  }, []);
+  }, [colors]);
 
   // Fonction pour obtenir les positions actuelles des tables
   const getCurrentTablePositions = useCallback(() => {
@@ -264,6 +292,43 @@ export default function Salle({
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
+  // Fonction pour mettre à jour les couleurs dans la scène
+  const updateColorsInScene = useCallback(() => {
+    // Mettre à jour le fond de la scène
+    if (sceneRef.current) {
+      sceneRef.current.background = new THREE.Color(colors.floor || '#f5f5f5');
+    }
+
+    // Mettre à jour le sol
+    if (floorRef.current) {
+      floorRef.current.material.color.set(hexToNumber(colors.floor));
+    }
+
+    // Mettre à jour toutes les tables
+    Object.keys(tableRefs.current).forEach(nom => {
+      const table = tableRefs.current[nom];
+      if (table && selectedTableRef.current !== nom) {
+        table.material.color.set(hexToNumber(colors.table));
+      }
+    });
+
+    // Mettre à jour toutes les chaises
+    Object.keys(chairRefsRef.current).forEach(nom => {
+      const chairs = chairRefsRef.current[nom] || [];
+      const chairColor = hexToNumber(colors.chair);
+      chairs.forEach(chair => {
+        chair.material.color.set(chairColor);
+      });
+    });
+  }, [colors]);
+
+  // Mettre à jour les couleurs quand elles changent
+  useEffect(() => {
+    if (sceneInitializedRef.current) {
+      updateColorsInScene();
+    }
+  }, [colors, updateColorsInScene]);
+
   // Initialiser la scène une seule fois
   useEffect(() => {
     if (loading || tablesData.length === 0 || sceneInitializedRef.current) return;
@@ -283,7 +348,7 @@ export default function Salle({
         : Math.min(window.innerHeight * 0.8, 800);
 
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0xd06c38);
+    scene.background = new THREE.Color(colors.floor || '#f5f5f5');
     sceneRef.current = scene;
 
     const camera = new THREE.PerspectiveCamera(60, width / height, 0.1, 1000);
@@ -294,38 +359,19 @@ export default function Salle({
     scene.add(new THREE.AmbientLight(0xffffff, 0.9));
     scene.add(new THREE.DirectionalLight(0xffffff, 0.4));
 
-    const textureLoader = new THREE.TextureLoader();
-    const floorTextures = [
-      textureLoader.load(couple1),
-      textureLoader.load(couple2),
-      textureLoader.load(couple3),
-      textureLoader.load(couple4),
-    ];
-
-    const sectionSize = 25;
-    const sections = [
-      { x: -12.5, z: -12.5 },
-      { x: 12.5, z: -12.5 },
-      { x: -12.5, z: 12.5 },
-      { x: 12.5, z: 12.5 },
-    ];
-
-    sections.forEach((section, index) => {
-      const texture = floorTextures[index];
-      texture.wrapS = THREE.RepeatWrapping;
-      texture.wrapT = THREE.RepeatWrapping;
-      texture.repeat.set(2, 2);
-
-      const floorGeometry = new THREE.PlaneGeometry(sectionSize, sectionSize);
-      const floorMaterial = new THREE.MeshStandardMaterial({
-        map: texture,
-        side: THREE.DoubleSide,
-      });
-      const floor = new THREE.Mesh(floorGeometry, floorMaterial);
-      floor.rotation.x = -Math.PI / 2;
-      floor.position.set(section.x, 0, section.z);
-      scene.add(floor);
+    // Sol simple avec une couleur unie
+    const floorSize = 50;
+    const floorGeometry = new THREE.PlaneGeometry(floorSize, floorSize);
+    const floorColor = hexToNumber(colors.floor);
+    const floorMaterial = new THREE.MeshStandardMaterial({
+      color: floorColor,
+      side: THREE.DoubleSide,
     });
+    const floor = new THREE.Mesh(floorGeometry, floorMaterial);
+    floor.rotation.x = -Math.PI / 2;
+    floor.position.set(0, 0, 0);
+    scene.add(floor);
+    floorRef.current = floor;
 
     const group = new THREE.Group();
     group.name = "tablesGroup";
@@ -385,13 +431,33 @@ export default function Salle({
 
     // Le clignotement sera géré dans la boucle d'animation
 
-    // Gestion du drag & drop en mode édition
-    const onMouseDown = (event) => {
-      if (!isEditing) return;
-
+    // Fonction utilitaire pour obtenir les coordonnées depuis un événement (souris ou tactile)
+    const getEventCoordinates = (event) => {
+      let clientX, clientY;
+      
+      if (event.touches && event.touches.length > 0) {
+        // Événement tactile
+        clientX = event.touches[0].clientX;
+        clientY = event.touches[0].clientY;
+      } else {
+        // Événement souris
+        clientX = event.clientX;
+        clientY = event.clientY;
+      }
+      
       const rect = renderer.domElement.getBoundingClientRect();
-      mouseRef.current.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
-      mouseRef.current.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+      return {
+        x: ((clientX - rect.left) / rect.width) * 2 - 1,
+        y: -((clientY - rect.top) / rect.height) * 2 + 1
+      };
+    };
+
+    // Fonction pour démarrer le drag
+    const startDrag = (coords) => {
+      if (!isEditing) return false;
+
+      mouseRef.current.x = coords.x;
+      mouseRef.current.y = coords.y;
 
       raycasterRef.current.setFromCamera(mouseRef.current, camera);
       
@@ -418,23 +484,18 @@ export default function Salle({
           if (table) {
             table.material.color.set(0x00ff00);
           }
+          return true;
         }
       }
+      return false;
     };
 
-    // Throttle pour améliorer les performances
-    let lastMoveTime = 0;
-    const onMouseMove = (event) => {
+    // Fonction pour mettre à jour le drag
+    const updateDrag = (coords) => {
       if (!isEditing || !isDraggingRef.current || !selectedTableRef.current) return;
 
-      // Throttle à 60fps max
-      const now = performance.now();
-      if (now - lastMoveTime < 16) return;
-      lastMoveTime = now;
-
-      const rect = renderer.domElement.getBoundingClientRect();
-      mouseRef.current.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
-      mouseRef.current.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+      mouseRef.current.x = coords.x;
+      mouseRef.current.y = coords.y;
 
       raycasterRef.current.setFromCamera(mouseRef.current, camera);
       
@@ -451,13 +512,14 @@ export default function Salle({
       }
     };
 
-    const onMouseUp = () => {
+    // Fonction pour terminer le drag
+    const endDrag = () => {
       if (!isEditing) return;
 
       if (isDraggingRef.current && selectedTableRef.current) {
         const table = tableRefs.current[selectedTableRef.current];
         if (table) {
-          table.material.color.set(0xFFA500);
+          table.material.color.set(hexToNumber(colors.table));
         }
         isDraggingRef.current = false;
         selectedTableRef.current = null;
@@ -465,14 +527,96 @@ export default function Salle({
       }
     };
 
-    // Double-clic pour éditer une table
-    const onDoubleClick = (event) => {
+    // Gestion du drag & drop en mode édition - Événements souris
+    const onMouseDown = (event) => {
+      const coords = getEventCoordinates(event);
+      startDrag(coords);
+    };
+
+    // Throttle pour améliorer les performances
+    let lastMoveTime = 0;
+    const onMouseMove = (event) => {
+      // Throttle à 60fps max
+      const now = performance.now();
+      if (now - lastMoveTime < 16) return;
+      lastMoveTime = now;
+
+      const coords = getEventCoordinates(event);
+      updateDrag(coords);
+    };
+
+    const onMouseUp = () => {
+      endDrag();
+    };
+
+    // Gestion du double-tap pour mobile
+    let lastTapTime = 0;
+    let lastTapCoords = null;
+    const DOUBLE_TAP_DELAY = 300; // ms
+    const DOUBLE_TAP_DISTANCE = 50; // pixels
+
+    // Gestion du drag & drop en mode édition - Événements tactiles
+    const onTouchStart = (event) => {
+      const coords = getEventCoordinates(event);
+      const touch = event.touches[0];
+      const currentTime = Date.now();
+      const tapLength = currentTime - lastTapTime;
+      
+      // Détecter le double-tap
+      if (lastTapCoords && 
+          tapLength < DOUBLE_TAP_DELAY &&
+          Math.abs(touch.clientX - lastTapCoords.x) < DOUBLE_TAP_DISTANCE &&
+          Math.abs(touch.clientY - lastTapCoords.y) < DOUBLE_TAP_DISTANCE) {
+        // Double-tap détecté - éditer la table
+        event.preventDefault();
+        editTableAtCoordinates(coords);
+        lastTapTime = 0;
+        lastTapCoords = null;
+        return;
+      }
+      
+      // Enregistrer le tap pour la détection du double-tap
+      lastTapTime = currentTime;
+      lastTapCoords = { x: touch.clientX, y: touch.clientY };
+      
+      // Essayer de démarrer le drag
+      if (startDrag(coords)) {
+        event.preventDefault(); // Empêcher le scroll si on drag une table
+        event.stopPropagation();
+      }
+    };
+
+    const onTouchMove = (event) => {
+      if (!isDraggingRef.current) return;
+      
+      event.preventDefault(); // Empêcher le scroll pendant le drag
+      
+      // Throttle à 60fps max
+      const now = performance.now();
+      if (now - lastMoveTime < 16) return;
+      lastMoveTime = now;
+
+      const coords = getEventCoordinates(event);
+      updateDrag(coords);
+      
+      // Annuler le double-tap si on bouge
+      lastTapTime = 0;
+      lastTapCoords = null;
+    };
+
+    const onTouchEnd = (event) => {
+      if (isDraggingRef.current) {
+        event.preventDefault();
+      }
+      endDrag();
+    };
+
+    // Fonction pour éditer une table à partir de coordonnées
+    const editTableAtCoordinates = (coords) => {
       if (!isEditing) return;
 
-      event.preventDefault();
-      const rect = renderer.domElement.getBoundingClientRect();
-      mouseRef.current.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
-      mouseRef.current.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+      mouseRef.current.x = coords.x;
+      mouseRef.current.y = coords.y;
 
       raycasterRef.current.setFromCamera(mouseRef.current, camera);
       
@@ -502,11 +646,24 @@ export default function Salle({
       }
     };
 
+    // Double-clic pour éditer une table
+    const onDoubleClick = (event) => {
+      event.preventDefault();
+      const coords = getEventCoordinates(event);
+      editTableAtCoordinates(coords);
+    };
+
     if (isEditing) {
+      // Événements souris
       renderer.domElement.addEventListener('mousedown', onMouseDown);
       renderer.domElement.addEventListener('mousemove', onMouseMove);
       renderer.domElement.addEventListener('mouseup', onMouseUp);
       renderer.domElement.addEventListener('dblclick', onDoubleClick);
+      
+      // Événements tactiles pour mobile
+      renderer.domElement.addEventListener('touchstart', onTouchStart, { passive: false });
+      renderer.domElement.addEventListener('touchmove', onTouchMove, { passive: false });
+      renderer.domElement.addEventListener('touchend', onTouchEnd, { passive: false });
     }
 
     // Gérer le clignotement dynamiquement
@@ -552,17 +709,8 @@ export default function Salle({
         if (blinkScale < 0.9) blinkDirection = 1;
         blinkTarget.scale.set(blinkScale, blinkScale, blinkScale);
 
-        // Arrêter après 5 secondes
-        if (blinkFrame > 300) {
-          blinkTarget.material.color.setHex(blinkOrigColor);
-          blinkTarget.scale.set(1, 1, 1);
-          blinking = false;
-          blinkTarget = null;
-          blinkOrigColor = null;
-          blinkFrame = 0;
-          blinkScale = 1;
-          onClignotementFini();
-        }
+        // Le clignotement continue indéfiniment jusqu'à ce qu'on quitte la page
+        // (le clignotement s'arrête uniquement si clignoter devient false ou si on quitte la page)
       }
 
       controls.update();
@@ -601,6 +749,9 @@ export default function Salle({
         renderer.domElement.removeEventListener('mousemove', onMouseMove);
         renderer.domElement.removeEventListener('mouseup', onMouseUp);
         renderer.domElement.removeEventListener('dblclick', onDoubleClick);
+        renderer.domElement.removeEventListener('touchstart', onTouchStart);
+        renderer.domElement.removeEventListener('touchmove', onTouchMove);
+        renderer.domElement.removeEventListener('touchend', onTouchEnd);
       }
       cancelAnimationFrame(frameId);
       renderer.dispose();
@@ -613,7 +764,7 @@ export default function Salle({
 
   const handleSave = async () => {
     const currentPositions = getCurrentTablePositions();
-    await saveRoomLayout(currentPositions);
+    await saveRoomLayout(currentPositions, colors);
     setTablesData(currentPositions);
   };
 
@@ -656,7 +807,7 @@ export default function Salle({
       // Mettre à jour les données
       const newTables = tablesData.filter(t => t.nom !== tableName);
       setTablesData(newTables);
-      await saveRoomLayout(newTables);
+      await saveRoomLayout(newTables, colors);
     }
   };
 
@@ -716,7 +867,7 @@ export default function Salle({
           const newTables = tablesData.filter(t => t.nom !== editingTable);
           newTables.push(newTable);
           setTablesData(newTables);
-          await saveRoomLayout(newTables);
+          await saveRoomLayout(newTables, colors);
         } else {
           // Juste mettre à jour le nombre de chaises
           updateTableChairs(tableGroup, tableFormData.nbChaises);
@@ -726,7 +877,7 @@ export default function Salle({
               : t
           );
           setTablesData(updatedTables);
-          await saveRoomLayout(updatedTables);
+          await saveRoomLayout(updatedTables, colors);
         }
       }
     } else {
@@ -747,7 +898,7 @@ export default function Salle({
       // Mettre à jour les données
       const newTables = [...tablesData, newTable];
       setTablesData(newTables);
-      await saveRoomLayout(newTables);
+      await saveRoomLayout(newTables, colors);
     }
     
     setShowTableForm(false);
@@ -867,6 +1018,23 @@ export default function Salle({
         >
           {isEditing ? (isMobile ? "✕" : "Arrêter l'édition") : (isMobile ? "✏️" : "Éditer la salle")}
         </button>
+        {isEditing && (
+          <button
+            onClick={() => setShowColorPicker(!showColorPicker)}
+            style={{
+              padding: isMobile ? "8px 12px" : "10px 20px",
+              fontSize: isMobile ? "12px" : "14px",
+              backgroundColor: showColorPicker ? "#9C27B0" : "#9C27B0",
+              color: "white",
+              border: "none",
+              borderRadius: "5px",
+              cursor: "pointer",
+              whiteSpace: "nowrap",
+            }}
+          >
+            {isMobile ? "🎨" : "🎨 Couleurs"}
+          </button>
+        )}
       </div>
       {message && (
         <div style={{
@@ -885,6 +1053,38 @@ export default function Salle({
           textAlign: "center",
         }}>
           {message}
+        </div>
+      )}
+      {/* Bouton pour afficher les instructions du mode édition */}
+      {isEditing && (
+        <div style={{
+          position: "absolute",
+          top: isMobile ? "50px" : "60px",
+          left: "50%",
+          transform: "translateX(-50%)",
+          zIndex: 1000,
+        }}>
+          <button
+            onClick={() => setShowEditInstructions(!showEditInstructions)}
+            style={{
+              padding: isMobile ? "10px 18px" : "12px 24px",
+              fontSize: isMobile ? "13px" : "14px",
+              backgroundColor: showEditInstructions ? "#4CAF50" : "#2196F3",
+              color: "white",
+              border: "none",
+              borderRadius: "25px",
+              fontWeight: "bold",
+              cursor: "pointer",
+              boxShadow: "0 2px 8px rgba(0,0,0,0.3)",
+              display: "flex",
+              alignItems: "center",
+              gap: "8px",
+              transition: "all 0.3s ease",
+            }}
+          >
+            <span>{showEditInstructions ? "✕" : "📝"}</span>
+            <span>{showEditInstructions ? "Fermer" : "Cliquez ici pour le mode d'édition"}</span>
+          </button>
         </div>
       )}
       {/* Statistiques de la salle */}
@@ -915,23 +1115,197 @@ export default function Salle({
         </div>
       </div>
 
-      {isEditing && !isMobile && (
+      {/* Panneau de sélection de couleurs */}
+      {isEditing && showColorPicker && (
         <div style={{
           position: "absolute",
-          top: isTablet ? "100px" : "120px",
-          right: isTablet ? "10px" : "20px",
-          padding: isTablet ? "8px 15px" : "10px 20px",
-          backgroundColor: "rgba(0,0,0,0.7)",
-          color: "white",
-          borderRadius: "5px",
-          zIndex: 1000,
-          fontSize: isTablet ? "12px" : "14px",
-          maxWidth: isTablet ? "250px" : "300px",
+          top: isMobile ? "100px" : "120px",
+          right: isMobile ? "10px" : "20px",
+          padding: isMobile ? "15px" : "20px",
+          backgroundColor: "white",
+          borderRadius: "12px",
+          boxShadow: "0 4px 20px rgba(0,0,0,0.3)",
+          zIndex: 2000,
+          minWidth: isMobile ? "200px" : "250px",
+          maxWidth: isMobile ? "calc(100% - 20px)" : "300px",
         }}>
-          <p><strong>Mode édition :</strong></p>
-          <p>• Cliquez et glissez pour déplacer</p>
-          <p>• Double-cliquez pour modifier</p>
-          <p>• Utilisez les boutons pour ajouter/supprimer</p>
+          <h3 style={{ 
+            margin: "0 0 15px 0", 
+            fontSize: isMobile ? "16px" : "18px",
+            color: "#333"
+          }}>
+            🎨 Personnaliser les couleurs
+          </h3>
+          
+          <div style={{ marginBottom: "15px" }}>
+            <label style={{ 
+              display: "block", 
+              marginBottom: "8px", 
+              fontWeight: "bold",
+              fontSize: isMobile ? "13px" : "14px",
+              color: "#555"
+            }}>
+              Couleur du sol :
+            </label>
+            <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+              <input
+                type="color"
+                value={colors.floor}
+                onChange={(e) => setColors({ ...colors, floor: e.target.value })}
+                style={{
+                  width: isMobile ? "50px" : "60px",
+                  height: isMobile ? "40px" : "45px",
+                  border: "2px solid #ddd",
+                  borderRadius: "5px",
+                  cursor: "pointer",
+                }}
+              />
+              <span style={{ fontSize: isMobile ? "12px" : "13px", color: "#666" }}>
+                {colors.floor}
+              </span>
+            </div>
+          </div>
+
+          <div style={{ marginBottom: "15px" }}>
+            <label style={{ 
+              display: "block", 
+              marginBottom: "8px", 
+              fontWeight: "bold",
+              fontSize: isMobile ? "13px" : "14px",
+              color: "#555"
+            }}>
+              Couleur des tables :
+            </label>
+            <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+              <input
+                type="color"
+                value={colors.table}
+                onChange={(e) => setColors({ ...colors, table: e.target.value })}
+                style={{
+                  width: isMobile ? "50px" : "60px",
+                  height: isMobile ? "40px" : "45px",
+                  border: "2px solid #ddd",
+                  borderRadius: "5px",
+                  cursor: "pointer",
+                }}
+              />
+              <span style={{ fontSize: isMobile ? "12px" : "13px", color: "#666" }}>
+                {colors.table}
+              </span>
+            </div>
+          </div>
+
+          <div style={{ marginBottom: "20px" }}>
+            <label style={{ 
+              display: "block", 
+              marginBottom: "8px", 
+              fontWeight: "bold",
+              fontSize: isMobile ? "13px" : "14px",
+              color: "#555"
+            }}>
+              Couleur des chaises :
+            </label>
+            <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+              <input
+                type="color"
+                value={colors.chair}
+                onChange={(e) => setColors({ ...colors, chair: e.target.value })}
+                style={{
+                  width: isMobile ? "50px" : "60px",
+                  height: isMobile ? "40px" : "45px",
+                  border: "2px solid #ddd",
+                  borderRadius: "5px",
+                  cursor: "pointer",
+                }}
+              />
+              <span style={{ fontSize: isMobile ? "12px" : "13px", color: "#666" }}>
+                {colors.chair}
+              </span>
+            </div>
+          </div>
+
+          <button
+            onClick={async () => {
+              const currentPositions = getCurrentTablePositions();
+              await saveRoomLayout(currentPositions, colors);
+              setTablesData(currentPositions);
+              setMessage("Couleurs sauvegardées avec succès !");
+              setTimeout(() => setMessage(""), 3000);
+            }}
+            style={{
+              width: "100%",
+              padding: isMobile ? "10px" : "12px",
+              fontSize: isMobile ? "13px" : "14px",
+              backgroundColor: "#4CAF50",
+              color: "white",
+              border: "none",
+              borderRadius: "5px",
+              cursor: "pointer",
+              fontWeight: "bold",
+            }}
+          >
+            💾 Sauvegarder les couleurs
+          </button>
+        </div>
+      )}
+
+      {/* Panneau d'instructions du mode édition */}
+      {isEditing && showEditInstructions && (
+        <div style={{
+          position: "absolute",
+          top: isMobile ? "100px" : "120px",
+          left: "50%",
+          transform: "translateX(-50%)",
+          padding: isMobile ? "15px 18px" : isTablet ? "18px 22px" : "20px 25px",
+          backgroundColor: "rgba(0,0,0,0.9)",
+          color: "white",
+          borderRadius: "12px",
+          zIndex: 1000,
+          fontSize: isMobile ? "12px" : isTablet ? "13px" : "14px",
+          maxWidth: isMobile ? "calc(100% - 40px)" : isTablet ? "320px" : "360px",
+          boxShadow: "0 4px 20px rgba(0,0,0,0.5)",
+          lineHeight: "1.8",
+        }}>
+          <p style={{ 
+            margin: "0 0 12px 0", 
+            fontWeight: "bold",
+            fontSize: isMobile ? "15px" : isTablet ? "16px" : "18px",
+            color: "#4CAF50",
+            textAlign: "center"
+          }}>
+            📝 Mode édition - Instructions
+          </p>
+          {isMobile ? (
+            <>
+              <p style={{ margin: "8px 0", display: "flex", alignItems: "flex-start", gap: "8px" }}>
+                <span>👆</span>
+                <span><strong>Touchez et maintenez</strong> une table pour la déplacer</span>
+              </p>
+              <p style={{ margin: "8px 0", display: "flex", alignItems: "flex-start", gap: "8px" }}>
+                <span>👆👆</span>
+                <span><strong>Double-tapez</strong> sur une table pour la modifier</span>
+              </p>
+              <p style={{ margin: "8px 0", display: "flex", alignItems: "flex-start", gap: "8px" }}>
+                <span>➕</span>
+                <span>Utilisez les <strong>boutons en haut</strong> pour ajouter ou supprimer des tables</span>
+              </p>
+            </>
+          ) : (
+            <>
+              <p style={{ margin: "8px 0", display: "flex", alignItems: "flex-start", gap: "8px" }}>
+                <span>🖱️</span>
+                <span><strong>Cliquez et glissez</strong> une table pour la déplacer</span>
+              </p>
+              <p style={{ margin: "8px 0", display: "flex", alignItems: "flex-start", gap: "8px" }}>
+                <span>🖱️🖱️</span>
+                <span><strong>Double-cliquez</strong> sur une table pour la modifier</span>
+              </p>
+              <p style={{ margin: "8px 0", display: "flex", alignItems: "flex-start", gap: "8px" }}>
+                <span>➕</span>
+                <span>Utilisez les <strong>boutons en haut</strong> pour ajouter ou supprimer des tables</span>
+              </p>
+            </>
+          )}
         </div>
       )}
       

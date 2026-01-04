@@ -17,6 +17,11 @@ const roomLayoutSchema = new mongoose.Schema({
         h: { type: Number },
         nbChaises: { type: Number, default: 10 }
     }],
+    colors: {
+        floor: { type: String, default: '#e8e8e8' },
+        table: { type: String, default: '#FFA500' },
+        chair: { type: String, default: '#405433' }
+    },
     updatedAt: { 
         type: Date, 
         default: Date.now 

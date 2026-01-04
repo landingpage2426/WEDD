@@ -1,4 +1,5 @@
 import Invite from "../../Models/Invite.js";
+import User from "../../Models/User.js";
 
 
 const OneInvite  = async (req, res) => {
@@ -22,10 +23,17 @@ const OneInvite  = async (req, res) => {
       });
     }
 
+    // Récupérer la date du mariage de l'utilisateur
+    const user = await User.findById(req.user._id);
+    const dateMariage = user?.dateMariage || null;
+    const isDatePassed = dateMariage ? new Date(dateMariage) < new Date() : false;
+
     res.status(200).json({
       message: 'Invité récupéré avec succès',
       type: 'success',
-      invite
+      invite,
+      dateMariage: dateMariage,
+      isDatePassed: isDatePassed
     });
   } catch (err) {
     console.error("Erreur lors de la récupération de l'invité :", err);

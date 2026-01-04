@@ -3,7 +3,7 @@ import RoomLayout from "../../Models/RoomLayout.js";
 const SaveRoomLayout = async (req, res) => {
     try {
         const userId = req.user._id;
-        const { tables } = req.body;
+        const { tables, colors } = req.body;
 
         if (!tables || !Array.isArray(tables)) {
             return res.status(400).json({
@@ -28,6 +28,10 @@ const SaveRoomLayout = async (req, res) => {
         if (roomLayout) {
             // Mettre à jour la disposition existante
             roomLayout.tables = tables;
+            // Toujours mettre à jour les couleurs si elles sont fournies, sinon conserver les existantes
+            if (colors) {
+                roomLayout.colors = colors;
+            }
             roomLayout.updatedAt = new Date();
             await roomLayout.save();
         } else {
@@ -35,6 +39,11 @@ const SaveRoomLayout = async (req, res) => {
             roomLayout = new RoomLayout({
                 userId,
                 tables,
+                colors: colors || {
+                    floor: '#e8e8e8',
+                    table: '#FFA500',
+                    chair: '#405433'
+                },
                 updatedAt: new Date()
             });
             await roomLayout.save();

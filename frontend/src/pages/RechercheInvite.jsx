@@ -76,6 +76,25 @@ const handleSubmit = async (e) => {
 
   try {
     const token = localStorage.getItem("token");
+    
+    // Vérifier d'abord si le billet est valide
+    const getInviteResponse = await axios.get(`${apiUrl}/api/invites/${found.inviteId}`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      withCredentials: true,
+    });
+
+    const isDatePassed = getInviteResponse.data.isDatePassed || false;
+    if (isDatePassed) {
+      setError({ 
+        text: "⛔ Ce billet n'est plus valide. La date du mariage est déjà passée.", 
+        color: "red" 
+      });
+      return;
+    }
+
     const response = await axios.post(
       `${apiUrl}/api/invites/${found.inviteId}/presence`,
       {},
@@ -88,7 +107,15 @@ const handleSubmit = async (e) => {
       }
     );
 
-    const { dejaPresent, message, invite } = response.data;
+    const { dejaPresent, message, invite, isDatePassed: datePassedInResponse } = response.data;
+
+    if (datePassedInResponse) {
+      setError({ 
+        text: "⛔ Ce billet n'est plus valide. La date du mariage est déjà passée.", 
+        color: "red" 
+      });
+      return;
+    }
 
     navigate(`/invites/${found.inviteId}`, {
       state: {
@@ -99,7 +126,14 @@ const handleSubmit = async (e) => {
     });
   } catch (err) {
     console.error("Erreur présence :", err);
-    setError({ text: "Erreur lors de l'enregistrement de la présence.", color: "red" });
+    if (err.response?.data?.isDatePassed) {
+      setError({ 
+        text: "⛔ Ce billet n'est plus valide. La date du mariage est déjà passée.", 
+        color: "red" 
+      });
+    } else {
+      setError({ text: "Erreur lors de l'enregistrement de la présence.", color: "red" });
+    }
   }
 };
 
@@ -134,6 +168,16 @@ const startScanner = () => {
             });
 
             const invite = getInviteResponse.data.invite;
+            const isDatePassed = getInviteResponse.data.isDatePassed || false;
+
+            // Vérifier si la date est passée avant de marquer la présence
+            if (isDatePassed) {
+              setError({ 
+                text: "⛔ Ce billet n'est plus valide. La date du mariage est déjà passée.", 
+                color: "red" 
+              });
+              return;
+            }
 
             // ✅ Étape 2 : Marquer comme présent
             const response = await axios.post(
@@ -148,7 +192,16 @@ const startScanner = () => {
               }
             );
 
-            const { dejaPresent, message } = response.data;
+            const { dejaPresent, message, isDatePassed: datePassedInResponse } = response.data;
+
+            // Si le serveur indique que la date est passée
+            if (datePassedInResponse) {
+              setError({ 
+                text: "⛔ Ce billet n'est plus valide. La date du mariage est déjà passée.", 
+                color: "red" 
+              });
+              return;
+            }
 
             // ✅ Redirection
             navigate(`/invites/${inviteId}`, {
