@@ -22,6 +22,22 @@ const roomLayoutSchema = new mongoose.Schema({
         table: { type: String, default: '#FFA500' },
         chair: { type: String, default: '#405433' }
     },
+    // Dimensions du sol (largeur = X, longueur = Z)
+    floorWidth: {
+        type: Number,
+        default: 50,
+        min: 10
+    },
+    floorLength: {
+        type: Number,
+        default: 50,
+        min: 10
+    },
+    // Ancien champ conservé pour compatibilité
+    floorSize: {
+        type: Number,
+        default: 50
+    },
     updatedAt: { 
         type: Date, 
         default: Date.now 

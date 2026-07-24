@@ -85,17 +85,21 @@ function Dashboard() {
   };
 
   useEffect(() => {
-    fetchInvites();
-    fetchReunions();
-
     const userString = localStorage.getItem('user');
 
     if (userString) {
       const user = JSON.parse(userString);
+      if (user.role === 'admin') {
+        navigate('/admin');
+        return;
+      }
       setNom(user.nom);
       setPrenom(user.prenom);
       setUser(user);
     }
+
+    fetchInvites();
+    fetchReunions();
   }, [location.pathname]);
 
   const handleSearch = () => {

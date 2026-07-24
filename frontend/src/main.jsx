@@ -18,6 +18,7 @@ import AdminPage from './pages/AdminPage.jsx'
 import Administration from './pages/Administration.jsx'
 import EditUser from './pages/EditUser.jsx'
 import ForgotPassword from './pages/ForgotPassword.jsx'
+import HelpPage from './pages/HelpPage.jsx'
 
 const router = createBrowserRouter (
   createRoutesFromElements (
@@ -36,6 +37,7 @@ const router = createBrowserRouter (
         <Route path="/invites/:inviteId" element={<ShowInvite />} />
         <Route path="/edit-user/:id" element={<EditUser />} /> 
         <Route path="/forgot-password" element={<ForgotPassword/>} /> 
+        <Route path="/help-page" element={<HelpPage />} />
         <Route path="/admin" element={<AdminPage />} />
         <Route path="/administration" element={<Administration />} /> 
         <Route path="*" element={<PageNotFound/>} />

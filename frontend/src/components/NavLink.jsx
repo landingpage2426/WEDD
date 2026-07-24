@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import help from '../assets/img/help.svg';
+import logo from '../assets/img/logo.png';
 import Image from './Image';
 import { navItems } from '../utils/NavItems';
 import { handleLogout } from '../services/HandleLogout';
@@ -11,6 +12,7 @@ function NavLink() {
   const [userRole, setUserRole] = useState(null);
   const location = useLocation();
   const navigate = useNavigate();
+  const isAdmin = userRole === 'admin';
   
   // Synchronisation de l'état actif avec l'URL
   useEffect(() => {
@@ -32,14 +34,24 @@ function NavLink() {
       animate={{ x: 0, opacity: 1 }}
       transition={{ duration: 0.3 }}
     >
-      <div className="p-6 border-b border-gray-100">
-        <h1 className="text-xl font-bold text-blue-700">WEDD</h1>
+      <div className="p-6 border-b border-gray-100 flex items-center gap-3">
+        <img src={logo} alt="WEDD" className="h-10 w-10 rounded-full object-cover" />
+        <div>
+          <h1 className="text-xl font-bold text-blue-700 leading-tight">WEDD</h1>
+          {isAdmin && (
+            <p className="text-xs text-slate-500">Administrateur</p>
+          )}
+        </div>
       </div>
 
       <div className="flex-1 flex flex-col justify-between overflow-y-auto">
         <div className="space-y-2 p-4">
           {navItems
             .filter(item => {
+              // Navigation admin : uniquement dashboard (redirigé) et profil
+              if (userRole === 'admin') {
+                return item.id === 'profil';
+              }
               // Filtrer les éléments selon le rôle
               if (item.id === 'liste-reunions' && !['client', 'manager', 'chef_protocole', 'protocole'].includes(userRole)) {
                 return false;
@@ -90,6 +102,43 @@ function NavLink() {
               </Link>
             </motion.div>
           ))}
+
+          {/* Lien Admin uniquement pour les administrateurs */}
+          {userRole === 'admin' && (
+            <motion.div
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              onHoverStart={() => setIsHovered('admin')}
+              onHoverEnd={() => setIsHovered(null)}
+            >
+              <Link
+                to="/admin"
+                className={`flex items-center gap-4 p-3 rounded-lg transition-all ${
+                  activeLink === 'admin' 
+                    ? 'bg-blue-50 text-blue-700 border-l-4 border-blue-500' 
+                    : 'text-gray-600 hover:bg-gray-50'
+                }`}
+              >
+                <motion.span 
+                  animate={{
+                    color: activeLink === 'admin' || isHovered === 'admin' ? '#2563eb' : '#4b5563'
+                  }}
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                  </svg>
+                </motion.span>
+                <span className="font-medium">Utilisateurs</span>
+                {activeLink === 'admin' && (
+                  <motion.div 
+                    className="ml-auto w-2 h-2 bg-blue-500 rounded-full"
+                    layoutId="activeIndicator"
+                    transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+                  />
+                )}
+              </Link>
+            </motion.div>
+          )}
           
           {/* Lien Administration uniquement pour les clients */}
           {userRole === 'client' && (
@@ -131,15 +180,17 @@ function NavLink() {
         </div>
 
         <div className="p-4 border-t border-gray-100 space-y-4">
-          <div className="flex flex-col items-center p-4 bg-blue-50 rounded-lg">
-            <Image src={help} className="w-48 mb-2" />
-            <Link 
-              to="/help-page" 
-              className="text-sm text-blue-600 hover:text-blue-800 hover:underline underline-offset-4"
-            >
-              Avez-vous besoin d'aide ?
-            </Link>
-          </div>
+          {!isAdmin && (
+            <div className="flex flex-col items-center p-4 bg-blue-50 rounded-lg">
+              <Image src={help} className="w-48 mb-2" alt="Besoin d'aide" />
+              <Link 
+                to="/help-page" 
+                className="text-sm text-blue-600 hover:text-blue-800 hover:underline underline-offset-4"
+              >
+                Avez-vous besoin d&apos;aide ?
+              </Link>
+            </div>
+          )}
 
           <motion.button
             onClick={() => { setActiveLink('logout'); handleLogout(navigate); }}

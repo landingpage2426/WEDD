@@ -7,4 +7,4 @@ export  const nomsTables = [
   "B787", "TUPOLEV 144", "BUFFET 1",
   "AN 225", "EMBRAER 190", "B717", "EMBRAER 170",
   "AN 124", "B737"
-];
+].map((nom) => nom.toUpperCase());

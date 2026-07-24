@@ -1,4 +1,5 @@
 import cors from 'cors';
+import dns from 'dns';
 import dotenv from 'dotenv';
 dotenv.config();
 import express from 'express';
@@ -14,6 +15,10 @@ import { fileURLToPath } from 'url';
 // Obtenir __dirname en ES modules
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
+// Contourne les DNS locaux (VPN/réseau) qui refusent les requêtes SRV de Node
+dns.setServers(['8.8.8.8', '1.1.1.1']);
+
 // Liste des origines autorisées
 
 const allowedOrigins = [

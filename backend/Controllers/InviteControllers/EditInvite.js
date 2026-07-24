@@ -7,9 +7,9 @@ const EditInvite = async (req, res) => {
   const { titre ,nom, prenom, telephone,email, nomTable, status } = req.body;
 
   try {
-    if (!nom || !prenom || !telephone) {
+    if (!nom || !prenom) {
       return res.status(400).json({
-        message: "Nom, prénom et téléphone sont requis",
+        message: "Nom et prénom sont requis",
         type: "danger",
       });
     }
@@ -18,10 +18,10 @@ const EditInvite = async (req, res) => {
       titre,
       nom,
       prenom,
-      telephone,
-      email,
-      nomTable,
-      status,
+      telephone: telephone || '',
+      email: email || '',
+      nomTable: nomTable ? String(nomTable).trim().toUpperCase() : nomTable,
+      status: status === 'P' ? 'P' : 'A',
     };
 
     if (req.file) {

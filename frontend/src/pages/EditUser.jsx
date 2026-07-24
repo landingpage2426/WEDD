@@ -79,7 +79,7 @@ function EditUser({ user, onClose,fetchUsers }) {
                 value={nom}
                 onChange={(e) => setNom(e.target.value)}
                 placeholder="Nom"
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
                 required
               />
             </div>
@@ -90,7 +90,7 @@ function EditUser({ user, onClose,fetchUsers }) {
                 value={prenom}
                 onChange={(e) => setPrenom(e.target.value)}
                 placeholder="Prénom"
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
                 required
               />
             </div>
@@ -101,7 +101,7 @@ function EditUser({ user, onClose,fetchUsers }) {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="Email"
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
                 required
               />
             </div>
@@ -112,7 +112,7 @@ function EditUser({ user, onClose,fetchUsers }) {
                 value={telephone}
                 onChange={(e) => setTelephone(e.target.value)}
                 placeholder="Téléphone"
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
               />
             </div>
             
@@ -122,7 +122,7 @@ function EditUser({ user, onClose,fetchUsers }) {
                 type="date"
                 value={dateMariage}
                 onChange={(e) => setDateMariage(e.target.value)}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
               />
             </div>
             <div>
@@ -132,7 +132,7 @@ function EditUser({ user, onClose,fetchUsers }) {
                 value={lieuMariage}
                 onChange={(e) => setLieuMariage(e.target.value)}
                 placeholder="Lieu Mariage"
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
               />
             </div>
             <div>
@@ -142,7 +142,7 @@ function EditUser({ user, onClose,fetchUsers }) {
                 value={couleurSite}
                 onChange={(e) => setCouleurSite(e.target.value)}
                 placeholder="Couleur du site"
-                className="w-full h-10 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition"
+                className="w-full h-10 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
               />
             </div>
             <div>
@@ -152,7 +152,7 @@ function EditUser({ user, onClose,fetchUsers }) {
                 value={themeMariage}
                 onChange={(e) => setThemeMariage(e.target.value)}
                 placeholder="Thème Mariage"
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
               />
             </div>
             <div>
@@ -161,7 +161,7 @@ function EditUser({ user, onClose,fetchUsers }) {
                 value={role}
                 onChange={(e) => setRole(e.target.value)}
                 placeholder="Rôle"
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
               >
                 <option value="admin">Admin</option>
                 <option value="client">Client</option>
@@ -175,7 +175,7 @@ function EditUser({ user, onClose,fetchUsers }) {
           <div className="flex space-x-3 pt-4">
             <button
               type="submit"
-              className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-medium py-3 px-4 rounded-lg transition-colors duration-200 flex items-center justify-center"
+              className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-4 rounded-lg transition-colors duration-200 flex items-center justify-center"
             >
               Sauvegarder
             </button>

@@ -1,4 +1,4 @@
-// Liste des tables / zones avec position et dimensions
+// Liste des tables / zones avec position et dimensions (noms toujours en majuscules)
 export const planTables = [
   { nom: "TABLE MARIES", x: -16, z: 0, w: 1.5, h: 5, rotation: Math.PI / 2 },
   { nom: "B737", x: 15, z: 20 },
@@ -27,4 +27,4 @@ export const planTables = [
   { nom: "TUPOLEV144", x: -5, z: 20 },
   { nom: "A330", x: -5, z: -20 },
   { nom: "CONCORDE", x: 5, z: -6 },
-];
+].map((table) => ({ ...table, nom: String(table.nom).toUpperCase() }));

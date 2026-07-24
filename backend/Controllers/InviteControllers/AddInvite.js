@@ -12,9 +12,9 @@ const AddInvite = async (req, res) => {
             });
         }
         
-        if (!nom || !prenom || !telephone) {
+        if (!nom || !prenom) {
             return res.status(400).json({
-                message: "Tous les champs sont requis",
+                message: "Le nom et le prénom sont requis",
                 type: "danger"
             });
         }
@@ -29,10 +29,10 @@ const AddInvite = async (req, res) => {
             titre,
             nom,
             prenom,
-            telephone,
-            email,
-            nomTable,
-            status,
+            telephone: telephone || '',
+            email: email || '',
+            nomTable: nomTable ? String(nomTable).trim().toUpperCase() : nomTable,
+            status: status === 'P' ? 'P' : 'A',
             image: req.file ? req.file.filename : null,
             userId: userIdToUse
         });

@@ -2,7 +2,11 @@ import User from "../../Models/User.js";
 
 const UsersGet = async (req, res) => {
     try {
-        const users = await User.find({$or: [{ role: "client"},{role: "admin"}]}); // Récupérer les utilisateurs
+        const users = await User.find({})
+            .select("-password -plainPassword")
+            .populate("createdBy", "nom prenom email")
+            .sort({ createdAt: -1 });
+
         res.status(200).json({
             message: "Utilisateurs récupérés avec succès",
             type: "success",

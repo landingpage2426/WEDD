@@ -16,6 +16,8 @@ function Informations() {
   const [isEditSuccess, setIsEditSuccess] = useState(false);
   const [isPasswordSuccess, setIsPasswordSuccess] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [userRole, setUserRole] = useState('');
+  const isAdmin = userRole === 'admin';
   
 
   const navigate = useNavigate();
@@ -139,7 +141,6 @@ const getUser = async () => {
         'Content-Type': 'application/json',
       },
     });
-    console.log('User data fetched:', response.data.user);
     
     return response.data.user || {};
   } catch (error) {
@@ -152,6 +153,12 @@ const getUser = async () => {
 };
 
   useEffect(() => {
+    const storedUser = localStorage.getItem('user');
+    if (storedUser) {
+      const user = JSON.parse(storedUser);
+      setUserRole(user.role || '');
+    }
+
     const fetchUser = async () => {
       const data = await getUser();
       setFormData((prev) => ({
@@ -212,7 +219,7 @@ const handleLogout = async () => {
         {/* ---- MOBILE HEADER + NAVIGATION ---- */}
         <header className="bg-gray-100 text-white w-full p-4 flex justify-between items-center md:hidden">
           <img src={logo} className="h-16 rounded-full" alt="logo-wedd" />
-          <Countdown />
+          {!isAdmin && <Countdown />}
           <button
             className="py-2 px-4 rounded-md bg-blue-700 hover:bg-blue-900 transition-colors"
             onClick={() => setMenuOpen(!menuOpen)}
@@ -231,11 +238,20 @@ const handleLogout = async () => {
             exit={{ opacity: 0, height: 0 }}
             transition={{ duration: 0.3 }}
           >
-            <Link to="/dashboard" onClick={() => setMenuOpen(false)} className="hover:text-blue-200 transition-colors">Dashboard</Link>
-            <Link to="/liste-reunions" onClick={() => setMenuOpen(false)} className="hover:text-blue-200 transition-colors">Réunions</Link>
-            <Link to="/ajout-invite" onClick={() => setMenuOpen(false)} className="hover:text-blue-200 transition-colors">Ajouter un invité</Link>
-            <Link to="/recherche-invite" onClick={() => setMenuOpen(false)} className="hover:text-blue-200 transition-colors">Recherche invité</Link>
-            <Link to="/profil" onClick={() => setMenuOpen(false)} className="hover:text-blue-200 transition-colors">Profil</Link>
+            {isAdmin ? (
+              <>
+                <Link to="/admin" onClick={() => setMenuOpen(false)} className="hover:text-blue-700 transition-colors font-semibold">Gestion des utilisateurs</Link>
+                <Link to="/profil" onClick={() => setMenuOpen(false)} className="hover:text-blue-700 transition-colors">Profil</Link>
+              </>
+            ) : (
+              <>
+                <Link to="/dashboard" onClick={() => setMenuOpen(false)} className="hover:text-blue-200 transition-colors">Dashboard</Link>
+                <Link to="/liste-reunions" onClick={() => setMenuOpen(false)} className="hover:text-blue-200 transition-colors">Réunions</Link>
+                <Link to="/ajout-invite" onClick={() => setMenuOpen(false)} className="hover:text-blue-200 transition-colors">Ajouter un invité</Link>
+                <Link to="/recherche-invite" onClick={() => setMenuOpen(false)} className="hover:text-blue-200 transition-colors">Recherche invité</Link>
+                <Link to="/profil" onClick={() => setMenuOpen(false)} className="hover:text-blue-200 transition-colors">Profil</Link>
+              </>
+            )}
             <button onClick={() => { setMenuOpen(false); handleLogout(); }} className="text-red-700 hover:text-red-700 text-left transition-colors">
               Déconnexion
             </button>
@@ -324,72 +340,76 @@ const handleLogout = async () => {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Date de mariage</label>
-          <Input
-            width="w-full"
-            type="date"
-            name="dateMariage"
-            required={true}
-            value={
-              formData.dateMariage
-                ? new Date(formData.dateMariage).toISOString().split('T')[0]
-                : ''
-            }
-            onChange={handleInputChange}
-            disabled={!isEditing}
-            className="disabled:bg-gray-50 disabled:text-gray-500"
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Lieu de mariage</label>
-          <Input
-            width="w-full"
-            type="text"
-            name="lieuMariage"
-            placeholder="Lieu du mariage"
-            required={true}
-            value={formData.lieuMariage}
-            onChange={handleInputChange}
-            disabled={!isEditing}
-            className="disabled:bg-gray-50 disabled:text-gray-500"
-          />
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Couleur du site</label>
-          <div className="flex items-center space-x-4">
-            <Input
-              width="w-16"
-              type="color"
-              name="couleurSite"
-              required={true}
-              value={formData.couleurSite}
-              onChange={handleInputChange}
-              disabled={!isEditing}
-              className="disabled:opacity-50 h-10 w-16 cursor-pointer rounded border border-gray-300"
-            />
-            <span className="text-sm text-gray-500">{formData.couleurSite}</span>
+      {!isAdmin && (
+        <>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Date de mariage</label>
+              <Input
+                width="w-full"
+                type="date"
+                name="dateMariage"
+                required={true}
+                value={
+                  formData.dateMariage
+                    ? new Date(formData.dateMariage).toISOString().split('T')[0]
+                    : ''
+                }
+                onChange={handleInputChange}
+                disabled={!isEditing}
+                className="disabled:bg-gray-50 disabled:text-gray-500"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Lieu de mariage</label>
+              <Input
+                width="w-full"
+                type="text"
+                name="lieuMariage"
+                placeholder="Lieu du mariage"
+                required={true}
+                value={formData.lieuMariage}
+                onChange={handleInputChange}
+                disabled={!isEditing}
+                className="disabled:bg-gray-50 disabled:text-gray-500"
+              />
+            </div>
           </div>
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Thème du mariage</label>
-          <Input
-            width="w-full"
-            type="text"
-            name="themeMariage"
-            placeholder="Thème du mariage"
-            required={true}
-            value={formData.themeMariage}
-            onChange={handleInputChange}
-            disabled={!isEditing}
-            className="disabled:bg-gray-50 disabled:text-gray-500"
-          />
-        </div>
-      </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Couleur du site</label>
+              <div className="flex items-center space-x-4">
+                <Input
+                  width="w-16"
+                  type="color"
+                  name="couleurSite"
+                  required={true}
+                  value={formData.couleurSite}
+                  onChange={handleInputChange}
+                  disabled={!isEditing}
+                  className="disabled:opacity-50 h-10 w-16 cursor-pointer rounded border border-gray-300"
+                />
+                <span className="text-sm text-gray-500">{formData.couleurSite}</span>
+              </div>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Thème du mariage</label>
+              <Input
+                width="w-full"
+                type="text"
+                name="themeMariage"
+                placeholder="Thème du mariage"
+                required={true}
+                value={formData.themeMariage}
+                onChange={handleInputChange}
+                disabled={!isEditing}
+                className="disabled:bg-gray-50 disabled:text-gray-500"
+              />
+            </div>
+          </div>
+        </>
+      )}
 
       <div className="pt-6 border-t border-gray-200">
         <div className="flex justify-center">

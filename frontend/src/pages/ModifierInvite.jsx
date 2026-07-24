@@ -8,7 +8,7 @@ function ModifierInvite({ invite, onClose }) {
   const [telephone, setTelephone] = useState('');
   const [email, setEmail] = useState('');
   const [nomTable, setNomTable] = useState('');
-  const [status, setStatus] = useState('P');
+  const [status, setStatus] = useState('A');
   const [image, setImage] = useState(null);
 
   const apiUrl = import.meta.env.VITE_API_URL;
@@ -20,8 +20,8 @@ function ModifierInvite({ invite, onClose }) {
       setPrenom(invite.prenom || '');
       setTelephone(invite.telephone || '');
       setEmail(invite.email || '');
-      setNomTable(invite.nomTable || '');
-      setStatus(invite.status || 'P');
+      setNomTable((invite.nomTable || '').toUpperCase());
+      setStatus(invite.status || 'A');
     }
   }, [invite]);
 
@@ -132,9 +132,9 @@ function ModifierInvite({ invite, onClose }) {
               <input
                 type="text"
                 value={nomTable}
-                onChange={(e) => setNomTable(e.target.value)}
-                placeholder="Nom de la table"
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition"
+                onChange={(e) => setNomTable(e.target.value.toUpperCase())}
+                placeholder="NOM DE LA TABLE"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition uppercase"
               />
             </div>
 
@@ -143,10 +143,10 @@ function ModifierInvite({ invite, onClose }) {
               <select
                 value={status}
                 onChange={(e) => setStatus(e.target.value)}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
               >
-                <option value="P">Présent (P)</option>
                 <option value="A">Absent (A)</option>
+                <option value="P">Présent (P)</option>
               </select>
             </div>
 

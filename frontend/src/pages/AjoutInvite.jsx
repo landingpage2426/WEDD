@@ -17,6 +17,8 @@ function AjoutInvite({ onClose }) {
   const [status, setStatus] = useState('A');
   const [image, setImage] = useState(null);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [errors, setErrors] = useState({});
+  const [submitError, setSubmitError] = useState('');
 
   const navigate = useNavigate();
   const apiUrl = import.meta.env.VITE_API_URL;
@@ -41,8 +43,34 @@ const handleLogout = async () => {
     }
   }
 
+  const clearFieldError = (field) => {
+    setErrors((prev) => {
+      if (!prev[field]) return prev;
+      const next = { ...prev };
+      delete next[field];
+      return next;
+    });
+  };
+
   const handleSubmitInvite = async (e) => {
   e.preventDefault();
+  setSubmitError('');
+
+  const nextErrors = {};
+  if (!titre) nextErrors.titre = 'La civilité est obligatoire.';
+  if (!nom.trim()) nextErrors.nom = 'Le nom est obligatoire.';
+  if (!prenom.trim()) nextErrors.prenom = 'Le prénom est obligatoire.';
+  if (email.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
+    nextErrors.email = 'Veuillez saisir un email valide.';
+  }
+
+  if (Object.keys(nextErrors).length > 0) {
+    setErrors(nextErrors);
+    setSubmitError('Veuillez remplir tous les champs obligatoires.');
+    return;
+  }
+
+  setErrors({});
 
   try {
     const formData = new FormData();
@@ -59,7 +87,7 @@ const handleLogout = async () => {
 
     const token = localStorage.getItem('token');
 
-    const response = await axios.post(`${apiUrl}/api/invite`, formData, {
+    await axios.post(`${apiUrl}/api/invite`, formData, {
       headers: {
         Authorization: `Bearer ${token}`,
         'Content-Type': 'multipart/form-data'
@@ -73,9 +101,9 @@ const handleLogout = async () => {
 
   } catch (error) {
     if (error.response) {
-      console.error('Erreur lors de l’ajout de l’invité:', error.response.data.message);
+      setSubmitError(error.response.data.message || "Erreur lors de l'ajout de l'invité.");
     } else {
-      console.error('Erreur réseau ou autre:', error.message);
+      setSubmitError('Erreur réseau. Vérifiez votre connexion.');
     }
   }
 
@@ -136,13 +164,22 @@ const handleLogout = async () => {
       <p className="text-gray-600">Renseignez les informations de votre invité</p>
     </div>
 
+    {submitError && (
+      <div className="mb-5 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">
+        {submitError}
+      </div>
+    )}
+
     <div className="space-y-5">
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">Civilité</label>
+        <label className="block text-sm font-medium text-gray-700 mb-1">Civilité <span className="text-red-600">*</span></label>
         <select
           value={titre}
-          onChange={(e) => setTitre(e.target.value)}
-          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          onChange={(e) => {
+            setTitre(e.target.value);
+            clearFieldError('titre');
+          }}
+          className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${errors.titre ? 'border-red-500' : 'border-gray-300'}`}
         >
           <option value="">Sélectionnez une civilité</option>
           <option value="M">Monsieur</option>
@@ -150,36 +187,43 @@ const handleLogout = async () => {
           <option value="Mlle">Mademoiselle</option>
           <option value="couple">Couple</option>
         </select>
+        {errors.titre && <p className="mt-1 text-xs font-semibold text-red-600">{errors.titre}</p>}
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Nom</label>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Nom <span className="text-red-600">*</span></label>
           <input
             type="text"
             placeholder="Dupont"
             value={nom}
-            onChange={(e) => setNom(e.target.value)}
-            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            required
+            onChange={(e) => {
+              setNom(e.target.value);
+              clearFieldError('nom');
+            }}
+            className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${errors.nom ? 'border-red-500' : 'border-gray-300'}`}
           />
+          {errors.nom && <p className="mt-1 text-xs font-semibold text-red-600">{errors.nom}</p>}
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Prénom</label>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Prénom <span className="text-red-600">*</span></label>
           <input
             type="text"
             placeholder="Jean"
             value={prenom}
-            onChange={(e) => setPrenom(e.target.value)}
-            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            required
+            onChange={(e) => {
+              setPrenom(e.target.value);
+              clearFieldError('prenom');
+            }}
+            className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${errors.prenom ? 'border-red-500' : 'border-gray-300'}`}
           />
+          {errors.prenom && <p className="mt-1 text-xs font-semibold text-red-600">{errors.prenom}</p>}
         </div>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Téléphone</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Téléphone <span className="text-gray-400 font-normal">(optionnel)</span></label>
             <div className="relative">
               <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
                 <span className="text-gray-500">+237</span>
@@ -188,22 +232,28 @@ const handleLogout = async () => {
                 type="tel"
                 placeholder="6 12 34 56 78"
                 value={telephone}
-                onChange={(e) => setTelephone(e.target.value)}
-                className="w-full pl-14 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                required
+                onChange={(e) => {
+                  setTelephone(e.target.value);
+                  clearFieldError('telephone');
+                }}
+                className={`w-full pl-14 pr-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${errors.telephone ? 'border-red-500' : 'border-gray-300'}`}
               />
             </div>
+            {errors.telephone && <p className="mt-1 text-xs font-semibold text-red-600">{errors.telephone}</p>}
           </div>
        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Email <span className="text-gray-400 font-normal">(optionnel)</span></label>
           <input
-            type="text"
+            type="email"
             placeholder="contact@exemple.com"
             value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            required
+            onChange={(e) => {
+              setEmail(e.target.value);
+              clearFieldError('email');
+            }}
+            className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${errors.email ? 'border-red-500' : 'border-gray-300'}`}
           />
+          {errors.email && <p className="mt-1 text-xs font-semibold text-red-600">{errors.email}</p>}
         </div>
       
       </div>
@@ -211,9 +261,9 @@ const handleLogout = async () => {
         <label className="block text-sm font-medium text-gray-700 mb-1">Table attribuée</label>
         <input
           type="text"
-          placeholder="Table 1"
+          placeholder="TABLE 1"
           value={nomTable}
-          onChange={(e) => setNomTable(e.target.value)}
+          onChange={(e) => setNomTable(e.target.value.toUpperCase())}
           className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
         />
       </div>
@@ -229,7 +279,6 @@ const handleLogout = async () => {
               value="P"
               checked={status === "P"}
               onChange={(e) => setStatus(e.target.value)}
-              required
             />
             <span className="ml-2">Présent</span>
           </label>
@@ -245,6 +294,7 @@ const handleLogout = async () => {
             <span className="ml-2">Absent</span>
           </label>
         </div>
+        <p className="mt-1 text-xs text-gray-500">Par défaut : Absent</p>
       </div>
 
       <div>

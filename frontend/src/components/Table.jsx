@@ -85,7 +85,7 @@ function Table({ invites, apiUrl, onEditInvite, handleDeleteInvite, userRole }) 
                             ? 'bg-red-100 text-red-800' 
                             : 'bg-blue-100 text-blue-800'
                       }`}>
-                        {invite.status === 'P' ? 'Confirmé' : invite.status === 'A' ? 'Décliné' : 'En attente'}
+                        {invite.status === 'P' ? 'Confirmé' : invite.status === 'A' ? 'Absent' : 'En attente'}
                       </span>
                     </td>
                     <td className="px-4 py-4 whitespace-nowrap text-right text-sm font-medium">

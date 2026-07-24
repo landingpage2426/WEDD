@@ -1,5 +1,13 @@
 import RoomLayout from "../../Models/RoomLayout.js";
 
+const MIN_FLOOR = 10;
+
+const normalizeDimension = (value, fallback = 50) => {
+    const n = Number(value);
+    if (!Number.isFinite(n)) return fallback;
+    return Math.max(MIN_FLOOR, Math.round(n));
+};
+
 const SaveRoomLayout = async (req, res) => {
     try {
         // Seuls les clients et les managers peuvent sauvegarder la disposition
@@ -15,7 +23,7 @@ const SaveRoomLayout = async (req, res) => {
         if (req.user.role === 'manager' && req.user.createdBy) {
             userId = req.user.createdBy;
         }
-        const { tables, colors } = req.body;
+        const { tables, colors, floorWidth, floorLength, floorSize } = req.body;
 
         if (!tables || !Array.isArray(tables)) {
             return res.status(400).json({
@@ -34,20 +42,30 @@ const SaveRoomLayout = async (req, res) => {
             }
         }
 
+        // Compatibilité : si floorSize seul est envoyé, l'appliquer aux deux axes
+        const width = normalizeDimension(
+            floorWidth ?? floorSize,
+            50
+        );
+        const length = normalizeDimension(
+            floorLength ?? floorSize,
+            50
+        );
+
         // Chercher ou créer la disposition
         let roomLayout = await RoomLayout.findOne({ userId });
 
         if (roomLayout) {
-            // Mettre à jour la disposition existante
             roomLayout.tables = tables;
-            // Toujours mettre à jour les couleurs si elles sont fournies, sinon conserver les existantes
             if (colors) {
                 roomLayout.colors = colors;
             }
+            roomLayout.floorWidth = width;
+            roomLayout.floorLength = length;
+            roomLayout.floorSize = Math.max(width, length);
             roomLayout.updatedAt = new Date();
             await roomLayout.save();
         } else {
-            // Créer une nouvelle disposition
             roomLayout = new RoomLayout({
                 userId,
                 tables,
@@ -56,6 +74,9 @@ const SaveRoomLayout = async (req, res) => {
                     table: '#FFA500',
                     chair: '#405433'
                 },
+                floorWidth: width,
+                floorLength: length,
+                floorSize: Math.max(width, length),
                 updatedAt: new Date()
             });
             await roomLayout.save();
@@ -70,10 +91,10 @@ const SaveRoomLayout = async (req, res) => {
         console.error("Erreur lors de la sauvegarde de la disposition :", err);
         res.status(500).json({
             message: "Erreur lors de la sauvegarde de la disposition",
-            type: "danger"
+            type: "danger",
+            error: err.message
         });
     }
 };
 
 export default SaveRoomLayout;
-

@@ -58,11 +58,8 @@ function Connexion() {
 
       // Rediriger selon le rôle
       const userRole = data.user.role;
-      if (userRole === 'client') {
-        navigate('/dashboard');
-      } else if (userRole === 'manager' || userRole === 'chef_protocole' || userRole === 'protocole') {
-        // Les utilisateurs staff sont redirigés vers le dashboard (qui sera adapté selon leur rôle)
-        navigate('/dashboard');
+      if (userRole === 'admin') {
+        navigate('/admin');
       } else {
         navigate('/dashboard');
       }

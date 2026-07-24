@@ -12,8 +12,8 @@ const inviteSchema = new mongoose.Schema({
     image: { type: String },
     nom: { type: String, required: true },
     prenom: { type: String, required: true },
-    telephone: { type: String, required: true },
-    email: { type: String, required: true },
+    telephone: { type: String, required: false, default: '' },
+    email: { type: String, required: false, default: '' },
     nomTable: { type: String },
     titre: {
     type: String,

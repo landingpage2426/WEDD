@@ -16,13 +16,18 @@ function createLabel(text) {
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
   ctx.clearRect(0, 0, canvas.width, canvas.height);
-  ctx.fillText(text, canvas.width / 2, canvas.height / 2);
+  ctx.fillText(String(text || "").toUpperCase(), canvas.width / 2, canvas.height / 2);
   const texture = new THREE.CanvasTexture(canvas);
   const material = new THREE.SpriteMaterial({ map: texture, transparent: true });
   const sprite = new THREE.Sprite(material);
   sprite.scale.set(4, 1, 1);
   return sprite;
 }
+
+const DEFAULT_FLOOR_WIDTH = 50;
+const DEFAULT_FLOOR_LENGTH = 50;
+const MIN_FLOOR_DIM = 10;
+const FLOOR_SIZE_STEP = 5;
 
 export default function Salle({
   clignoter = false,
@@ -79,12 +84,18 @@ export default function Salle({
   const [tableFormData, setTableFormData] = useState({ nom: "", nbChaises: 10 });
   const [showEditInstructions, setShowEditInstructions] = useState(false);
   const [showColorPicker, setShowColorPicker] = useState(false);
+  const [floorWidth, setFloorWidth] = useState(DEFAULT_FLOOR_WIDTH);
+  const [floorLength, setFloorLength] = useState(DEFAULT_FLOOR_LENGTH);
+  const [tableFormErrors, setTableFormErrors] = useState({});
   const [colors, setColors] = useState({
     floor: '#e8e8e8',
     table: '#FFA500',
     chair: '#405433'
   });
   const floorRef = useRef(null);
+  const editPlaneRef = useRef(null);
+  const floorWidthRef = useRef(DEFAULT_FLOOR_WIDTH);
+  const floorLengthRef = useRef(DEFAULT_FLOOR_LENGTH);
   
   // Détection de la taille d'écran pour le responsive (doit être avant tout return conditionnel)
   const [windowSize, setWindowSize] = useState({
@@ -113,7 +124,11 @@ export default function Salle({
       });
       
       if (response.data.layout && response.data.layout.tables) {
-        const tables = response.data.layout.tables.map(t => ({ ...t, nbChaises: t.nbChaises || 10 }));
+        const tables = response.data.layout.tables.map(t => ({
+          ...t,
+          nom: String(t.nom || '').toUpperCase(),
+          nbChaises: t.nbChaises || 10
+        }));
         setTablesData(tables);
         
         // Charger les couleurs personnalisées si elles existent
@@ -124,6 +139,21 @@ export default function Salle({
             chair: response.data.layout.colors.chair || '#405433'
           });
         }
+
+        const layout = response.data.layout;
+        const legacySize = typeof layout.floorSize === 'number' ? layout.floorSize : DEFAULT_FLOOR_WIDTH;
+        const loadedWidth = Math.max(
+          MIN_FLOOR_DIM,
+          Number(layout.floorWidth ?? legacySize) || DEFAULT_FLOOR_WIDTH
+        );
+        const loadedLength = Math.max(
+          MIN_FLOOR_DIM,
+          Number(layout.floorLength ?? legacySize) || DEFAULT_FLOOR_LENGTH
+        );
+        floorWidthRef.current = loadedWidth;
+        floorLengthRef.current = loadedLength;
+        setFloorWidth(loadedWidth);
+        setFloorLength(loadedLength);
         
         return tables;
       }
@@ -153,10 +183,12 @@ export default function Salle({
         return;
       }
 
-      // Toujours inclure les couleurs (soit celles passées en paramètre, soit celles de l'état actuel)
+      // Toujours inclure les couleurs et les dimensions du sol
       const payload = { 
         tables,
-        colors: customColors || colors
+        colors: customColors || colors,
+        floorWidth: floorWidthRef.current,
+        floorLength: floorLengthRef.current,
       };
 
       const response = await axios.put(
@@ -195,8 +227,9 @@ export default function Salle({
   // Fonction pour créer une table dans la scène
   const createTableInScene = useCallback((scene, group, { nom, x, z, rotation = 0, nbChaises = 10 }) => {
     const tableGroup = new THREE.Group();
+    const tableName = String(nom || "").toUpperCase();
     
-    const tableColor = isEditing && selectedTableRef.current === nom ? 0x00ff00 : hexToNumber(colors.table);
+    const tableColor = isEditing && selectedTableRef.current === tableName ? 0x00ff00 : hexToNumber(colors.table);
     const table = new THREE.Mesh(
       new THREE.CylinderGeometry(1.5, 1.5, 1, 32),
       new THREE.MeshPhongMaterial({ 
@@ -205,11 +238,11 @@ export default function Salle({
     );
     table.position.set(0, 0.5, 0);
     table.rotation.y = 0;
-    table.userData = { nom, isTable: true };
-    tableRefs.current[nom] = table;
+    table.userData = { nom: tableName, isTable: true };
+    tableRefs.current[tableName] = table;
     tableGroup.add(table);
 
-    const label = createLabel(nom);
+    const label = createLabel(tableName);
     label.position.set(0, 2, 0);
     tableGroup.add(label);
 
@@ -228,12 +261,12 @@ export default function Salle({
       tableGroup.add(chair);
       chairs.push(chair);
     }
-    chairRefsRef.current[nom] = chairs;
+    chairRefsRef.current[tableName] = chairs;
 
     tableGroup.position.set(x, 0, z);
     tableGroup.rotation.y = rotation;
-    tableGroup.userData = { nom, isTableGroup: true, nbChaises };
-    tableGroupsRef.current[nom] = tableGroup;
+    tableGroup.userData = { nom: tableName, isTableGroup: true, nbChaises };
+    tableGroupsRef.current[tableName] = tableGroup;
     group.add(tableGroup);
     
     return tableGroup;
@@ -388,9 +421,15 @@ export default function Salle({
     scene.add(new THREE.AmbientLight(0xffffff, 0.9));
     scene.add(new THREE.DirectionalLight(0xffffff, 0.4));
 
-    // Sol simple avec une couleur unie
-    const floorSize = 50;
-    const floorGeometry = new THREE.PlaneGeometry(floorSize, floorSize);
+    // Conteneur de la salle (sol + tables)
+    const roomRoot = new THREE.Group();
+    roomRoot.name = "roomRoot";
+    scene.add(roomRoot);
+
+    // Sol : largeur (X) x longueur (Z) — utilise les dimensions sauvegardées
+    const initialWidth = floorWidthRef.current || DEFAULT_FLOOR_WIDTH;
+    const initialLength = floorLengthRef.current || DEFAULT_FLOOR_LENGTH;
+    const floorGeometry = new THREE.PlaneGeometry(initialWidth, initialLength);
     const floorColor = hexToNumber(colors.floor);
     const floorMaterial = new THREE.MeshStandardMaterial({
       color: floorColor,
@@ -399,12 +438,12 @@ export default function Salle({
     const floor = new THREE.Mesh(floorGeometry, floorMaterial);
     floor.rotation.x = -Math.PI / 2;
     floor.position.set(0, 0, 0);
-    scene.add(floor);
+    roomRoot.add(floor);
     floorRef.current = floor;
 
     const group = new THREE.Group();
     group.name = "tablesGroup";
-    scene.add(group);
+    roomRoot.add(group);
     tablesGroupRef.current = group;
 
     // Flèche de direction
@@ -420,13 +459,17 @@ export default function Salle({
 
     // Plan invisible pour le raycasting en mode édition
     if (isEditing) {
-      const planeGeometry = new THREE.PlaneGeometry(100, 100);
+      const planeGeometry = new THREE.PlaneGeometry(
+        Math.max(200, initialWidth * 2),
+        Math.max(200, initialLength * 2)
+      );
       const planeMaterial = new THREE.MeshBasicMaterial({ visible: false });
       const plane = new THREE.Mesh(planeGeometry, planeMaterial);
       plane.rotation.x = -Math.PI / 2;
       plane.position.y = 0;
       scene.add(plane);
       planeRef.current = plane;
+      editPlaneRef.current = plane;
     }
 
     // Créer les tables
@@ -443,11 +486,11 @@ export default function Salle({
     const controls = new OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
     controls.dampingFactor = 0.09;
-    if (isEditing) {
-      controls.enableRotate = true;
-      controls.enablePan = true;
-      controls.enableZoom = true;
-    }
+    controls.enableRotate = true;
+    controls.enablePan = true;
+    controls.enableZoom = true;
+    controls.minDistance = 8;
+    controls.maxDistance = 500;
     controlsRef.current = controls;
 
     let frameId;
@@ -670,6 +713,7 @@ export default function Salle({
             nom: nom,
             nbChaises: tableGroup.userData.nbChaises || 10
           });
+          setTableFormErrors({});
           setShowTableForm(true);
         }
       }
@@ -810,6 +854,7 @@ export default function Salle({
   const handleAddTable = () => {
     setEditingTable(null);
     setTableFormData({ nom: "", nbChaises: 10 });
+    setTableFormErrors({});
     setShowTableForm(true);
   };
 
@@ -841,26 +886,44 @@ export default function Salle({
   };
 
   const handleSubmitTableForm = async () => {
-    if (!tableFormData.nom.trim()) {
-      setMessage("Le nom de la table est requis");
-      setTimeout(() => setMessage(""), 3000);
+    const normalizedName = tableFormData.nom.trim().toUpperCase();
+    const errors = {};
+
+    if (!normalizedName) {
+      errors.nom = "Le nom de la table est obligatoire.";
+    }
+
+    const chairs = Number(tableFormData.nbChaises);
+    if (!chairs || chairs < 1) {
+      errors.nbChaises = "Indiquez au moins 1 chaise.";
+    } else if (chairs > 20) {
+      errors.nbChaises = "Le maximum est de 20 chaises.";
+    }
+
+    if (normalizedName) {
+      const isNameTaken = tablesData.some(t => t.nom === normalizedName && t.nom !== editingTable);
+      if (isNameTaken) {
+        errors.nom = "Une table avec ce nom existe déjà.";
+      }
+    }
+
+    if (Object.keys(errors).length > 0) {
+      setTableFormErrors(errors);
+      setMessage(Object.values(errors)[0]);
+      setTimeout(() => setMessage(""), 3500);
       return;
     }
 
-    // Vérifier si le nom existe déjà (sauf si on modifie la même table ou si c'est le même nom)
-    const isNameTaken = tablesData.some(t => t.nom === tableFormData.nom && t.nom !== editingTable);
-    if (isNameTaken) {
-      setMessage("Une table avec ce nom existe déjà");
-      setTimeout(() => setMessage(""), 3000);
-      return;
-    }
+    setTableFormErrors({});
+
+    const formWithUpperName = { ...tableFormData, nom: normalizedName, nbChaises: chairs };
 
     if (editingTable) {
       // Modifier une table existante
       const tableGroup = tableGroupsRef.current[editingTable];
       if (tableGroup) {
         // Mettre à jour le nom si changé
-        if (tableFormData.nom !== editingTable) {
+        if (normalizedName !== editingTable) {
           // Supprimer l'ancienne table de la scène
           tablesGroupRef.current?.remove(tableGroup);
           
@@ -880,8 +943,8 @@ export default function Salle({
           const oldTable = tablesData.find(t => t.nom === editingTable);
           const newTable = {
             ...oldTable,
-            nom: tableFormData.nom,
-            nbChaises: tableFormData.nbChaises,
+            nom: normalizedName,
+            nbChaises: formWithUpperName.nbChaises,
             x: tableGroup.position.x,
             z: tableGroup.position.z,
             rotation: tableGroup.rotation.y
@@ -899,10 +962,10 @@ export default function Salle({
           await saveRoomLayout(newTables, colors);
         } else {
           // Juste mettre à jour le nombre de chaises
-          updateTableChairs(tableGroup, tableFormData.nbChaises);
+          updateTableChairs(tableGroup, formWithUpperName.nbChaises);
           const updatedTables = tablesData.map(t => 
             t.nom === editingTable 
-              ? { ...t, nbChaises: tableFormData.nbChaises }
+              ? { ...t, nbChaises: formWithUpperName.nbChaises }
               : t
           );
           setTablesData(updatedTables);
@@ -912,11 +975,11 @@ export default function Salle({
     } else {
       // Créer une nouvelle table
       const newTable = {
-        nom: tableFormData.nom,
+        nom: normalizedName,
         x: 0,
         z: 0,
         rotation: 0,
-        nbChaises: tableFormData.nbChaises
+        nbChaises: formWithUpperName.nbChaises
       };
       
       // Ajouter à la scène
@@ -933,6 +996,44 @@ export default function Salle({
     setShowTableForm(false);
     setEditingTable(null);
     setTableFormData({ nom: "", nbChaises: 10 });
+    setTableFormErrors({});
+  };
+
+  // Appliquer largeur / longueur du sol (et garder les refs à jour pour la sauvegarde + réinit scène)
+  useEffect(() => {
+    floorWidthRef.current = floorWidth;
+    floorLengthRef.current = floorLength;
+
+    if (floorRef.current) {
+      floorRef.current.geometry.dispose();
+      floorRef.current.geometry = new THREE.PlaneGeometry(floorWidth, floorLength);
+    }
+    if (editPlaneRef.current) {
+      editPlaneRef.current.geometry.dispose();
+      editPlaneRef.current.geometry = new THREE.PlaneGeometry(
+        Math.max(200, floorWidth * 2),
+        Math.max(200, floorLength * 2)
+      );
+    }
+  }, [floorWidth, floorLength]);
+
+  const updateFloorWidth = (value) => {
+    const next = Math.max(MIN_FLOOR_DIM, Number(value) || MIN_FLOOR_DIM);
+    floorWidthRef.current = next;
+    setFloorWidth(next);
+  };
+
+  const updateFloorLength = (value) => {
+    const next = Math.max(MIN_FLOOR_DIM, Number(value) || MIN_FLOOR_DIM);
+    floorLengthRef.current = next;
+    setFloorLength(next);
+  };
+
+  const handleFloorReset = () => {
+    floorWidthRef.current = DEFAULT_FLOOR_WIDTH;
+    floorLengthRef.current = DEFAULT_FLOOR_LENGTH;
+    setFloorWidth(DEFAULT_FLOOR_WIDTH);
+    setFloorLength(DEFAULT_FLOOR_LENGTH);
   };
 
   // Calcul des breakpoints (après tous les hooks)
@@ -972,177 +1073,326 @@ export default function Salle({
         overflow: "hidden",
       }}
     >
+      {/* Barre d'outils supérieure */}
       <div style={{
         position: "absolute",
-        top: isMobile ? "10px" : "20px",
-        left: isMobile ? "10px" : "20px",
+        top: 0,
+        left: 0,
+        right: 0,
+        zIndex: 1100,
         display: "flex",
-        gap: isMobile ? "5px" : "10px",
         flexWrap: "wrap",
-        zIndex: 1000,
-        maxWidth: isMobile ? "calc(100% - 20px)" : "auto",
+        alignItems: "center",
+        justifyContent: "space-between",
+        gap: isMobile ? "8px" : "12px",
+        padding: isMobile ? "10px" : "12px 16px",
+        backgroundColor: "rgba(255,255,255,0.96)",
+        borderBottom: "1px solid #e2e8f0",
+        boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
       }}>
-        <button
-          onClick={() => navigate(-1)}
-          style={{
-            padding: isMobile ? "8px 12px" : "10px 20px",
-            fontSize: isMobile ? "12px" : "14px",
-            backgroundColor: "#405433",
-            color: "white",
-            border: "none",
-            borderRadius: "5px",
-            cursor: "pointer",
-            whiteSpace: "nowrap",
-          }}
-        >
-          {isMobile ? "←" : "Retour"}
-        </button>
-        {isEditing && (
-          <>
+        <div style={{
+          display: "flex",
+          flexWrap: "wrap",
+          gap: isMobile ? "6px" : "8px",
+          alignItems: "center",
+        }}>
+          <button
+            onClick={() => navigate(-1)}
+            style={{
+              padding: isMobile ? "8px 12px" : "9px 16px",
+              fontSize: isMobile ? "12px" : "14px",
+              backgroundColor: "#405433",
+              color: "white",
+              border: "none",
+              borderRadius: "6px",
+              cursor: "pointer",
+              whiteSpace: "nowrap",
+            }}
+          >
+            {isMobile ? "←" : "Retour"}
+          </button>
+          {isEditing && (
+            <>
+              <button
+                onClick={handleAddTable}
+                style={{
+                  padding: isMobile ? "8px 12px" : "9px 16px",
+                  fontSize: isMobile ? "12px" : "14px",
+                  backgroundColor: "#4CAF50",
+                  color: "white",
+                  border: "none",
+                  borderRadius: "6px",
+                  cursor: "pointer",
+                  whiteSpace: "nowrap",
+                }}
+              >
+                {isMobile ? "+ Table" : "+ Ajouter table"}
+              </button>
+              <button
+                onClick={handleSave}
+                disabled={saving}
+                style={{
+                  padding: isMobile ? "8px 12px" : "9px 16px",
+                  fontSize: isMobile ? "12px" : "14px",
+                  backgroundColor: saving ? "#ccc" : "#2196F3",
+                  color: "white",
+                  border: "none",
+                  borderRadius: "6px",
+                  cursor: saving ? "not-allowed" : "pointer",
+                  whiteSpace: "nowrap",
+                }}
+              >
+                {saving ? (isMobile ? "..." : "Sauvegarde...") : (isMobile ? "💾" : "Sauvegarder")}
+              </button>
+            </>
+          )}
+          {canEdit() && (
             <button
-              onClick={handleAddTable}
+              onClick={handleToggleEdit}
               style={{
-                padding: isMobile ? "8px 12px" : "10px 20px",
+                padding: isMobile ? "8px 12px" : "9px 16px",
                 fontSize: isMobile ? "12px" : "14px",
-                backgroundColor: "#4CAF50",
+                backgroundColor: isEditing ? "#ff6b6b" : "#4CAF50",
                 color: "white",
                 border: "none",
-                borderRadius: "5px",
+                borderRadius: "6px",
                 cursor: "pointer",
                 whiteSpace: "nowrap",
               }}
             >
-              {isMobile ? "+ Table" : "+ Ajouter table"}
+              {isEditing ? (isMobile ? "✕" : "Arrêter l'édition") : (isMobile ? "✏️" : "Éditer la salle")}
             </button>
+          )}
+          {isEditing && (
             <button
-              onClick={handleSave}
-              disabled={saving}
+              onClick={() => setShowColorPicker(!showColorPicker)}
               style={{
-                padding: isMobile ? "8px 12px" : "10px 20px",
+                padding: isMobile ? "8px 12px" : "9px 16px",
                 fontSize: isMobile ? "12px" : "14px",
-                backgroundColor: saving ? "#ccc" : "#2196F3",
+                backgroundColor: "#9C27B0",
                 color: "white",
                 border: "none",
-                borderRadius: "5px",
-                cursor: saving ? "not-allowed" : "pointer",
+                borderRadius: "6px",
+                cursor: "pointer",
                 whiteSpace: "nowrap",
               }}
             >
-              {saving ? (isMobile ? "..." : "Sauvegarde...") : (isMobile ? "💾" : "Sauvegarder")}
+              {isMobile ? "🎨" : "🎨 Couleurs"}
             </button>
-          </>
-        )}
-        {canEdit() && (
+          )}
+          {isEditing && (
+            <button
+              onClick={() => setShowEditInstructions(!showEditInstructions)}
+              style={{
+                padding: isMobile ? "8px 12px" : "9px 16px",
+                fontSize: isMobile ? "12px" : "14px",
+                backgroundColor: showEditInstructions ? "#0f766e" : "#0284c7",
+                color: "white",
+                border: "none",
+                borderRadius: "6px",
+                cursor: "pointer",
+                whiteSpace: "nowrap",
+              }}
+            >
+              {showEditInstructions ? "Fermer aide" : (isMobile ? "Aide" : "Aide édition")}
+            </button>
+          )}
+        </div>
+
+        <div style={{
+          display: "flex",
+          flexWrap: "wrap",
+          alignItems: "center",
+          gap: "10px",
+          backgroundColor: "#eff6ff",
+          padding: isMobile ? "8px" : "8px 12px",
+          borderRadius: "8px",
+          border: "1px solid #bfdbfe",
+        }}>
+          {/* Largeur */}
+          <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+            <span style={{ fontSize: "12px", color: "#1e40af", fontWeight: 700, whiteSpace: "nowrap" }}>
+              Largeur
+            </span>
+            <button
+              onClick={() => updateFloorWidth(floorWidth - FLOOR_SIZE_STEP)}
+              disabled={floorWidth <= MIN_FLOOR_DIM}
+              title="Réduire la largeur"
+              style={{
+                width: "30px",
+                height: "30px",
+                border: "none",
+                borderRadius: "6px",
+                backgroundColor: floorWidth <= MIN_FLOOR_DIM ? "#cbd5e1" : "#2563eb",
+                color: "white",
+                fontSize: "16px",
+                fontWeight: "bold",
+                cursor: floorWidth <= MIN_FLOOR_DIM ? "not-allowed" : "pointer",
+              }}
+            >
+              −
+            </button>
+            <input
+              type="number"
+              min={MIN_FLOOR_DIM}
+              value={floorWidth}
+              onChange={(e) => updateFloorWidth(e.target.value)}
+              style={{
+                width: "64px",
+                height: "30px",
+                textAlign: "center",
+                border: "1px solid #93c5fd",
+                borderRadius: "6px",
+                fontWeight: 700,
+                fontSize: "13px",
+              }}
+            />
+            <button
+              onClick={() => updateFloorWidth(floorWidth + FLOOR_SIZE_STEP)}
+              title="Augmenter la largeur"
+              style={{
+                width: "30px",
+                height: "30px",
+                border: "none",
+                borderRadius: "6px",
+                backgroundColor: "#2563eb",
+                color: "white",
+                fontSize: "16px",
+                fontWeight: "bold",
+                cursor: "pointer",
+              }}
+            >
+              +
+            </button>
+          </div>
+
+          {/* Longueur */}
+          <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+            <span style={{ fontSize: "12px", color: "#1e40af", fontWeight: 700, whiteSpace: "nowrap" }}>
+              Longueur
+            </span>
+            <button
+              onClick={() => updateFloorLength(floorLength - FLOOR_SIZE_STEP)}
+              disabled={floorLength <= MIN_FLOOR_DIM}
+              title="Réduire la longueur"
+              style={{
+                width: "30px",
+                height: "30px",
+                border: "none",
+                borderRadius: "6px",
+                backgroundColor: floorLength <= MIN_FLOOR_DIM ? "#cbd5e1" : "#2563eb",
+                color: "white",
+                fontSize: "16px",
+                fontWeight: "bold",
+                cursor: floorLength <= MIN_FLOOR_DIM ? "not-allowed" : "pointer",
+              }}
+            >
+              −
+            </button>
+            <input
+              type="number"
+              min={MIN_FLOOR_DIM}
+              value={floorLength}
+              onChange={(e) => updateFloorLength(e.target.value)}
+              style={{
+                width: "64px",
+                height: "30px",
+                textAlign: "center",
+                border: "1px solid #93c5fd",
+                borderRadius: "6px",
+                fontWeight: 700,
+                fontSize: "13px",
+              }}
+            />
+            <button
+              onClick={() => updateFloorLength(floorLength + FLOOR_SIZE_STEP)}
+              title="Augmenter la longueur"
+              style={{
+                width: "30px",
+                height: "30px",
+                border: "none",
+                borderRadius: "6px",
+                backgroundColor: "#2563eb",
+                color: "white",
+                fontSize: "16px",
+                fontWeight: "bold",
+                cursor: "pointer",
+              }}
+            >
+              +
+            </button>
+          </div>
+
           <button
-            onClick={handleToggleEdit}
+            onClick={handleFloorReset}
+            title="Dimensions par défaut"
             style={{
-              padding: isMobile ? "8px 12px" : "10px 20px",
-              fontSize: isMobile ? "12px" : "14px",
-              backgroundColor: isEditing ? "#ff6b6b" : "#4CAF50",
-              color: "white",
-              border: "none",
-              borderRadius: "5px",
+              padding: "7px 10px",
+              border: "1px solid #93c5fd",
+              borderRadius: "6px",
+              backgroundColor: "#fff",
+              color: "#1d4ed8",
+              fontSize: "12px",
+              fontWeight: 700,
               cursor: "pointer",
               whiteSpace: "nowrap",
             }}
           >
-            {isEditing ? (isMobile ? "✕" : "Arrêter l'édition") : (isMobile ? "✏️" : "Éditer la salle")}
+            Défaut
           </button>
-        )}
-        {isEditing && (
-          <button
-            onClick={() => setShowColorPicker(!showColorPicker)}
-            style={{
-              padding: isMobile ? "8px 12px" : "10px 20px",
-              fontSize: isMobile ? "12px" : "14px",
-              backgroundColor: showColorPicker ? "#9C27B0" : "#9C27B0",
-              color: "white",
-              border: "none",
-              borderRadius: "5px",
-              cursor: "pointer",
-              whiteSpace: "nowrap",
-            }}
-          >
-            {isMobile ? "🎨" : "🎨 Couleurs"}
-          </button>
-        )}
+        </div>
       </div>
+
       {message && (
         <div style={{
           position: "absolute",
-          top: isMobile ? "60px" : "70px",
+          top: isMobile ? "110px" : "78px",
           left: "50%",
           transform: "translateX(-50%)",
-          padding: isMobile ? "8px 15px" : "10px 20px",
-          fontSize: isMobile ? "12px" : "14px",
-          backgroundColor: message.includes("succès") || message.includes("Erreur") ? 
-            (message.includes("succès") ? "#4CAF50" : "#f44336") : "#2196F3",
+          padding: isMobile ? "10px 14px" : "12px 18px",
+          fontSize: isMobile ? "13px" : "14px",
+          backgroundColor: message.toLowerCase().includes("succès")
+            ? "#16a34a"
+            : (message.toLowerCase().includes("erreur") || message.toLowerCase().includes("obligatoire") || message.toLowerCase().includes("requis") || message.toLowerCase().includes("existe") || message.toLowerCase().includes("maximum") || message.toLowerCase().includes("indiquez"))
+              ? "#dc2626"
+              : "#2563eb",
           color: "white",
-          borderRadius: "5px",
-          zIndex: 1000,
-          maxWidth: isMobile ? "90%" : "auto",
+          borderRadius: "8px",
+          zIndex: 1200,
+          maxWidth: isMobile ? "92%" : "520px",
           textAlign: "center",
+          boxShadow: "0 4px 14px rgba(0,0,0,0.2)",
+          fontWeight: 600,
         }}>
           {message}
         </div>
       )}
-      {/* Bouton pour afficher les instructions du mode édition */}
-      {isEditing && (
-        <div style={{
-          position: "absolute",
-          top: isMobile ? "50px" : "60px",
-          left: "50%",
-          transform: "translateX(-50%)",
-          zIndex: 1000,
-        }}>
-          <button
-            onClick={() => setShowEditInstructions(!showEditInstructions)}
-            style={{
-              padding: isMobile ? "10px 18px" : "12px 24px",
-              fontSize: isMobile ? "13px" : "14px",
-              backgroundColor: showEditInstructions ? "#4CAF50" : "#2196F3",
-              color: "white",
-              border: "none",
-              borderRadius: "25px",
-              fontWeight: "bold",
-              cursor: "pointer",
-              boxShadow: "0 2px 8px rgba(0,0,0,0.3)",
-              display: "flex",
-              alignItems: "center",
-              gap: "8px",
-              transition: "all 0.3s ease",
-            }}
-          >
-            <span>{showEditInstructions ? "✕" : "📝"}</span>
-            <span>{showEditInstructions ? "Fermer" : "Cliquez ici pour le mode d'édition"}</span>
-          </button>
-        </div>
-      )}
-      {/* Statistiques de la salle */}
+
+      {/* Statistiques en bas à droite */}
       <div style={{
         position: "absolute",
-        top: isMobile ? "10px" : "20px",
-        right: isMobile ? "10px" : "20px",
-        padding: isMobile ? "10px 12px" : "15px 20px",
-        backgroundColor: "rgba(64, 84, 51, 0.9)",
+        bottom: isMobile ? "12px" : "20px",
+        right: isMobile ? "12px" : "20px",
+        padding: isMobile ? "10px 12px" : "12px 16px",
+        backgroundColor: "rgba(64, 84, 51, 0.95)",
         color: "white",
         borderRadius: "10px",
         zIndex: 1000,
-        fontSize: isMobile ? "12px" : "16px",
+        fontSize: isMobile ? "12px" : "14px",
         fontWeight: "bold",
         boxShadow: "0 2px 10px rgba(0,0,0,0.3)",
         display: "flex",
         flexDirection: "column",
-        gap: isMobile ? "5px" : "8px",
-        minWidth: isMobile ? "120px" : "200px",
+        gap: "6px",
+        minWidth: isMobile ? "130px" : "170px",
       }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <span>{isMobile ? "📊" : "📊 Tables :"}</span>
-          <span style={{ fontSize: isMobile ? "16px" : "20px", color: "#FFD700" }}>{totalTables}</span>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "16px" }}>
+          <span>📊 Tables</span>
+          <span style={{ fontSize: isMobile ? "16px" : "18px", color: "#FFD700" }}>{totalTables}</span>
         </div>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <span>{isMobile ? "🪑" : "🪑 Chaises :"}</span>
-          <span style={{ fontSize: isMobile ? "16px" : "20px", color: "#FFD700" }}>{totalChaises}</span>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "16px" }}>
+          <span>🪑 Chaises</span>
+          <span style={{ fontSize: isMobile ? "16px" : "18px", color: "#FFD700" }}>{totalChaises}</span>
         </div>
       </div>
 
@@ -1150,15 +1400,15 @@ export default function Salle({
       {isEditing && showColorPicker && (
         <div style={{
           position: "absolute",
-          top: isMobile ? "100px" : "120px",
-          right: isMobile ? "10px" : "20px",
+          top: isMobile ? "120px" : "84px",
+          right: isMobile ? "12px" : "16px",
           padding: isMobile ? "15px" : "20px",
           backgroundColor: "white",
           borderRadius: "12px",
           boxShadow: "0 4px 20px rgba(0,0,0,0.3)",
           zIndex: 2000,
           minWidth: isMobile ? "200px" : "250px",
-          maxWidth: isMobile ? "calc(100% - 20px)" : "300px",
+          maxWidth: isMobile ? "calc(100% - 24px)" : "300px",
         }}>
           <h3 style={{ 
             margin: "0 0 15px 0", 
@@ -1284,16 +1534,15 @@ export default function Salle({
       {isEditing && showEditInstructions && (
         <div style={{
           position: "absolute",
-          top: isMobile ? "100px" : "120px",
-          left: "50%",
-          transform: "translateX(-50%)",
+          top: isMobile ? "120px" : "84px",
+          left: isMobile ? "12px" : "16px",
           padding: isMobile ? "15px 18px" : isTablet ? "18px 22px" : "20px 25px",
-          backgroundColor: "rgba(0,0,0,0.9)",
+          backgroundColor: "rgba(0,0,0,0.92)",
           color: "white",
           borderRadius: "12px",
           zIndex: 1000,
           fontSize: isMobile ? "12px" : isTablet ? "13px" : "14px",
-          maxWidth: isMobile ? "calc(100% - 40px)" : isTablet ? "320px" : "360px",
+          maxWidth: isMobile ? "calc(100% - 24px)" : isTablet ? "320px" : "360px",
           boxShadow: "0 4px 20px rgba(0,0,0,0.5)",
           lineHeight: "1.8",
         }}>
@@ -1371,21 +1620,33 @@ export default function Salle({
               fontWeight: "bold",
               fontSize: isMobile ? "14px" : "16px",
             }}>
-              Nom de la table :
+              Nom de la table <span style={{ color: "#dc2626" }}>*</span>
             </label>
             <input
               type="text"
               value={tableFormData.nom}
-              onChange={(e) => setTableFormData({ ...tableFormData, nom: e.target.value })}
+              onChange={(e) => {
+                setTableFormData({ ...tableFormData, nom: e.target.value.toUpperCase() });
+                if (tableFormErrors.nom) {
+                  setTableFormErrors((prev) => ({ ...prev, nom: undefined }));
+                }
+              }}
               style={{
                 width: "100%",
                 padding: isMobile ? "10px" : "8px",
-                border: "1px solid #ddd",
+                border: tableFormErrors.nom ? "2px solid #dc2626" : "1px solid #ddd",
                 borderRadius: "5px",
                 fontSize: isMobile ? "14px" : "16px",
+                textTransform: "uppercase",
+                boxSizing: "border-box",
               }}
-              placeholder="Nom de la table"
+              placeholder="NOM DE LA TABLE"
             />
+            {tableFormErrors.nom && (
+              <p style={{ color: "#dc2626", fontSize: "12px", margin: "6px 0 0", fontWeight: 600 }}>
+                {tableFormErrors.nom}
+              </p>
+            )}
           </div>
           <div style={{ marginBottom: isMobile ? "15px" : "20px" }}>
             <label style={{ 
@@ -1394,22 +1655,33 @@ export default function Salle({
               fontWeight: "bold",
               fontSize: isMobile ? "14px" : "16px",
             }}>
-              Nombre de chaises :
+              Nombre de chaises <span style={{ color: "#dc2626" }}>*</span>
             </label>
             <input
               type="number"
               min="1"
               max="20"
               value={tableFormData.nbChaises}
-              onChange={(e) => setTableFormData({ ...tableFormData, nbChaises: parseInt(e.target.value) || 10 })}
+              onChange={(e) => {
+                setTableFormData({ ...tableFormData, nbChaises: parseInt(e.target.value) || "" });
+                if (tableFormErrors.nbChaises) {
+                  setTableFormErrors((prev) => ({ ...prev, nbChaises: undefined }));
+                }
+              }}
               style={{
                 width: "100%",
                 padding: isMobile ? "10px" : "8px",
-                border: "1px solid #ddd",
+                border: tableFormErrors.nbChaises ? "2px solid #dc2626" : "1px solid #ddd",
                 borderRadius: "5px",
                 fontSize: isMobile ? "14px" : "16px",
+                boxSizing: "border-box",
               }}
             />
+            {tableFormErrors.nbChaises && (
+              <p style={{ color: "#dc2626", fontSize: "12px", margin: "6px 0 0", fontWeight: 600 }}>
+                {tableFormErrors.nbChaises}
+              </p>
+            )}
           </div>
           {editingTable && (
             <button
@@ -1454,6 +1726,7 @@ export default function Salle({
                 setShowTableForm(false);
                 setEditingTable(null);
                 setTableFormData({ nom: "", nbChaises: 10 });
+                setTableFormErrors({});
               }}
               style={{
                 flex: 1,
