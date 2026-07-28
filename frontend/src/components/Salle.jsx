@@ -87,6 +87,9 @@ export default function Salle({
   const [floorWidth, setFloorWidth] = useState(DEFAULT_FLOOR_WIDTH);
   const [floorLength, setFloorLength] = useState(DEFAULT_FLOOR_LENGTH);
   const [tableFormErrors, setTableFormErrors] = useState({});
+  const [mobileSelectedTable, setMobileSelectedTable] = useState(null);
+  const [showMobileTableList, setShowMobileTableList] = useState(false);
+  const [tableListSearch, setTableListSearch] = useState('');
   const [colors, setColors] = useState({
     floor: '#e8e8e8',
     table: '#FFA500',
@@ -621,66 +624,72 @@ export default function Salle({
       endDrag();
     };
 
-    // Gestion du double-tap pour mobile
-    let lastTapTime = 0;
-    let lastTapCoords = null;
-    const DOUBLE_TAP_DELAY = 300; // ms
-    const DOUBLE_TAP_DISTANCE = 50; // pixels
-
     // Gestion du drag & drop en mode édition - Événements tactiles
+    let touchStartPos = null;
+    let touchMovedFar = false;
+    const TAP_MOVE_THRESHOLD = 12; // px
+
     const onTouchStart = (event) => {
       const coords = getEventCoordinates(event);
       const touch = event.touches[0];
-      const currentTime = Date.now();
-      const tapLength = currentTime - lastTapTime;
+      touchStartPos = { x: touch.clientX, y: touch.clientY };
+      touchMovedFar = false;
       
-      // Détecter le double-tap
-      if (lastTapCoords && 
-          tapLength < DOUBLE_TAP_DELAY &&
-          Math.abs(touch.clientX - lastTapCoords.x) < DOUBLE_TAP_DISTANCE &&
-          Math.abs(touch.clientY - lastTapCoords.y) < DOUBLE_TAP_DISTANCE) {
-        // Double-tap détecté - éditer la table
-        event.preventDefault();
-        editTableAtCoordinates(coords);
-        lastTapTime = 0;
-        lastTapCoords = null;
-        return;
-      }
-      
-      // Enregistrer le tap pour la détection du double-tap
-      lastTapTime = currentTime;
-      lastTapCoords = { x: touch.clientX, y: touch.clientY };
-      
-      // Essayer de démarrer le drag
+      // Essayer de démarrer le drag (sélection visuelle)
       if (startDrag(coords)) {
-        event.preventDefault(); // Empêcher le scroll si on drag une table
+        event.preventDefault();
         event.stopPropagation();
       }
     };
 
     const onTouchMove = (event) => {
+      if (touchStartPos && event.touches[0]) {
+        const dx = event.touches[0].clientX - touchStartPos.x;
+        const dy = event.touches[0].clientY - touchStartPos.y;
+        if (Math.hypot(dx, dy) > TAP_MOVE_THRESHOLD) {
+          touchMovedFar = true;
+        }
+      }
+
       if (!isDraggingRef.current) return;
       
-      event.preventDefault(); // Empêcher le scroll pendant le drag
+      event.preventDefault();
       
-      // Throttle à 60fps max
       const now = performance.now();
       if (now - lastMoveTime < 16) return;
       lastMoveTime = now;
 
       const coords = getEventCoordinates(event);
       updateDrag(coords);
-      
-      // Annuler le double-tap si on bouge
-      lastTapTime = 0;
-      lastTapCoords = null;
     };
 
     const onTouchEnd = (event) => {
+      const selectedNom = selectedTableRef.current;
+      const isMobileTouch = window.innerWidth < 768;
+
       if (isDraggingRef.current) {
         event.preventDefault();
       }
+
+      // Sur mobile : un simple tap sélectionne la table (sans double-tap)
+      if (isEditing && isMobileTouch && selectedNom && !touchMovedFar) {
+        // Garder la surbrillance verte pour la table sélectionnée
+        const table = tableRefs.current[selectedNom];
+        endDrag();
+        if (table) {
+          table.material.color.set(0x00ff00);
+        }
+        setMobileSelectedTable(selectedNom);
+        setMessage(`Table "${selectedNom}" sélectionnée — appuyez sur Modifier`);
+        setTimeout(() => setMessage(""), 2500);
+        touchStartPos = null;
+        touchMovedFar = false;
+        return;
+      }
+
       endDrag();
+      touchStartPos = null;
+      touchMovedFar = false;
     };
 
     // Fonction pour éditer une table à partir de coordonnées
@@ -856,6 +865,28 @@ export default function Salle({
     setTableFormData({ nom: "", nbChaises: 10 });
     setTableFormErrors({});
     setShowTableForm(true);
+    setShowMobileTableList(false);
+  };
+
+  const openTableEditor = (tableName) => {
+    const tableGroup = tableGroupsRef.current[tableName];
+    const fromData = tablesData.find((t) => t.nom === tableName);
+    setEditingTable(tableName);
+    setTableFormData({
+      nom: tableName,
+      nbChaises: tableGroup?.userData?.nbChaises || fromData?.nbChaises || 10,
+    });
+    setTableFormErrors({});
+    setShowTableForm(true);
+    setShowMobileTableList(false);
+    setMobileSelectedTable(tableName);
+  };
+
+  const clearMobileSelection = () => {
+    if (mobileSelectedTable && tableRefs.current[mobileSelectedTable]) {
+      tableRefs.current[mobileSelectedTable].material.color.set(hexToNumber(colors.table));
+    }
+    setMobileSelectedTable(null);
   };
 
   const handleDeleteTable = async (tableName) => {
@@ -1195,6 +1226,27 @@ export default function Salle({
               }}
             >
               {showEditInstructions ? "Fermer aide" : (isMobile ? "Aide" : "Aide édition")}
+            </button>
+          )}
+          {isEditing && isMobile && (
+            <button
+              onClick={() => {
+                setShowMobileTableList(true);
+                setTableListSearch('');
+              }}
+              style={{
+                padding: "8px 12px",
+                fontSize: "12px",
+                backgroundColor: "#1d4ed8",
+                color: "white",
+                border: "none",
+                borderRadius: "6px",
+                cursor: "pointer",
+                whiteSpace: "nowrap",
+                fontWeight: 700,
+              }}
+            >
+              📋 Tables
             </button>
           )}
         </div>
@@ -1558,16 +1610,20 @@ export default function Salle({
           {isMobile ? (
             <>
               <p style={{ margin: "8px 0", display: "flex", alignItems: "flex-start", gap: "8px" }}>
+                <span>1️⃣</span>
+                <span><strong>Tapez une fois</strong> sur une table pour la sélectionner</span>
+              </p>
+              <p style={{ margin: "8px 0", display: "flex", alignItems: "flex-start", gap: "8px" }}>
+                <span>✏️</span>
+                <span>Puis appuyez sur <strong>Modifier</strong> en bas de l&apos;écran</span>
+              </p>
+              <p style={{ margin: "8px 0", display: "flex", alignItems: "flex-start", gap: "8px" }}>
+                <span>📋</span>
+                <span>Ou ouvrez <strong>Tables</strong> en haut pour choisir dans la liste</span>
+              </p>
+              <p style={{ margin: "8px 0", display: "flex", alignItems: "flex-start", gap: "8px" }}>
                 <span>👆</span>
-                <span><strong>Touchez et maintenez</strong> une table pour la déplacer</span>
-              </p>
-              <p style={{ margin: "8px 0", display: "flex", alignItems: "flex-start", gap: "8px" }}>
-                <span>👆👆</span>
-                <span><strong>Double-tapez</strong> sur une table pour la modifier</span>
-              </p>
-              <p style={{ margin: "8px 0", display: "flex", alignItems: "flex-start", gap: "8px" }}>
-                <span>➕</span>
-                <span>Utilisez les <strong>boutons en haut</strong> pour ajouter ou supprimer des tables</span>
+                <span><strong>Maintenez et glissez</strong> pour déplacer une table</span>
               </p>
             </>
           ) : (
@@ -1741,6 +1797,164 @@ export default function Salle({
             >
               Annuler
             </button>
+          </div>
+        </div>
+      )}
+      
+      {/* Popup centrale mobile pour la table sélectionnée */}
+      {isEditing && isMobile && mobileSelectedTable && !showTableForm && (
+        <div
+          style={{
+            position: "absolute",
+            inset: 0,
+            zIndex: 1400,
+            backgroundColor: "rgba(15, 23, 42, 0.55)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: "20px",
+          }}
+          onClick={clearMobileSelection}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              width: "100%",
+              maxWidth: "340px",
+              backgroundColor: "#ffffff",
+              border: "2px solid #2563eb",
+              borderRadius: "16px",
+              padding: "20px",
+              boxShadow: "0 12px 40px rgba(0,0,0,0.35)",
+              textAlign: "center",
+            }}
+          >
+            <p style={{ margin: "0 0 4px", fontSize: "13px", color: "#64748b", fontWeight: 600 }}>
+              Table sélectionnée
+            </p>
+            <p style={{
+              margin: "0 0 18px",
+              fontSize: "22px",
+              color: "#1d4ed8",
+              fontWeight: 800,
+              letterSpacing: "0.02em",
+              wordBreak: "break-word",
+            }}>
+              {mobileSelectedTable}
+            </p>
+            <div style={{ display: "flex", gap: "10px" }}>
+              <button
+                onClick={() => openTableEditor(mobileSelectedTable)}
+                style={{
+                  flex: 1,
+                  padding: "14px 16px",
+                  backgroundColor: "#2563eb",
+                  color: "white",
+                  border: "none",
+                  borderRadius: "10px",
+                  fontWeight: 800,
+                  fontSize: "15px",
+                  boxShadow: "0 4px 12px rgba(37, 99, 235, 0.35)",
+                }}
+              >
+                Modifier
+              </button>
+              <button
+                onClick={clearMobileSelection}
+                style={{
+                  padding: "14px 16px",
+                  backgroundColor: "#e2e8f0",
+                  color: "#334155",
+                  border: "none",
+                  borderRadius: "10px",
+                  fontWeight: 800,
+                  fontSize: "15px",
+                }}
+              >
+                ✕
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Liste des tables (mobile) */}
+      {isEditing && showMobileTableList && (
+        <div style={{
+          position: "absolute",
+          inset: 0,
+          zIndex: 2000,
+          backgroundColor: "rgba(15,23,42,0.45)",
+          display: "flex",
+          alignItems: "flex-end",
+          justifyContent: "center",
+        }}>
+          <div style={{
+            width: "100%",
+            maxHeight: "70vh",
+            backgroundColor: "white",
+            borderTopLeftRadius: "16px",
+            borderTopRightRadius: "16px",
+            padding: "16px",
+            display: "flex",
+            flexDirection: "column",
+            gap: "12px",
+          }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <h3 style={{ margin: 0, fontSize: "18px", color: "#0f172a" }}>Choisir une table</h3>
+              <button
+                onClick={() => setShowMobileTableList(false)}
+                style={{
+                  border: "none",
+                  background: "#e2e8f0",
+                  borderRadius: "8px",
+                  padding: "8px 12px",
+                  fontWeight: 700,
+                }}
+              >
+                Fermer
+              </button>
+            </div>
+            <input
+              type="text"
+              value={tableListSearch}
+              onChange={(e) => setTableListSearch(e.target.value.toUpperCase())}
+              placeholder="Rechercher une table..."
+              style={{
+                width: "100%",
+                padding: "12px",
+                borderRadius: "8px",
+                border: "1px solid #cbd5e1",
+                fontSize: "14px",
+                boxSizing: "border-box",
+                textTransform: "uppercase",
+              }}
+            />
+            <div style={{ overflowY: "auto", display: "flex", flexDirection: "column", gap: "8px" }}>
+              {tablesData
+                .filter((t) => !tableListSearch || String(t.nom).toUpperCase().includes(tableListSearch))
+                .sort((a, b) => String(a.nom).localeCompare(String(b.nom)))
+                .map((t) => (
+                  <button
+                    key={t.nom}
+                    onClick={() => openTableEditor(t.nom)}
+                    style={{
+                      textAlign: "left",
+                      padding: "12px 14px",
+                      borderRadius: "10px",
+                      border: "1px solid #e2e8f0",
+                      backgroundColor: mobileSelectedTable === t.nom ? "#dbeafe" : "#f8fafc",
+                      cursor: "pointer",
+                    }}
+                  >
+                    <div style={{ fontWeight: 700, color: "#1e293b" }}>{t.nom}</div>
+                    <div style={{ fontSize: "12px", color: "#64748b" }}>{t.nbChaises || 10} chaises</div>
+                  </button>
+                ))}
+              {tablesData.filter((t) => !tableListSearch || String(t.nom).toUpperCase().includes(tableListSearch)).length === 0 && (
+                <p style={{ textAlign: "center", color: "#64748b", margin: "20px 0" }}>Aucune table trouvée</p>
+              )}
+            </div>
           </div>
         </div>
       )}

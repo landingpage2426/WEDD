@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
-import { FaHeart, FaEnvelope, FaLock, FaUser, FaPhone, FaCalendarAlt, FaMapMarkerAlt, FaPalette, FaArrowRight } from 'react-icons/fa';
+import { FaHeart, FaEnvelope, FaLock, FaUser, FaPhone, FaCalendarAlt, FaMapMarkerAlt, FaPalette, FaArrowRight, FaEye, FaEyeSlash } from 'react-icons/fa';
 import { FiHeart } from 'react-icons/fi';
 import image_couple from '../assets/img/image_couple.jpg';
 import logo from '../assets/img/logo.png';
@@ -15,6 +15,8 @@ function Inscription() {
   const [errorMessage, setErrorMessage] = useState({ text: '', type: '' });
   const [hearts, setHearts] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const apiUrl = import.meta.env.VITE_API_URL;
 
   const [formData, setFormData] = useState({
@@ -276,17 +278,25 @@ function Inscription() {
                 transition={{ type: "spring", stiffness: 300 }}
               >
                 <div className="relative">
-                  <FaLock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-pink-400" />
+                  <FaLock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-pink-400 z-10" />
                   <Input
                     width="w-full"
-                    type="password"
+                    type={showPassword ? 'text' : 'password'}
                     name="password"
                     placeholder="Mot de passe"
                     required={true}
                     value={formData.password}
                     onChange={handleChange}
-                    className="pl-10 bg-white bg-opacity-70 border-pink-200 focus:border-rose-400"
+                    className="pl-10 pr-10 bg-white bg-opacity-70 border-pink-200 focus:border-rose-400"
                   />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword((v) => !v)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-pink-400 hover:text-rose-600"
+                    aria-label={showPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}
+                  >
+                    {showPassword ? <FaEyeSlash /> : <FaEye />}
+                  </button>
                 </div>
               </motion.div>
 
@@ -295,17 +305,25 @@ function Inscription() {
                 transition={{ type: "spring", stiffness: 300 }}
               >
                 <div className="relative">
-                  <FaLock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-pink-400" />
+                  <FaLock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-pink-400 z-10" />
                   <Input
                     width="w-full"
-                    type="password"
+                    type={showConfirmPassword ? 'text' : 'password'}
                     name="confirmPassword"
                     placeholder="Confirmez le mot de passe"
                     required={true}
                     value={formData.confirmPassword}
                     onChange={handleChange}
-                    className="pl-10 bg-white bg-opacity-70 border-pink-200 focus:border-rose-400"
+                    className="pl-10 pr-10 bg-white bg-opacity-70 border-pink-200 focus:border-rose-400"
                   />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword((v) => !v)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-pink-400 hover:text-rose-600"
+                    aria-label={showConfirmPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}
+                  >
+                    {showConfirmPassword ? <FaEyeSlash /> : <FaEye />}
+                  </button>
                 </div>
               </motion.div>
             </div>

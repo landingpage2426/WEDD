@@ -8,12 +8,13 @@ import loadingImage from '../assets/img/load.png';
 import Input from '../components/Input';
 import Image from '../components/Image';
 import Title from '../components/Title';
-import { FaHeart, FaEnvelope, FaLock, FaArrowRight } from 'react-icons/fa';
+import { FaHeart, FaEnvelope, FaLock, FaArrowRight, FaEye, FaEyeSlash } from 'react-icons/fa';
 import { FiHeart } from 'react-icons/fi';
 
 function Connexion() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [hearts, setHearts] = useState([]);
@@ -215,17 +216,25 @@ function Connexion() {
               transition={{ type: "spring", stiffness: 300 }}
             >
               <div className="relative">
-                <FaLock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-pink-400" />
+                <FaLock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-pink-400 z-10" />
                 <Input
                   width="w-full"
-                  type="password"
+                  type={showPassword ? 'text' : 'password'}
                   name="password"
                   placeholder="Mot de passe"
                   required={true}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="pl-10 bg-white bg-opacity-70 border-pink-200 focus:border-rose-400"
+                  className="pl-10 pr-10 bg-white bg-opacity-70 border-pink-200 focus:border-rose-400"
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((v) => !v)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-pink-400 hover:text-rose-600"
+                  aria-label={showPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}
+                >
+                  {showPassword ? <FaEyeSlash /> : <FaEye />}
+                </button>
               </div>
 
               <div className="mt-3 flex justify-end">
