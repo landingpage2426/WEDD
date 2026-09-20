@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { FiEdit2, FiTrash2, FiDownload } from 'react-icons/fi';
+import { FiEdit2, FiTrash2, FiDownload, FiEye } from 'react-icons/fi';
 import { FaWhatsapp } from 'react-icons/fa';
 import { ImSpinner8 } from 'react-icons/im';
 import { handleWhatsAppShare } from '../utils/HandleWhatsAppShare';
@@ -8,10 +8,12 @@ import { handleDownload } from '../utils/HandleDownload';
 import { handleSendEmail } from '../utils/HandleSendEmail';
 import { FiMail } from 'react-icons/fi';
 import { formatInviteDisplayName, formatTitreLabel, getInvitePersonCount, isCouple } from '../utils/invitePeople';
+import BilletPreview from './BilletPreview';
 
 function Table({ invites, apiUrl, onEditInvite, handleDeleteInvite, userRole }) {
   const [loadingStates, setLoadingStates] = useState({});
   const [expandedRow, setExpandedRow] = useState(null);
+  const [previewInvite, setPreviewInvite] = useState(null);
   const toggleRowExpand = (id) => {
     setExpandedRow(expandedRow === id ? null : id);
   };
@@ -155,7 +157,14 @@ function Table({ invites, apiUrl, onEditInvite, handleDeleteInvite, userRole }) 
                           </div>
                           <div className="flex flex-col justify-between">
                             {(userRole === 'client' || userRole === 'manager') && (
-                              <div className="flex space-x-3">
+                              <div className="flex flex-wrap gap-3">
+                                <button
+                                  onClick={() => setPreviewInvite(invite)}
+                                  className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded shadow-sm text-white bg-amber-700 hover:bg-amber-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-amber-600"
+                                >
+                                  <FiEye className="mr-2" />
+                                  Aperçu
+                                </button>
                                 <button
                                   onClick={() => handleDownload(invite._id,invites,setLoadingStates)}
                                   disabled={loadingStates[invite._id]}
@@ -212,6 +221,14 @@ function Table({ invites, apiUrl, onEditInvite, handleDeleteInvite, userRole }) 
           </tbody>
         </table>
       </div>
+      {previewInvite && (
+        <BilletPreview
+          invite={previewInvite}
+          onClose={() => setPreviewInvite(null)}
+          onDownload={() => handleDownload(previewInvite._id, invites, setLoadingStates)}
+          downloading={loadingStates[previewInvite._id] === 'pdf'}
+        />
+      )}
     </div>
   );
 }

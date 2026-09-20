@@ -6,7 +6,7 @@ import logo from "../assets/img/logo.png"
 import axios from 'axios';
 import { AnimatePresence, motion } from 'framer-motion';
 import Countdown from '../components/Countdown';
-import { isCouple } from '../utils/invitePeople';
+import { isCouple, getBilletCharsRemaining, limitBilletField, MAX_BILLET_LINE_CHARS } from '../utils/invitePeople';
 
 function AjoutInvite({ onClose }) {
   const [nom, setNom] = useState('');
@@ -23,6 +23,7 @@ function AjoutInvite({ onClose }) {
 
   const navigate = useNavigate();
   const apiUrl = import.meta.env.VITE_API_URL;
+  const billetRemaining = getBilletCharsRemaining(prenom, nom, titre);
 
 const handleLogout = async () => {
     try {
@@ -204,7 +205,7 @@ const handleLogout = async () => {
             placeholder="Dupont"
             value={nom}
             onChange={(e) => {
-              setNom(e.target.value);
+              setNom(limitBilletField(prenom, nom, titre, 'nom', e.target.value));
               clearFieldError('nom');
             }}
             className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${errors.nom ? 'border-red-500' : 'border-gray-300'}`}
@@ -221,7 +222,7 @@ const handleLogout = async () => {
             placeholder="Jean"
             value={prenom}
             onChange={(e) => {
-              setPrenom(e.target.value);
+              setPrenom(limitBilletField(prenom, nom, titre, 'prenom', e.target.value));
               clearFieldError('prenom');
             }}
             className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${errors.prenom ? 'border-red-500' : 'border-gray-300'}`}
@@ -229,6 +230,10 @@ const handleLogout = async () => {
           {errors.prenom && <p className="mt-1 text-xs font-semibold text-red-600">{errors.prenom}</p>}
         </div>
       </div>
+      <p className={`-mt-2 text-xs font-medium ${billetRemaining <= 5 ? 'text-red-600' : 'text-gray-500'}`}>
+        {billetRemaining} caractère{billetRemaining === 1 ? '' : 's'} restant{billetRemaining === 1 ? '' : 's'} sur le billet
+        {' '}({MAX_BILLET_LINE_CHARS - billetRemaining}/{MAX_BILLET_LINE_CHARS})
+      </p>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Téléphone <span className="text-gray-400 font-normal">(optionnel)</span></label>

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import { isCouple } from '../utils/invitePeople';
+import { isCouple, getBilletCharsRemaining, limitBilletField, MAX_BILLET_LINE_CHARS } from '../utils/invitePeople';
 
 function ModifierInvite({ invite, onClose }) {
   const [titre, setTitre] = useState('');
@@ -13,6 +13,7 @@ function ModifierInvite({ invite, onClose }) {
   const [image, setImage] = useState(null);
 
   const apiUrl = import.meta.env.VITE_API_URL;
+  const billetRemaining = getBilletCharsRemaining(prenom, nom, titre);
 
   useEffect(() => {
     if (invite) {
@@ -95,7 +96,7 @@ function ModifierInvite({ invite, onClose }) {
                 <input
                   type="text"
                   value={nom}
-                  onChange={(e) => setNom(e.target.value)}
+                  onChange={(e) => setNom(limitBilletField(prenom, nom, titre, 'nom', e.target.value))}
                   placeholder="Nom"
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition"
                 />
@@ -107,12 +108,16 @@ function ModifierInvite({ invite, onClose }) {
                 <input
                   type="text"
                   value={prenom}
-                  onChange={(e) => setPrenom(e.target.value)}
+                  onChange={(e) => setPrenom(limitBilletField(prenom, nom, titre, 'prenom', e.target.value))}
                   placeholder="Prénom"
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition"
                 />
               </div>
             </div>
+            <p className={`text-xs font-medium ${billetRemaining <= 5 ? 'text-red-600' : 'text-gray-500'}`}>
+              {billetRemaining} caractère{billetRemaining === 1 ? '' : 's'} restant{billetRemaining === 1 ? '' : 's'} sur le billet
+              {' '}({MAX_BILLET_LINE_CHARS - billetRemaining}/{MAX_BILLET_LINE_CHARS})
+            </p>
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Téléphone</label>

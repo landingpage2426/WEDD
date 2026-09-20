@@ -8,12 +8,14 @@ import axios from "axios";
 import { Html5Qrcode } from "html5-qrcode";
 import { AnimatePresence, motion } from "framer-motion";
 import Countdown from "../components/Countdown";
+import loadingImage from "../assets/img/load.png";
 
 const RechercheInvite = () => {
   const [invitesList, setInvitesList] = useState([]);
   const [inputId, setInputId] = useState("");
   const [error, setError] = useState(null);
   const [isScanning, setIsScanning] = useState(false);
+  const [verifying, setVerifying] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
 
   const apiUrl = import.meta.env.VITE_API_URL;
@@ -64,6 +66,7 @@ const RechercheInvite = () => {
 
 const handleSubmit = async (e) => {
   e.preventDefault();
+  if (verifying) return;
 
   const found = invitesList.find(
     (invite) => String(invite.inviteId).trim() === inputId.trim()
@@ -74,6 +77,8 @@ const handleSubmit = async (e) => {
     return;
   }
 
+  setError(null);
+  setVerifying(true);
   try {
     const token = localStorage.getItem("token");
     
@@ -134,6 +139,8 @@ const handleSubmit = async (e) => {
     } else {
       setError({ text: "Erreur lors de l'enregistrement de la présence.", color: "red" });
     }
+  } finally {
+    setVerifying(false);
   }
 };
 
@@ -151,6 +158,7 @@ const startScanner = () => {
       { facingMode: "environment" },
       { fps: 10, qrbox: 250 },
       async (decodedText) => {
+        setVerifying(true);
         html5QrCode.stop().then(async () => {
           setIsScanning(false);
           try {
@@ -222,7 +230,13 @@ const startScanner = () => {
             } else {
               setError({ text: "❌ QR Code invalide ou erreur serveur", color: "red" });
             }
+          } finally {
+            setVerifying(false);
           }
+        }).catch((err) => {
+          console.error("Erreur arrêt scanner :", err);
+          setIsScanning(false);
+          setVerifying(false);
         });
       },
       (errorMessage) => {
@@ -297,16 +311,18 @@ const startScanner = () => {
             </div>
             <button
               type="submit"
-              className="w-full bg-[#016CEC] font-bold text-white px-6 py-3 rounded-lg hover:bg-[#0156BC]"
+              disabled={verifying}
+              className="w-full bg-[#016CEC] font-bold text-white px-6 py-3 rounded-lg hover:bg-[#0156BC] disabled:opacity-60"
             >
-              CHERCHER
+              {verifying ? "VÉRIFICATION..." : "CHERCHER"}
             </button>
           </form>
 
           <button
             type="button"
             onClick={startScanner}
-            className="mt-4 w-full bg-green-600 font-bold text-white px-6 py-3 rounded-lg hover:bg-green-800"
+            disabled={verifying || isScanning}
+            className="mt-4 w-full bg-green-600 font-bold text-white px-6 py-3 rounded-lg hover:bg-green-800 disabled:opacity-60"
           >
             📷 Scanner un QR Code
           </button>
@@ -330,6 +346,14 @@ const startScanner = () => {
       <div className="hidden xl:block border-l border-gray-200 w-100">
         <BlogRight />
       </div>
+
+      {verifying && (
+        <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-black/55">
+          <img src={loadingImage} alt="Chargement" className="mb-4 h-14 w-14 animate-spin" />
+          <p className="text-lg font-semibold text-white">Vérification du billet…</p>
+          <p className="mt-1 text-sm text-white/80">Recherche en cours, veuillez patienter</p>
+        </div>
+      )}
     </div>
   );
 };
