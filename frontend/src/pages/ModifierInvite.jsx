@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
+import { isCouple } from '../utils/invitePeople';
 
 function ModifierInvite({ invite, onClose }) {
   const [titre, setTitre] = useState('');
@@ -32,7 +33,7 @@ function ModifierInvite({ invite, onClose }) {
       const formData = new FormData();
       formData.append('titre', titre);
       formData.append('nom', nom);
-      formData.append('prenom', prenom);
+      formData.append('prenom', isCouple(titre) ? (prenom.trim() || '-') : prenom);
       formData.append('telephone', telephone);
       formData.append('email', email);
       formData.append('nomTable', nomTable);
@@ -79,8 +80,13 @@ function ModifierInvite({ invite, onClose }) {
                 <option value="M">M.</option>
                 <option value="Mme">Mme</option>
                 <option value="Mlle">Mlle</option>
-                <option value="couple">M. & Mme</option>
+                <option value="couple">M. & Mme (2 personnes)</option>
               </select>
+              {isCouple(titre) && (
+                <p className="mt-2 rounded-lg bg-pink-50 px-3 py-2 text-sm font-medium text-pink-700">
+                  Un couple s’affiche en « M. & Mme » et compte pour 2 personnes dans les statistiques.
+                </p>
+              )}
             </div>
 
             <div className="grid grid-cols-2 gap-4">
@@ -95,7 +101,9 @@ function ModifierInvite({ invite, onClose }) {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Prénom</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Prénom {isCouple(titre) ? <span className="text-gray-400 font-normal">(optionnel pour un couple)</span> : null}
+                </label>
                 <input
                   type="text"
                   value={prenom}

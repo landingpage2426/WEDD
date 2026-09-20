@@ -12,9 +12,9 @@ const AddInvite = async (req, res) => {
             });
         }
         
-        if (!nom || !prenom) {
+        if (!nom || (titre !== 'couple' && !prenom)) {
             return res.status(400).json({
-                message: "Le nom et le prénom sont requis",
+                message: titre === 'couple' ? "Le nom est requis" : "Le nom et le prénom sont requis",
                 type: "danger"
             });
         }
@@ -28,7 +28,7 @@ const AddInvite = async (req, res) => {
         const newInvite = new Invite({
             titre,
             nom,
-            prenom,
+            prenom: titre === 'couple' ? (prenom || '-') : prenom,
             telephone: telephone || '',
             email: email || '',
             nomTable: nomTable ? String(nomTable).trim().toUpperCase() : nomTable,

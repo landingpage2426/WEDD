@@ -1,17 +1,18 @@
 import { useState, useEffect } from 'react';
 import ReactApexChart from 'react-apexcharts';
 import { motion } from 'framer-motion';
+import { countInvitePeople, countInvitePeopleByStatus } from '../utils/invitePeople';
 function Graphe({ invites }) {
   const [series, setSeries] = useState([0, 0]);
   const [totalInvites, setTotalInvites] = useState(0);
 
   useEffect(() => {
-    const presents = invites.filter(invite => invite.status?.toUpperCase() === 'P').length;
-    const absents = invites.filter(invite => invite.status?.toUpperCase() === 'A').length;
-    const noResponse = invites.filter(invite => !invite.status).length;
+    const presents = countInvitePeopleByStatus(invites, 'P');
+    const absents = countInvitePeopleByStatus(invites, 'A');
+    const noResponse = countInvitePeople(invites.filter(invite => !invite.status));
     
     setSeries([presents, absents, noResponse]);
-    setTotalInvites(invites.length);
+    setTotalInvites(countInvitePeople(invites));
   }, [invites]);
 
   const options = {
@@ -57,7 +58,7 @@ function Graphe({ invites }) {
             total: {
               show: true,
               showAlways: true,
-              label: 'Total Invités',
+              label: 'Total personnes',
               fontSize: '16px',
               fontWeight: 600,
               color: '#1f2937',
@@ -79,7 +80,7 @@ function Graphe({ invites }) {
     tooltip: {
       enabled: true,
       y: {
-        formatter: (value) => `${value} invité(s) (${Math.round(value / totalInvites * 100)}%)`
+        formatter: (value) => `${value} personne(s) (${Math.round(value / totalInvites * 100)}%)`
       }
     },
     responsive: [{
@@ -113,7 +114,7 @@ function Graphe({ invites }) {
     >
       <div className="mb-4">
         <h3 className="text-lg font-semibold text-gray-800">Statistiques de participation</h3>
-        <p className="text-sm text-gray-500">{totalInvites} invités au total</p>
+        <p className="text-sm text-gray-500">{totalInvites} personnes au total</p>
       </div>
       
       <div className="w-full h-[200px]">

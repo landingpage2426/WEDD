@@ -7,6 +7,7 @@ import { handleWhatsAppShare } from '../utils/HandleWhatsAppShare';
 import { handleDownload } from '../utils/HandleDownload';
 import { handleSendEmail } from '../utils/HandleSendEmail';
 import { FiMail } from 'react-icons/fi';
+import { formatInviteDisplayName, formatTitreLabel, getInvitePersonCount, isCouple } from '../utils/invitePeople';
 
 function Table({ invites, apiUrl, onEditInvite, handleDeleteInvite, userRole }) {
   const [loadingStates, setLoadingStates] = useState({});
@@ -62,9 +63,14 @@ function Table({ invites, apiUrl, onEditInvite, handleDeleteInvite, userRole }) 
                         </div>
                         <div className="ml-4">
                           <div className="text-sm font-medium text-gray-900">
-                            {invite.prenom} {invite.nom}
+                            {formatInviteDisplayName(invite)}
                           </div>
-                          <div className="text-sm text-gray-500 sm:hidden">
+                          <div className="text-sm text-gray-500">
+                            {isCouple(invite) && (
+                              <span className="mr-2 inline-flex items-center rounded-full bg-pink-100 px-2 py-0.5 text-xs font-semibold text-pink-700">
+                                {getInvitePersonCount(invite)} pers.
+                              </span>
+                            )}
                             {invite.nomTable && `Table: ${invite.nomTable}`}
                           </div>
                         </div>
@@ -138,8 +144,9 @@ function Table({ invites, apiUrl, onEditInvite, handleDeleteInvite, userRole }) 
                           <div>
                             <h4 className="text-sm font-medium text-gray-900 mb-2">Détails de l'invité</h4>
                             <div className="text-sm text-gray-500 space-y-1">
-                              <p><span className="font-medium">Titre:</span> {invite.titre || 'Non spécifié'}</p>
-                              <p><span className="font-medium">Nom complet:</span> {invite.prenom || 'Non spécifié' } {invite.nom || 'Non spécifié'}</p>
+                              <p><span className="font-medium">Titre:</span> {formatTitreLabel(invite.titre)}</p>
+                              <p><span className="font-medium">Nom complet:</span> {formatInviteDisplayName(invite) || 'Non spécifié'}</p>
+                              <p><span className="font-medium">Personnes:</span> {getInvitePersonCount(invite)}</p>
                               <p><span className="font-medium">ID:</span> {invite.inviteId || 'Non spécifié'}</p>
                               <p><span className="font-medium">Téléphone:</span> +237 {invite.telephone || 'Non spécifié'}</p>
                               <p><span className="font-medium">Email:</span> {invite.email || "Non spécifié"}</p>

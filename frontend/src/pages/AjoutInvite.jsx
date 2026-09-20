@@ -6,6 +6,7 @@ import logo from "../assets/img/logo.png"
 import axios from 'axios';
 import { AnimatePresence, motion } from 'framer-motion';
 import Countdown from '../components/Countdown';
+import { isCouple } from '../utils/invitePeople';
 
 function AjoutInvite({ onClose }) {
   const [nom, setNom] = useState('');
@@ -59,7 +60,7 @@ const handleLogout = async () => {
   const nextErrors = {};
   if (!titre) nextErrors.titre = 'La civilité est obligatoire.';
   if (!nom.trim()) nextErrors.nom = 'Le nom est obligatoire.';
-  if (!prenom.trim()) nextErrors.prenom = 'Le prénom est obligatoire.';
+  if (!isCouple(titre) && !prenom.trim()) nextErrors.prenom = 'Le prénom est obligatoire.';
   if (email.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
     nextErrors.email = 'Veuillez saisir un email valide.';
   }
@@ -76,7 +77,7 @@ const handleLogout = async () => {
     const formData = new FormData();
     formData.append('titre', titre);
     formData.append('nom', nom);
-    formData.append('prenom', prenom);
+    formData.append('prenom', isCouple(titre) ? (prenom.trim() || '-') : prenom);
     formData.append('telephone', telephone);
     formData.append('email', email);
     formData.append('nomTable', nomTable);
@@ -185,9 +186,14 @@ const handleLogout = async () => {
           <option value="M">Monsieur</option>
           <option value="Mme">Madame</option>
           <option value="Mlle">Mademoiselle</option>
-          <option value="couple">Couple</option>
+          <option value="couple">Couple (2 personnes)</option>
         </select>
         {errors.titre && <p className="mt-1 text-xs font-semibold text-red-600">{errors.titre}</p>}
+        {isCouple(titre) && (
+          <p className="mt-2 rounded-lg bg-pink-50 px-3 py-2 text-sm font-medium text-pink-700">
+            Un couple s’affiche en « M. & Mme » et compte pour 2 personnes dans les statistiques.
+          </p>
+        )}
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
@@ -207,7 +213,9 @@ const handleLogout = async () => {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Prénom <span className="text-red-600">*</span></label>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Prénom {isCouple(titre) ? <span className="text-gray-400 font-normal">(optionnel pour un couple)</span> : <span className="text-red-600">*</span>}
+          </label>
           <input
             type="text"
             placeholder="Jean"

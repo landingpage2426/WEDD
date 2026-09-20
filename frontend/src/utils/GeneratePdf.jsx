@@ -1,5 +1,6 @@
 import jsPDF from 'jspdf';
 import QRCode from 'qrcode';
+import { formatInviteDisplayName } from './invitePeople';
   
   export const generatePdf = async (invite) => {
     const apiUrlFrontend = 'https://wedd-i8ls.onrender.com';
@@ -35,23 +36,7 @@ import QRCode from 'qrcode';
       const qrImage = await QRCode.toDataURL(qrText);
       doc.addImage(qrImage, 'PNG', 150, 205, 40, 40);
 
-      let titreTexte = '';
-      switch (invite.titre) {
-        case 'M':
-          titreTexte = `M. ${invite.prenom} ${invite.nom}`;
-          break;
-        case 'Mme':
-          titreTexte = `Mme ${invite.prenom} ${invite.nom}`;
-          break;
-        case 'Mlle':
-          titreTexte = `Mlle ${invite.prenom} ${invite.nom}`;
-          break;
-        case 'couple':
-          titreTexte = `M. & Mme ${invite.nom}`;
-          break;
-        default:
-          titreTexte = `${invite.prenom} ${invite.nom}`;
-      }
+      const titreTexte = formatInviteDisplayName(invite);
 
       doc.setTextColor(208, 108, 56);
       doc.setFont('times', 'bold');
