@@ -2,45 +2,42 @@ import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { FiDownload, FiX } from 'react-icons/fi';
 import { ImSpinner8 } from 'react-icons/im';
-import { generatePdf } from '../utils/GeneratePdf';
+import { generateBilletPreviewUrl } from '../utils/GeneratePdf';
 
 function BilletPreview({ invite, onClose, onDownload, downloading }) {
   const [url, setUrl] = useState(null);
   const [error, setError] = useState('');
 
   useEffect(() => {
-    let objectUrl;
     let cancelled = false;
 
     const loadPreview = async () => {
-      const blob = await generatePdf(invite);
+      const previewUrl = await generateBilletPreviewUrl(invite);
       if (cancelled) return;
-      if (!blob) {
+      if (!previewUrl) {
         setError('Impossible de générer l’aperçu du billet.');
         return;
       }
-      objectUrl = URL.createObjectURL(blob);
-      setUrl(objectUrl);
+      setUrl(previewUrl);
     };
 
     loadPreview();
 
     return () => {
       cancelled = true;
-      if (objectUrl) URL.revokeObjectURL(objectUrl);
     };
   }, [invite]);
 
   return createPortal(
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
+      className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 p-0 sm:items-center sm:p-4"
       onClick={onClose}
       role="dialog"
       aria-modal="true"
       aria-labelledby="billet-preview-title"
     >
       <div
-        className="flex max-h-[92vh] w-full max-w-5xl flex-col overflow-hidden rounded-xl bg-white shadow-2xl"
+        className="flex max-h-[100dvh] w-full max-w-5xl flex-col overflow-hidden rounded-t-2xl bg-white shadow-2xl sm:max-h-[92vh] sm:rounded-xl"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between border-b border-gray-200 px-4 py-3">
@@ -57,26 +54,26 @@ function BilletPreview({ invite, onClose, onDownload, downloading }) {
           </button>
         </div>
 
-        <div className="min-h-[50vh] flex-1 bg-[#efe4d4]">
+        <div className="min-h-[40vh] flex-1 overflow-auto bg-[#efe4d4] p-3">
           {error && (
             <p className="p-6 text-center text-sm font-medium text-red-600">{error}</p>
           )}
           {!error && !url && (
-            <div className="flex h-full min-h-[50vh] items-center justify-center text-gray-600">
+            <div className="flex h-full min-h-[40vh] items-center justify-center text-gray-600">
               <ImSpinner8 className="mr-2 animate-spin" />
               Génération de l’aperçu…
             </div>
           )}
           {url && (
-            <iframe
+            <img
               src={url}
-              title="Aperçu du billet d’invitation"
-              className="h-[68vh] w-full border-0"
+              alt="Aperçu du billet d’invitation"
+              className="mx-auto h-auto w-full max-w-full rounded shadow"
             />
           )}
         </div>
 
-        <div className="flex flex-wrap items-center justify-end gap-2 border-t border-gray-200 px-4 py-3">
+        <div className="flex flex-wrap items-center justify-end gap-2 border-t border-gray-200 px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
           <button
             type="button"
             onClick={onClose}
