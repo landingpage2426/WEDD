@@ -9,8 +9,8 @@ const FAQ_SECTIONS = [
     title: 'Démarrage',
     items: [
       {
-        q: 'Qu’est-ce que WEDD ?',
-        a: 'WEDD est une plateforme de gestion de mariage : invités, tables, disposition de salle, réunions de protocole, billets et suivi des présences.',
+        q: 'Qu’est-ce que Wedd ?',
+        a: 'Wedd est une plateforme de gestion de mariage : invités, tables, disposition de salle, réunions de protocole, billets et suivi des présences.',
       },
       {
         q: 'Comment créer un compte ?',
@@ -182,9 +182,9 @@ function HelpPage() {
       <header className="bg-white border-b border-blue-100 sticky top-0 z-20">
         <div className="max-w-3xl mx-auto px-4 py-4 flex items-center justify-between gap-3">
           <div className="flex items-center gap-3">
-            <img src={logo} alt="WEDD" className="h-10 w-10 rounded-full object-cover" />
+            <img src={logo} alt="Wedd" className="h-10 w-10 rounded-full object-cover" />
             <div>
-              <p className="font-bold text-blue-700 leading-tight">WEDD</p>
+              <p className="font-bold text-blue-700 leading-tight">Wedd</p>
               <p className="text-xs text-slate-500">Centre d’aide & FAQ</p>
             </div>
           </div>
@@ -205,7 +205,7 @@ function HelpPage() {
             <FiHelpCircle size={28} />
           </div>
           <h1 className="text-2xl sm:text-3xl font-bold text-slate-800">
-            Comment fonctionne WEDD ?
+            Comment fonctionne Wedd ?
           </h1>
           <p className="mt-2 text-slate-500 text-sm sm:text-base">
             Toutes les réponses pour utiliser le site : comptes, rôles, invités, salle et réunions.

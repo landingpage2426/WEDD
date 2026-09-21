@@ -20,17 +20,17 @@ export async function sendEmailNotification(destinataire) {
     const info = await transporter.sendMail({
       from: process.env.EMAIL_USER, 
       to: destinataire,                         
-      subject: 'Notification de connexion à votre compte WEDD',
+      subject: 'Notification de connexion à votre compte Wedd',
       html: `
   <p>Bonjour,</p>
 
-<p>Nous souhaitons vous informer qu'une connexion à votre compte WEDD a été détectée le <strong>${dateLocale}</strong> à <strong>${heureLocale}</strong>.</p>
+<p>Nous souhaitons vous informer qu'une connexion à votre compte Wedd a été détectée le <strong>${dateLocale}</strong> à <strong>${heureLocale}</strong>.</p>
 
 <p>Si ce n'était pas vous, nous vous recommandons de vérifier la sécurité de votre compte en changeant votre mot de passe.</p>
 
 <p>Nous restons à votre disposition pour toute assistance.</p>
 
-<p>Cordialement,<br />L'équipe WEDD</p>
+<p>Cordialement,<br />L'équipe Wedd</p>
     `,
     });
     console.log('Email envoyé avec succès');

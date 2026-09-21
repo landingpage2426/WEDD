@@ -9,8 +9,8 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.svg', 'favicon.ico', 'robots.txt'],
       manifest: {
-        name: 'WEDD',
-        short_name: 'WEDD',
+        name: 'Wedd',
+        short_name: 'Wedd',
         description: "Plateforme de gestion de mariage avec génération automatisée de billets numériques en PDF intégrant les données dynamiques de l’invité (nom, statut, numéro de table). Chaque billet contient un QR code unique permettant un scan rapide à l’entrée, une gestion en temps réel des présences, et une organisation optimale du plan de salle.",
         theme_color: '#ffffff',
         background_color: '#ffffff',
