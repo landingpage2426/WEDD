@@ -1,30 +1,81 @@
 import { useEffect, useState } from 'react';
 
-function UseInstallPrompt() {
+const DISMISS_KEY = 'wedd-install-dismissed';
 
-  const [deferredPrompt, setDeferredPrompt] = useState(null);
-  const [isVisible, setIsVisible] = useState(true);
+const isStandalone = () =>
+  window.matchMedia('(display-mode: standalone)').matches
+  || window.matchMedia('(display-mode: fullscreen)').matches
+  || window.navigator.standalone === true;
 
-   // Gérer l'affichage du bouton d'installation
+const isIosDevice = () => /iphone|ipad|ipod/i.test(window.navigator.userAgent);
+
+function useInstallPrompt() {
+  const [deferredPrompt, setDeferredPrompt] = useState(window.__pwaInstallPrompt || null);
+  const [installed, setInstalled] = useState(isStandalone());
+  const [dismissed, setDismissed] = useState(
+    () => window.sessionStorage.getItem(DISMISS_KEY) === '1'
+  );
+
   useEffect(() => {
-    const handleBeforeInstall = (e) => {
-      e.preventDefault();
-      setDeferredPrompt(e);
+    const capturePrompt = (event) => {
+      event.preventDefault();
+      window.__pwaInstallPrompt = event;
+      setDeferredPrompt(event);
     };
-    window.addEventListener('beforeinstallprompt', handleBeforeInstall);
 
-    const handleClickOutside = () => {
-      setIsVisible(false);
+    const syncPrompt = () => {
+      if (window.__pwaInstallPrompt) {
+        setDeferredPrompt(window.__pwaInstallPrompt);
+      }
     };
-    document.addEventListener('click', handleClickOutside);
+
+    const markInstalled = () => {
+      setInstalled(true);
+      setDeferredPrompt(null);
+      window.__pwaInstallPrompt = null;
+    };
+
+    window.addEventListener('beforeinstallprompt', capturePrompt);
+    window.addEventListener('pwa-install-available', syncPrompt);
+    window.addEventListener('appinstalled', markInstalled);
+    syncPrompt();
 
     return () => {
-      window.removeEventListener('beforeinstallprompt', handleBeforeInstall);
-      document.removeEventListener('click', handleClickOutside);
+      window.removeEventListener('beforeinstallprompt', capturePrompt);
+      window.removeEventListener('pwa-install-available', syncPrompt);
+      window.removeEventListener('appinstalled', markInstalled);
     };
   }, []);
 
-  return {deferredPrompt,setDeferredPrompt, isVisible, setIsVisible};
+  const dismiss = () => {
+    window.sessionStorage.setItem(DISMISS_KEY, '1');
+    setDismissed(true);
+  };
+
+  const promptInstall = async () => {
+    const promptEvent = deferredPrompt || window.__pwaInstallPrompt;
+    if (!promptEvent) return false;
+
+    promptEvent.prompt();
+    const { outcome } = await promptEvent.userChoice;
+    setDeferredPrompt(null);
+    window.__pwaInstallPrompt = null;
+    if (outcome === 'accepted') {
+      setInstalled(true);
+      return true;
+    }
+    return false;
+  };
+
+  return {
+    installed,
+    dismissed,
+    isIos: isIosDevice(),
+    canNativeInstall: Boolean(deferredPrompt),
+    showPrompt: !installed && !dismissed,
+    dismiss,
+    promptInstall,
+  };
 }
 
-export default UseInstallPrompt
+export default useInstallPrompt;

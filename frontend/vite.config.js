@@ -7,24 +7,37 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['favicon.svg', 'favicon.ico', 'robots.txt'],
+      injectRegister: 'auto',
+      includeAssets: ['favicon.svg', 'favicon.ico', 'robots.txt', 'images/logo.png'],
       manifest: {
         name: 'Wedd',
         short_name: 'Wedd',
-        description: "Plateforme de gestion de mariage avec génération automatisée de billets numériques en PDF intégrant les données dynamiques de l’invité (nom, statut, numéro de table). Chaque billet contient un QR code unique permettant un scan rapide à l’entrée, une gestion en temps réel des présences, et une organisation optimale du plan de salle.",
+        start_url: '/',
+        scope: '/',
+        id: '/',
+        display: 'standalone',
+        orientation: 'portrait',
         theme_color: '#ffffff',
         background_color: '#ffffff',
-        display: 'standalone',
+        description: "Plateforme de gestion de mariage avec génération automatisée de billets numériques en PDF intégrant les données dynamiques de l’invité (nom, statut, numéro de table). Chaque billet contient un QR code unique permettant un scan rapide à l’entrée, une gestion en temps réel des présences, et une organisation optimale du plan de salle.",
         icons: [
           {
             src: '/images/logo.png',
             sizes: '192x192',
             type: 'image/png',
+            purpose: 'any',
           },
           {
             src: '/images/logo.png',
             sizes: '512x512',
             type: 'image/png',
+            purpose: 'any',
+          },
+          {
+            src: '/images/logo.png',
+            sizes: '512x512',
+            type: 'image/png',
+            purpose: 'maskable',
           },
         ],
       }, workbox: {
