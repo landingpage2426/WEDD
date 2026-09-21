@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { FiEdit2, FiTrash2, FiDownload, FiEye } from 'react-icons/fi';
+import { FiEdit2, FiTrash2, FiDownload, FiEye, FiCheckSquare, FiSquare } from 'react-icons/fi';
 import { FaWhatsapp } from 'react-icons/fa';
 import { ImSpinner8 } from 'react-icons/im';
+import axios from 'axios';
 import { handleWhatsAppShare } from '../utils/HandleWhatsAppShare';
 import { handleDownload } from '../utils/HandleDownload';
 import { handleSendEmail } from '../utils/HandleSendEmail';
@@ -10,14 +11,39 @@ import { FiMail } from 'react-icons/fi';
 import { formatInviteDisplayName, formatTitreLabel, getInvitePersonCount, isCouple } from '../utils/invitePeople';
 import BilletPreview from './BilletPreview';
 
-function Table({ invites, apiUrl, onEditInvite, handleDeleteInvite, userRole }) {
+function Table({ invites, apiUrl, onEditInvite, handleDeleteInvite, userRole, onInviteUpdated }) {
   const [loadingStates, setLoadingStates] = useState({});
   const [expandedRow, setExpandedRow] = useState(null);
   const [previewInvite, setPreviewInvite] = useState(null);
+  const canManageBillet = userRole === 'client' || userRole === 'manager';
   const toggleRowExpand = (id) => {
     setExpandedRow(expandedRow === id ? null : id);
   };
   const [sendEmailMessage ,setSendEmailMessage] = useState("");
+
+  const handleToggleBilletEnvoye = async (event, invite) => {
+    event.stopPropagation();
+    if (!canManageBillet || loadingStates[invite._id] === 'billet') return;
+
+    setLoadingStates((prev) => ({ ...prev, [invite._id]: 'billet' }));
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.patch(
+        `${apiUrl}/api/invites/${invite._id}/billet-envoye`,
+        { billetEnvoye: !invite.billetEnvoye },
+        {
+          headers: { Authorization: `Bearer ${token}` },
+          withCredentials: true,
+        }
+      );
+      onInviteUpdated?.(response.data.invite);
+    } catch (err) {
+      console.error(err);
+      alert("Impossible de mettre à jour l'envoi du billet");
+    } finally {
+      setLoadingStates((prev) => ({ ...prev, [invite._id]: null }));
+    }
+  };
 
 
   return (
@@ -86,15 +112,37 @@ function Table({ invites, apiUrl, onEditInvite, handleDeleteInvite, userRole }) 
                       <div>{invite.nomTable && `Table ${invite.nomTable}`}</div>
                     </td>
                     <td className="px-4 py-4 whitespace-nowrap">
-                      <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                        invite.status === 'P' 
-                          ? 'bg-green-100 text-green-800' 
-                          : invite.status === 'A' 
-                            ? 'bg-red-100 text-red-800' 
-                            : 'bg-blue-100 text-blue-800'
-                      }`}>
-                        {invite.status === 'P' ? 'Confirmé' : invite.status === 'A' ? 'Absent' : 'En attente'}
-                      </span>
+                      <div className="flex flex-col items-start gap-1">
+                        <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                          invite.status === 'P' 
+                            ? 'bg-green-100 text-green-800' 
+                            : invite.status === 'A' 
+                              ? 'bg-red-100 text-red-800' 
+                              : 'bg-blue-100 text-blue-800'
+                        }`}>
+                          {invite.status === 'P' ? 'Confirmé' : invite.status === 'A' ? 'Absent' : 'En attente'}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={(e) => handleToggleBilletEnvoye(e, invite)}
+                          disabled={!canManageBillet || loadingStates[invite._id] === 'billet'}
+                          title={canManageBillet ? 'Cliquer pour cocher ou décocher' : 'Billet envoyé ou non'}
+                          className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-semibold ${
+                            invite.billetEnvoye
+                              ? 'bg-emerald-100 text-emerald-800'
+                              : 'bg-gray-100 text-gray-600'
+                          } ${canManageBillet ? 'hover:opacity-80' : 'cursor-default'}`}
+                        >
+                          {loadingStates[invite._id] === 'billet' ? (
+                            <ImSpinner8 className="animate-spin" size={12} />
+                          ) : invite.billetEnvoye ? (
+                            <FiCheckSquare size={14} />
+                          ) : (
+                            <FiSquare size={14} />
+                          )}
+                          {invite.billetEnvoye ? 'Billet envoyé' : 'Non envoyé'}
+                        </button>
+                      </div>
                     </td>
                     <td className="px-4 py-4 whitespace-nowrap text-right text-sm font-medium">
                       <div className="flex justify-end space-x-2">
@@ -153,11 +201,33 @@ function Table({ invites, apiUrl, onEditInvite, handleDeleteInvite, userRole }) 
                               <p><span className="font-medium">Téléphone:</span> +237 {invite.telephone || 'Non spécifié'}</p>
                               <p><span className="font-medium">Email:</span> {invite.email || "Non spécifié"}</p>
                               <p><span className="font-medium">Table:</span> {invite.nomTable || 'À définir'}</p>
+                              <p>
+                                <span className="font-medium">Billet:</span>{' '}
+                                {invite.billetEnvoye ? 'Envoyé' : 'Non envoyé'}
+                              </p>
                             </div>
                           </div>
                           <div className="flex flex-col justify-between">
                             {(userRole === 'client' || userRole === 'manager') && (
                               <div className="flex flex-wrap gap-3">
+                                <button
+                                  onClick={(e) => handleToggleBilletEnvoye(e, invite)}
+                                  disabled={loadingStates[invite._id] === 'billet'}
+                                  className={`inline-flex items-center px-3 py-1.5 border text-xs font-medium rounded shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 ${
+                                    invite.billetEnvoye
+                                      ? 'border-emerald-600 text-white bg-emerald-600 hover:bg-emerald-700 focus:ring-emerald-500'
+                                      : 'border-gray-400 text-gray-700 bg-white hover:bg-gray-50 focus:ring-gray-400'
+                                  }`}
+                                >
+                                  {loadingStates[invite._id] === 'billet' ? (
+                                    <ImSpinner8 className="animate-spin mr-2" />
+                                  ) : invite.billetEnvoye ? (
+                                    <FiCheckSquare className="mr-2" />
+                                  ) : (
+                                    <FiSquare className="mr-2" />
+                                  )}
+                                  {invite.billetEnvoye ? 'Billet envoyé' : 'Marquer comme envoyé'}
+                                </button>
                                 <button
                                   onClick={() => setPreviewInvite(invite)}
                                   className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded shadow-sm text-white bg-amber-700 hover:bg-amber-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-amber-600"

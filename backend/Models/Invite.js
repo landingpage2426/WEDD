@@ -26,6 +26,10 @@ const inviteSchema = new mongoose.Schema({
         enum: ['P', 'A'],
         default: 'A'
     },
+    billetEnvoye: {
+        type: Boolean,
+        default: false
+    },
     userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true }
 });
 

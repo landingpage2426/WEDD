@@ -19,6 +19,7 @@ import OneInvite from '../Controllers/InviteControllers/OneInvite.js';
 import EditInvite from '../Controllers/InviteControllers/EditInvite.js';
 import DeleteInvite from '../Controllers/InviteControllers/DeleteInvite.js';
 import Presence from '../Controllers/InviteControllers/Presence.js';
+import ToggleBilletEnvoye from '../Controllers/InviteControllers/ToggleBilletEnvoye.js';
 
 import UsersGet from "../Controllers/UserControllers/UsersGet.js";
 import UsersDelete from "../Controllers/UserControllers/UsersDelete.js";
@@ -72,6 +73,7 @@ router.delete('/delete-invite/:id', authenticate, DeleteInvite);
 // presence invité 
 
 router.post('/invites/:inviteId/presence', authenticate, Presence);
+router.patch('/invites/:id/billet-envoye', authenticate, ToggleBilletEnvoye);
 
 //  Routes pour les reunions
 router.post("/reunion", authenticate , AddReunion)

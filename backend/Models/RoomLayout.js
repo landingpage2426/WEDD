@@ -44,9 +44,6 @@ const roomLayoutSchema = new mongoose.Schema({
     }
 });
 
-// Index pour améliorer les performances
-roomLayoutSchema.index({ userId: 1 });
-
 const RoomLayout = mongoose.model('RoomLayout', roomLayoutSchema);
 
 export default RoomLayout;

@@ -307,6 +307,14 @@ function Dashboard() {
                   setShowPopupUpdateInvite(true);
                 }}
                 userRole={user?.role}
+                onInviteUpdated={(updatedInvite) => {
+                  const apply = (list) =>
+                    list.map((invite) =>
+                      invite._id === updatedInvite._id ? { ...invite, ...updatedInvite } : invite
+                    );
+                  setInvitesList(apply);
+                  setFilteredInvites(apply);
+                }}
               />
             </div>
           </section>
