@@ -9,7 +9,7 @@ import { handleWhatsAppShare } from '../utils/HandleWhatsAppShare';
 import { handleDownload } from '../utils/HandleDownload';
 import { handleSendEmail } from '../utils/HandleSendEmail';
 import { FiMail } from 'react-icons/fi';
-import { formatInviteDisplayName, formatTitreLabel, getInvitePersonCount, isCouple } from '../utils/invitePeople';
+import { formatInviteDisplayName, formatTitreLabel, getInvitePersonCount, getInvitePhotoUrl, isCouple } from '../utils/invitePeople';
 import BilletPreview from './BilletPreview';
 
 function Table({ invites, apiUrl, onEditInvite, handleDeleteInvite, userRole, onInviteUpdated }) {
@@ -91,7 +91,7 @@ function Table({ invites, apiUrl, onEditInvite, handleDeleteInvite, userRole, on
                         <div className="flex-shrink-0 h-10 w-10">
                           <img
                             className="h-10 w-10 rounded-full object-cover"
-                            src={`${apiUrl}/uploads/${invite.image}`}
+                            src={getInvitePhotoUrl(invite, apiUrl)}
                             alt={`${invite.nom} ${invite.prenom}`}
                             onError={(e) => {
                               e.target.src = `https://ui-avatars.com/api/?name=${invite.nom} ${invite.prenom}&background=random`;

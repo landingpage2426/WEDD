@@ -10,6 +10,18 @@ import { AnimatePresence, motion } from "framer-motion";
 import Countdown from "../components/Countdown";
 import loadingImage from "../assets/img/load.png";
 
+const extractInviteId = (decodedText) => {
+  try {
+    const url = new URL(decodedText);
+    const parts = url.pathname.split('/').filter(Boolean);
+    return parts[parts.length - 1] || String(decodedText).trim();
+  } catch {
+    const text = String(decodedText).trim();
+    const match = text.match(/(\d{4,})\s*$/);
+    return match ? match[1] : text;
+  }
+};
+
 const RechercheInvite = () => {
   const [invitesList, setInvitesList] = useState([]);
   const [inputId, setInputId] = useState("");
@@ -149,105 +161,149 @@ const handleSubmit = async (e) => {
 
 const startScanner = () => {
   setError(null);
+  if (isScanning || verifying) return;
   setIsScanning(true);
-
-  const html5QrCode = new Html5Qrcode("scanner");
-
-  html5QrCode
-    .start(
-      { facingMode: "environment" },
-      { fps: 10, qrbox: 250 },
-      async (decodedText) => {
-        setVerifying(true);
-        html5QrCode.stop().then(async () => {
-          setIsScanning(false);
-          try {
-            const url = new URL(decodedText);
-            const inviteId = url.pathname.split("/").pop();
-            const token = localStorage.getItem("token");
-
-            // Étape 1 : Vérifier que l'invité appartient bien à l'utilisateur
-            const getInviteResponse = await axios.get(`${apiUrl}/api/invites/${inviteId}`, {
-              headers: {
-                Authorization: `Bearer ${token}`,
-                "Content-Type": "application/json",
-              },
-              withCredentials: true,
-            });
-
-            const invite = getInviteResponse.data.invite;
-            const isDatePassed = getInviteResponse.data.isDatePassed || false;
-
-            // Vérifier si la date est passée avant de marquer la présence
-            if (isDatePassed) {
-              setError({ 
-                text: "⛔ Ce billet n'est plus valide. La date du mariage est déjà passée.", 
-                color: "red" 
-              });
-              return;
-            }
-
-            // ✅ Étape 2 : Marquer comme présent
-            const response = await axios.post(
-              `${apiUrl}/api/invites/${inviteId}/presence`,
-              {},
-              {
-                headers: {
-                  Authorization: `Bearer ${token}`,
-                  "Content-Type": "application/json",
-                },
-                withCredentials: true,
-              }
-            );
-
-            const { dejaPresent, message, isDatePassed: datePassedInResponse } = response.data;
-
-            // Si le serveur indique que la date est passée
-            if (datePassedInResponse) {
-              setError({ 
-                text: "⛔ Ce billet n'est plus valide. La date du mariage est déjà passée.", 
-                color: "red" 
-              });
-              return;
-            }
-
-            // ✅ Redirection
-            navigate(`/invites/${inviteId}`, {
-              state: {
-                invite,
-                message,
-                color: dejaPresent ? "red" : "green",
-              },
-            });
-
-          } catch (err) {
-            console.error("❌ Erreur lors du scan :", err);
-
-            if (err.response?.status === 403) {
-              setError({ text: "⛔ Ce QR Code ne vous appartient pas.", color: "red" });
-            } else if (err.response?.status === 401) {
-              setError({ text: "🔐 Vous devez être connecté pour scanner.", color: "red" });
-            } else {
-              setError({ text: "❌ QR Code invalide ou erreur serveur", color: "red" });
-            }
-          } finally {
-            setVerifying(false);
-          }
-        }).catch((err) => {
-          console.error("Erreur arrêt scanner :", err);
-          setIsScanning(false);
-          setVerifying(false);
-        });
-      },
-      (errorMessage) => {
-        console.warn("Erreur scan :", errorMessage);
-      }
-    )
-    .catch((err) => {
-      console.error("Erreur démarrage scanner :", err);
-      setIsScanning(false);
-    });
 };
+
+const stopScanner = async () => {
+  const instance = scannerRef.current;
+  if (instance) {
+    try {
+      await instance.stop();
+      await instance.clear();
+    } catch (_err) {
+      /* déjà arrêté */
+    }
+    scannerRef.current = null;
+  }
+  setIsScanning(false);
+};
+
+useEffect(() => {
+  if (!isScanning) return undefined;
+
+  let cancelled = false;
+  let html5QrCode;
+
+  const handleDecoded = async (decodedText) => {
+    if (cancelled) return;
+    cancelled = true;
+    setVerifying(true);
+    try {
+      if (html5QrCode) {
+        await html5QrCode.stop();
+        await html5QrCode.clear();
+      }
+    } catch (_err) {
+      /* déjà arrêté */
+    }
+    scannerRef.current = null;
+    setIsScanning(false);
+
+    try {
+      const inviteId = extractInviteId(decodedText);
+      const token = localStorage.getItem('token');
+      const getInviteResponse = await axios.get(`${apiUrl}/api/invites/${inviteId}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        withCredentials: true,
+      });
+
+      const invite = getInviteResponse.data.invite;
+      const isDatePassed = getInviteResponse.data.isDatePassed || false;
+
+      if (isDatePassed) {
+        setError({
+          text: "⛔ Ce billet n'est plus valide. La date du mariage est déjà passée.",
+          color: 'red',
+        });
+        return;
+      }
+
+      const response = await axios.post(
+        `${apiUrl}/api/invites/${inviteId}/presence`,
+        {},
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+          withCredentials: true,
+        }
+      );
+
+      const { dejaPresent, message, isDatePassed: datePassedInResponse } = response.data;
+
+      if (datePassedInResponse) {
+        setError({
+          text: "⛔ Ce billet n'est plus valide. La date du mariage est déjà passée.",
+          color: 'red',
+        });
+        return;
+      }
+
+      navigate(`/invites/${inviteId}`, {
+        state: {
+          invite,
+          message,
+          color: dejaPresent ? 'red' : 'green',
+        },
+      });
+    } catch (err) {
+      console.error('❌ Erreur lors du scan :', err);
+      if (err.response?.status === 403) {
+        setError({ text: '⛔ Ce QR Code ne vous appartient pas.', color: 'red' });
+      } else if (err.response?.status === 401) {
+        setError({ text: '🔐 Vous devez être connecté pour scanner.', color: 'red' });
+      } else {
+        setError({ text: '❌ QR Code invalide ou erreur serveur', color: 'red' });
+      }
+    } finally {
+      setVerifying(false);
+    }
+  };
+
+  const timer = window.setTimeout(async () => {
+    const el = document.getElementById('scanner');
+    if (!el) {
+      setError({ text: 'Zone de scan introuvable. Réessaie.', color: 'red' });
+      setIsScanning(false);
+      return;
+    }
+
+    html5QrCode = new Html5Qrcode('scanner');
+    scannerRef.current = html5QrCode;
+    const config = { fps: 10, qrbox: { width: 220, height: 220 } };
+
+    try {
+      await html5QrCode.start({ facingMode: 'environment' }, config, handleDecoded);
+    } catch (_firstError) {
+      try {
+        await html5QrCode.start({ facingMode: 'user' }, config, handleDecoded);
+      } catch (err) {
+        console.error('Erreur démarrage scanner :', err);
+        if (!cancelled) {
+          setError({
+            text: "Impossible d'ouvrir la caméra. Autorise l'accès à la caméra dans le navigateur.",
+            color: 'red',
+          });
+          setIsScanning(false);
+        }
+      }
+    }
+  }, 200);
+
+  return () => {
+    cancelled = true;
+    window.clearTimeout(timer);
+    if (scannerRef.current) {
+      scannerRef.current.stop().catch(() => {});
+      scannerRef.current = null;
+    }
+  };
+}, [isScanning, apiUrl, navigate]);
 
 
   return (
@@ -320,11 +376,13 @@ const startScanner = () => {
 
           <button
             type="button"
-            onClick={startScanner}
-            disabled={verifying || isScanning}
-            className="mt-4 w-full bg-green-600 font-bold text-white px-6 py-3 rounded-lg hover:bg-green-800 disabled:opacity-60"
+            onClick={isScanning ? stopScanner : startScanner}
+            disabled={verifying}
+            className={`mt-4 w-full font-bold text-white px-6 py-3 rounded-lg disabled:opacity-60 ${
+              isScanning ? 'bg-gray-600 hover:bg-gray-700' : 'bg-green-600 hover:bg-green-800'
+            }`}
           >
-            📷 Scanner un QR Code
+            {isScanning ? 'Fermer le scan' : '📷 Scanner un QR Code'}
           </button>
 
           {error && error.text && (
@@ -337,7 +395,7 @@ const startScanner = () => {
 
 
           {isScanning && (
-            <div id="scanner" className="mt-6 w-full h-60 bg-gray-100 rounded-md shadow-inner" />
+            <div id="scanner" className="mt-6 w-full min-h-[240px] h-60 overflow-hidden rounded-md bg-gray-100 shadow-inner" />
           )}
         </div>
       </div>

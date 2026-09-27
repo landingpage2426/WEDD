@@ -1,22 +1,25 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import axios from 'axios';
 import { motion, AnimatePresence } from 'framer-motion';
 import NavLink from './../components/NavLink';
 import Table from '../components/Table';
 import Graphe from '../components/Graphe';
 import Bouton from '../components/Bouton';
-import tri from '../assets/icons/tri.svg';
 import NextMeeting from '../components/NextMeeting';
 import BlogRight from '../components/BlogRight';
 import ModifierInvite from './ModifierInvite';
 import logo from "../assets/img/logo.png";
 import Countdown from '../components/Countdown';
+import { countTableOccupied, getKnownTableNames, getTableCapacity } from '../utils/invitePeople';
 function Dashboard() {
   const [invitesList, setInvitesList] = useState([]);
   const [reunionsList, setReunionsList] = useState([]);
-  const [filteredInvites, setFilteredInvites] = useState([]);
+  const [roomTables, setRoomTables] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
+  const [filterBillet, setFilterBillet] = useState('all');
+  const [filterStatus, setFilterStatus] = useState('all');
+  const [filterTable, setFilterTable] = useState('all');
   const [nom, setNom] = useState('');
   const [prenom, setPrenom] = useState('');
   const [user, setUser] = useState();
@@ -55,16 +58,27 @@ function Dashboard() {
       });
       const data = response.data.invites || [];
       setInvitesList(data);
-      setFilteredInvites(data);
     } catch (error) {
-      if (error.response && (error.response.status === 401 || error.response.status === 403)) {
-        // Token invalide ou expiré
-        localStorage.removeItem("user");
-        localStorage.removeItem("token");
-        navigate("/");
+      if (error.response?.status === 401) {
         return;
       }
       console.error('Erreur lors de la récupération des Invités:', error);
+    }
+  };
+
+  const fetchRoomLayout = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${apiUrl}/api/room-layout`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+      setRoomTables(response.data.layout?.tables || []);
+    } catch (error) {
+      if (error.response?.status === 401) return;
+      setRoomTables([]);
     }
   };
 
@@ -100,18 +114,57 @@ function Dashboard() {
 
     fetchInvites();
     fetchReunions();
+    fetchRoomLayout();
   }, [location.pathname]);
 
-  const handleSearch = () => {
-    const filtered = invitesList.filter(
-      (invite) =>
-        invite.nom?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        invite.prenom?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        invite.nomTable?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        invite.telephone?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        invite.inviteId?.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-    setFilteredInvites(filtered);
+  const tableNames = useMemo(
+    () => getKnownTableNames(invitesList, roomTables),
+    [invitesList, roomTables]
+  );
+
+  const filteredInvites = useMemo(() => {
+    const query = searchTerm.trim().toLowerCase();
+    return invitesList.filter((invite) => {
+      if (query) {
+        const haystack = [
+          invite.nom,
+          invite.prenom,
+          invite.nomTable,
+          invite.telephone,
+          invite.inviteId,
+          invite.email,
+        ]
+          .join(' ')
+          .toLowerCase();
+        if (!haystack.includes(query)) return false;
+      }
+
+      const status = String(invite.status || '').toUpperCase();
+      if (filterStatus !== 'all' && status !== filterStatus) return false;
+
+      if (filterBillet === 'envoye' && !invite.billetEnvoye) return false;
+      if (filterBillet === 'non-envoye' && invite.billetEnvoye) return false;
+
+      if (filterTable !== 'all') {
+        const table = String(invite.nomTable || '').trim().toUpperCase();
+        if (table !== filterTable) return false;
+      }
+
+      return true;
+    });
+  }, [invitesList, searchTerm, filterStatus, filterBillet, filterTable]);
+
+  const hasActiveFilters =
+    searchTerm.trim() !== '' ||
+    filterBillet !== 'all' ||
+    filterStatus !== 'all' ||
+    filterTable !== 'all';
+
+  const resetFilters = () => {
+    setSearchTerm('');
+    setFilterBillet('all');
+    setFilterStatus('all');
+    setFilterTable('all');
   };
 
   const handleDeleteInvite = async (id) => {
@@ -253,30 +306,70 @@ function Dashboard() {
             </div>
           </section>
 
-          {/* Search Section */}
+          {/* Search and filters */}
           <section className="mb-6">
-            <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-              <div className="flex items-center gap-2">
-                <button className="p-2 rounded-lg hover:bg-gray-100 transition-colors">
-                  <img src={tri} alt="Trier" className="w-5 h-5" />
-                </button>
-                <span className="text-sm text-gray-600">Trier</span>
-              </div>
-              <div className="flex flex-col md:flex-row gap-3 w-full md:w-auto">
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 space-y-4">
+              <div className="flex flex-col lg:flex-row gap-3">
                 <input
                   type="text"
                   className="border border-gray-300 rounded-lg px-4 py-2 w-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  placeholder="Rechercher un invité..."
+                  placeholder="Rechercher un invité, une table, un téléphone..."
                 />
-                <button
-                  className="bg-blue-600 text-white font-medium rounded-lg px-4 py-2 hover:bg-blue-700 transition-colors w-full md:w-auto"
-                  onClick={handleSearch}
-                >
-                  Rechercher
-                </button>
               </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                <select
+                  value={filterBillet}
+                  onChange={(e) => setFilterBillet(e.target.value)}
+                  className="border border-gray-300 rounded-lg px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="all">Tous les billets</option>
+                  <option value="envoye">Billets envoyés</option>
+                  <option value="non-envoye">Billets non envoyés</option>
+                </select>
+                <select
+                  value={filterStatus}
+                  onChange={(e) => setFilterStatus(e.target.value)}
+                  className="border border-gray-300 rounded-lg px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="all">Tous les statuts</option>
+                  <option value="P">Présents</option>
+                  <option value="A">Absents</option>
+                </select>
+                <select
+                  value={filterTable}
+                  onChange={(e) => setFilterTable(e.target.value)}
+                  className="border border-gray-300 rounded-lg px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="all">Toutes les tables</option>
+                  {tableNames.map((tableName) => {
+                    const occupied = countTableOccupied(invitesList, tableName);
+                    const capacity = getTableCapacity(roomTables, tableName);
+                    const label = capacity != null
+                      ? `${tableName} (${occupied}/${capacity})`
+                      : `${tableName} (${occupied} place${occupied > 1 ? 's' : ''})`;
+                    return (
+                      <option key={tableName} value={tableName}>
+                        {label}
+                      </option>
+                    );
+                  })}
+                </select>
+                {hasActiveFilters && (
+                  <button
+                    type="button"
+                    onClick={resetFilters}
+                    className="rounded-lg border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                  >
+                    Réinitialiser
+                  </button>
+                )}
+              </div>
+              <p className="text-sm text-gray-600">
+                {filteredInvites.length} invité{filteredInvites.length > 1 ? 's' : ''} affiché{filteredInvites.length > 1 ? 's' : ''}
+                {hasActiveFilters ? ` sur ${invitesList.length}` : ''}
+              </p>
             </div>
           </section>
 
@@ -308,12 +401,11 @@ function Dashboard() {
                 }}
                 userRole={user?.role}
                 onInviteUpdated={(updatedInvite) => {
-                  const apply = (list) =>
+                  setInvitesList((list) =>
                     list.map((invite) =>
                       invite._id === updatedInvite._id ? { ...invite, ...updatedInvite } : invite
-                    );
-                  setInvitesList(apply);
-                  setFilteredInvites(apply);
+                    )
+                  );
                 }}
               />
             </div>
@@ -350,6 +442,8 @@ function Dashboard() {
         {showPopupUpdateInvite && selectedInvite && (
           <ModifierInvite
             invite={selectedInvite}
+            invites={invitesList}
+            tables={roomTables}
             onClose={() => {
               setShowPopupUpdateInvite(false);
               setSelectedInvite(null);

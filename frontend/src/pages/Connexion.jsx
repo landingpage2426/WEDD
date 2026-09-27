@@ -51,7 +51,8 @@ function Connexion() {
       });
 
       const data = response.data;
-      const expiration = new Date().getTime() + data.expiresIn;
+      const durationMs = Number(data.expiresIn) || 24 * 60 * 60 * 1000;
+      const expiration = Date.now() + durationMs;
 
       localStorage.setItem('token', data.token);
       localStorage.setItem('tokenExpiration', expiration.toString());
@@ -64,13 +65,6 @@ function Connexion() {
       } else {
         navigate('/dashboard');
       }
-
-      setTimeout(() => {
-        localStorage.removeItem('token');
-        localStorage.removeItem('tokenExpiration');
-        localStorage.removeItem('user');
-        navigate('/login-page');
-      }, data.expiresIn);
 
     } catch (err) {
       if (err.response?.data?.message) {

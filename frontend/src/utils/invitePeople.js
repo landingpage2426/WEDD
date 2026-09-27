@@ -1,3 +1,14 @@
+export const getInvitePhotoUrl = (invite, apiUrl) => {
+  const image = invite?.image;
+  if (!image || image === 'null' || image === 'undefined' || image === '-') {
+    const name = encodeURIComponent(
+      `${invite?.nom || ''} ${invite?.prenom && invite.prenom !== '-' ? invite.prenom : ''}`.trim() || 'Invite'
+    );
+    return `https://ui-avatars.com/api/?name=${name}&background=random`;
+  }
+  return `${apiUrl}/uploads/${image}`;
+};
+
 export const isCouple = (inviteOrTitre) => {
   const titre = typeof inviteOrTitre === 'string'
     ? inviteOrTitre
@@ -14,6 +25,40 @@ export const countInvitePeopleByStatus = (invites = [], status) =>
   countInvitePeople(
     invites.filter((invite) => invite.status?.toUpperCase() === status)
   );
+
+export const normalizeTableName = (name) => String(name || '').trim().toUpperCase();
+
+export const countTableOccupied = (invites = [], tableName, excludeInviteId) => {
+  const table = normalizeTableName(tableName);
+  if (!table) return 0;
+  return invites.reduce((sum, invite) => {
+    if (excludeInviteId && String(invite._id) === String(excludeInviteId)) return sum;
+    if (normalizeTableName(invite.nomTable) !== table) return sum;
+    return sum + getInvitePersonCount(invite);
+  }, 0);
+};
+
+export const getTableCapacity = (tables = [], tableName) => {
+  const table = normalizeTableName(tableName);
+  if (!table) return null;
+  const found = tables.find((item) => normalizeTableName(item.nom) === table);
+  if (!found) return null;
+  const seats = Number(found.nbChaises);
+  return Number.isFinite(seats) && seats > 0 ? seats : null;
+};
+
+export const getKnownTableNames = (invites = [], tables = []) => {
+  const names = new Set();
+  tables.forEach((item) => {
+    const name = normalizeTableName(item.nom);
+    if (name) names.add(name);
+  });
+  invites.forEach((invite) => {
+    const name = normalizeTableName(invite.nomTable);
+    if (name) names.add(name);
+  });
+  return [...names].sort((a, b) => a.localeCompare(b, 'fr'));
+};
 
 export const capitalizePrenom = (prenom = '') =>
   String(prenom || '')

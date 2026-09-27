@@ -9,7 +9,7 @@ import Countdown from '../components/Countdown';
 import logo from "../assets/img/logo.png";
 import { AnimatePresence, motion } from 'framer-motion';
 import { nomsTables } from '../utils/NomsTables';
-import { formatInviteDisplayName, getInvitePersonCount, isCouple } from '../utils/invitePeople';
+import { formatInviteDisplayName, getInvitePersonCount, getInvitePhotoUrl, isCouple } from '../utils/invitePeople';
 
 
 function ShowInvite() {
@@ -145,7 +145,7 @@ function ShowInvite() {
               <div className="relative mb-8">
                 <div className="absolute inset-0 rounded-full bg-gradient-to-r from-pink-200 to-pink-100 blur-md opacity-75 -z-10 mx-auto w-32 h-32 md:w-40 md:h-40"></div>
                 <img
-                  src={`${apiUrl}/uploads/${invite.image}`}
+                  src={getInvitePhotoUrl(invite, apiUrl)}
                   alt={invite.nom + ' ' + invite.prenom}
                   onError={(e) => {
                     e.target.src = `https://ui-avatars.com/api/?name=${invite.nom} ${invite.prenom}&background=random`;

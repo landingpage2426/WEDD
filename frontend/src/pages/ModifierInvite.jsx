@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import { isCouple, getBilletCharsRemaining, limitBilletField, MAX_BILLET_LINE_CHARS } from '../utils/invitePeople';
+import { isCouple, getBilletCharsRemaining, limitBilletField, MAX_BILLET_LINE_CHARS, getKnownTableNames } from '../utils/invitePeople';
+import TableOccupancyHint from '../components/TableOccupancyHint';
+import useTableOccupancy from '../hooks/useTableOccupancy';
 
-function ModifierInvite({ invite, onClose }) {
+function ModifierInvite({ invite, onClose, invites: invitesProp, tables: tablesProp }) {
   const [titre, setTitre] = useState('');
   const [nom, setNom] = useState('');
   const [prenom, setPrenom] = useState('');
@@ -14,6 +16,8 @@ function ModifierInvite({ invite, onClose }) {
 
   const apiUrl = import.meta.env.VITE_API_URL;
   const billetRemaining = getBilletCharsRemaining(prenom, nom, titre);
+  const { invites, tables } = useTableOccupancy({ invites: invitesProp, tables: tablesProp });
+  const knownTables = getKnownTableNames(invites, tables);
 
   useEffect(() => {
     if (invite) {
@@ -144,10 +148,23 @@ function ModifierInvite({ invite, onClose }) {
               <label className="block text-sm font-medium text-gray-700 mb-1">Nom de la table</label>
               <input
                 type="text"
+                list="tables-connues-edit"
                 value={nomTable}
                 onChange={(e) => setNomTable(e.target.value.toUpperCase())}
                 placeholder="NOM DE LA TABLE"
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition uppercase"
+              />
+              <datalist id="tables-connues-edit">
+                {knownTables.map((table) => (
+                  <option key={table} value={table} />
+                ))}
+              </datalist>
+              <TableOccupancyHint
+                tableName={nomTable}
+                invites={invites}
+                tables={tables}
+                titre={titre}
+                excludeInviteId={invite?._id}
               />
             </div>
 

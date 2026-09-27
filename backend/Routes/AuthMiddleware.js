@@ -23,6 +23,9 @@ const Authenticate = async (req, res, next) => {
         next();
     } catch (err) {
         console.error("Erreur de token :", err);
+        if (err.name === "TokenExpiredError") {
+            return res.status(401).json({ message: "Session expirée" });
+        }
         return res.status(401).json({ message: "Token invalide" });
     }
 };

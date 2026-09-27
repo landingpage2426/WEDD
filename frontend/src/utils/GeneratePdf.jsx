@@ -58,6 +58,19 @@ const drawBilletCanvas = async (invite) => {
   ctx.fillRect(138, 414, 128, 148);
   ctx.drawImage(qrImage, 142, 420, 120, 120);
 
+  ctx.fillStyle = 'rgb(243, 232, 214)';
+  ctx.fillRect(138, 388, 128, 26);
+  const inviteIdText = String(invite.inviteId || '').trim();
+  if (inviteIdText) {
+    ctx.fillStyle = 'rgb(92, 51, 23)';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.font = 'bold 13px "Times New Roman", Times, serif';
+    ctx.fillText(inviteIdText, 202, 400);
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'alphabetic';
+  }
+
   ctx.fillStyle = 'rgb(229, 214, 201)';
   ctx.fillRect(318, 342, 478, 18);
 

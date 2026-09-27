@@ -5,6 +5,7 @@ import { countInvitePeople, countInvitePeopleByStatus } from '../utils/invitePeo
 function Graphe({ invites }) {
   const [series, setSeries] = useState([0, 0]);
   const [totalInvites, setTotalInvites] = useState(0);
+  const [billetsEnvoyes, setBilletsEnvoyes] = useState(0);
 
   useEffect(() => {
     const presents = countInvitePeopleByStatus(invites, 'P');
@@ -13,6 +14,7 @@ function Graphe({ invites }) {
     
     setSeries([presents, absents, noResponse]);
     setTotalInvites(countInvitePeople(invites));
+    setBilletsEnvoyes(invites.filter((invite) => invite.billetEnvoye).length);
   }, [invites]);
 
   const options = {
@@ -127,7 +129,7 @@ function Graphe({ invites }) {
         />
       </div>
       
-      <div className="mt-4 grid grid-cols-3 gap-2 text-center">
+      <div className="mt-4 grid grid-cols-2 gap-2 text-center sm:grid-cols-4">
         <div className="p-2 bg-green-50 rounded-lg">
           <p className="text-green-600 font-medium">{series[0]}</p>
           <p className="text-xs text-gray-600">Présents</p>
@@ -139,6 +141,10 @@ function Graphe({ invites }) {
         <div className="p-2 bg-blue-50 rounded-lg">
           <p className="text-blue-600 font-medium">{series[2]}</p>
           <p className="text-xs text-gray-600">En attente</p>
+        </div>
+        <div className="p-2 bg-amber-50 rounded-lg">
+          <p className="text-amber-700 font-medium">{billetsEnvoyes}</p>
+          <p className="text-xs text-gray-600">Billets envoyés</p>
         </div>
       </div>
     </motion.div>
