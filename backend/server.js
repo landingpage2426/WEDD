@@ -23,6 +23,7 @@ dns.setServers(['8.8.8.8', '1.1.1.1']);
 
 const allowedOrigins = [
   "https://wedd-i8ls.onrender.com",  //ton front-end actuel
+  "https://wedd-2.onrender.com",
   "http://localhost:5173" // pour le dev local
 ];
 const corsOptions = {
