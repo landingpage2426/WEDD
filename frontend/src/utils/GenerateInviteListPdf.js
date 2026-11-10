@@ -3,6 +3,7 @@ import {
   capitalizePrenom,
   countInvitePeople,
   formatBilletNom,
+  getBilletCivility,
   getInvitePersonCount,
 } from './invitePeople.js';
 
@@ -15,12 +16,13 @@ const FOOTER_Y = PAGE_H - 8;
 const CONTENT_BOTTOM = PAGE_H - 16;
 
 const COLUMNS = [
-  { key: 'nom', label: 'Nom', width: 42 },
-  { key: 'prenom', label: 'Prénom', width: 40 },
-  { key: 'id', label: 'ID', width: 24 },
-  { key: 'table', label: 'Table', width: 32 },
-  { key: 'contact', label: 'Contact', width: 40 },
-  { key: 'email', label: 'Email', width: 70 },
+  { key: 'titre', label: 'Titre', width: 22 },
+  { key: 'nom', label: 'Nom', width: 38 },
+  { key: 'prenom', label: 'Prénom', width: 36 },
+  { key: 'id', label: 'ID', width: 22 },
+  { key: 'table', label: 'Table', width: 30 },
+  { key: 'contact', label: 'Contact', width: 36 },
+  { key: 'email', label: 'Email', width: 64 },
   { key: 'personnes', label: 'Personnes', width: 25 },
 ];
 
@@ -36,6 +38,7 @@ const rowValues = (invite) => {
   const prenom = invite.prenom && invite.prenom !== '-' ? capitalizePrenom(invite.prenom) : '';
   const phone = String(invite.telephone || '').trim();
   return {
+    titre: dash(getBilletCivility(invite.titre)),
     nom: dash(formatBilletNom(invite.nom)),
     prenom: dash(prenom),
     id: dash(invite.inviteId),
