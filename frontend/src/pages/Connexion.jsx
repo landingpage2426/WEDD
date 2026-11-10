@@ -10,6 +10,7 @@ import Image from '../components/Image';
 import Title from '../components/Title';
 import { FaHeart, FaEnvelope, FaLock, FaArrowRight, FaEye, FaEyeSlash } from 'react-icons/fa';
 import { FiHeart } from 'react-icons/fi';
+import { openRightPanel } from '../components/BlogRight';
 
 function Connexion() {
   const [email, setEmail] = useState('');
@@ -57,6 +58,7 @@ function Connexion() {
       localStorage.setItem('token', data.token);
       localStorage.setItem('tokenExpiration', expiration.toString());
       localStorage.setItem('user', JSON.stringify(data.user));
+      openRightPanel();
 
       // Rediriger selon le rôle
       const userRole = data.user.role;

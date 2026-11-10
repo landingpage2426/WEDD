@@ -354,7 +354,7 @@ const handleLogout = async () => {
   </motion.div>
 </div>
         {/* ---- BLOGRIGHT (droite, desktop seulement) ---- */}
-      <div className="hidden xl:block border-l border-gray-200 w-100">
+      <div className="hidden xl:block shrink-0 self-stretch">
         <BlogRight />
       </div>
     </div>

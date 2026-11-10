@@ -432,7 +432,7 @@ function Dashboard() {
         </main>
 
         {/* Right Sidebar (Desktop only) */}
-        <aside className="hidden xl:block border-l border-gray-200 w-100">
+        <aside className="hidden xl:block shrink-0 self-stretch">
           <BlogRight />
         </aside>
       </div>
