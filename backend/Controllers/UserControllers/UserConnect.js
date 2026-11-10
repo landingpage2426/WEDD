@@ -10,6 +10,13 @@ const UserConnect = async (req, res) => {
                 type: "danger"
             });
         }
+
+        let maries = user;
+        if (user.createdBy) {
+            const owner = await User.findById(user.createdBy).select("nom prenom dateMariage");
+            if (owner) maries = owner;
+        }
+
         res.status(200).json({
             message: "Informations utilisateur récupérées avec succès",
             type: "success",
@@ -25,6 +32,9 @@ const UserConnect = async (req, res) => {
                 themeMariage: user.themeMariage,
                 role: user.role,
                 createdAt: user.createdAt,
+                mariesNom: maries.nom,
+                mariesPrenom: maries.prenom,
+                dateMariagePrevu: maries.dateMariage || user.dateMariage || null,
             }
         });
     } catch (err) {
