@@ -12,7 +12,7 @@ import ModifierInvite from './ModifierInvite';
 import logo from "../assets/img/logo.png";
 import Countdown from '../components/Countdown';
 import { countTableOccupied, getKnownTableNames, getTableCapacity } from '../utils/invitePeople';
-import { downloadInviteListPdf } from '../utils/GenerateInviteListPdf';
+import InviteListActions, { getInviteSortOrder, setInviteExportList, sortInvites, subscribeInviteSort } from '../components/InviteListActions';
 function Dashboard() {
   const [invitesList, setInvitesList] = useState([]);
   const [reunionsList, setReunionsList] = useState([]);
@@ -21,7 +21,7 @@ function Dashboard() {
   const [filterBillet, setFilterBillet] = useState('all');
   const [filterStatus, setFilterStatus] = useState('all');
   const [filterTable, setFilterTable] = useState('all');
-  const [sortOrder, setSortOrder] = useState(null);
+  const [sortOrder, setSortOrder] = useState(getInviteSortOrder);
   const [nom, setNom] = useState('');
   const [prenom, setPrenom] = useState('');
   const [user, setUser] = useState();
@@ -156,15 +156,17 @@ function Dashboard() {
     });
   }, [invitesList, searchTerm, filterStatus, filterBillet, filterTable]);
 
-  const sortedInvites = useMemo(() => {
-    if (!sortOrder) return filteredInvites;
-    const direction = sortOrder === 'asc' ? 1 : -1;
-    return [...filteredInvites].sort((a, b) => {
-      const byNom = String(a.nom || '').localeCompare(String(b.nom || ''), 'fr', { sensitivity: 'base' });
-      if (byNom !== 0) return byNom * direction;
-      return String(a.prenom || '').localeCompare(String(b.prenom || ''), 'fr', { sensitivity: 'base' }) * direction;
-    });
-  }, [filteredInvites, sortOrder]);
+  const sortedInvites = useMemo(
+    () => sortInvites(filteredInvites, sortOrder),
+    [filteredInvites, sortOrder]
+  );
+
+  useEffect(() => subscribeInviteSort(setSortOrder), []);
+
+  useEffect(() => {
+    setInviteExportList(sortedInvites);
+    return () => setInviteExportList(null);
+  }, [sortedInvites]);
 
   const hasActiveFilters =
     searchTerm.trim() !== '' ||
@@ -177,31 +179,6 @@ function Dashboard() {
     setFilterBillet('all');
     setFilterStatus('all');
     setFilterTable('all');
-  };
-
-  const handleDownloadList = async () => {
-    let wedding = {
-      nom: user?.nom || nom,
-      prenom: user?.prenom || prenom,
-      dateMariage: user?.dateMariage || '',
-    };
-
-    try {
-      const token = localStorage.getItem('token');
-      const response = await axios.get(`${apiUrl}/api/profil`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      const profile = response.data.user || {};
-      wedding = {
-        nom: profile.mariesNom || profile.nom || wedding.nom,
-        prenom: profile.mariesPrenom || profile.prenom || wedding.prenom,
-        dateMariage: profile.dateMariagePrevu || profile.dateMariage || wedding.dateMariage,
-      };
-    } catch (error) {
-      console.error('Impossible de lire la date du mariage:', error);
-    }
-
-    downloadInviteListPdf(sortedInvites, wedding);
   };
 
   const handleDeleteInvite = async (id) => {
@@ -403,32 +380,12 @@ function Dashboard() {
                   </button>
                 )}
               </div>
-              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
                 <p className="text-sm text-gray-600">
                   {sortedInvites.length} invité{sortedInvites.length > 1 ? 's' : ''} affiché{sortedInvites.length > 1 ? 's' : ''}
                   {hasActiveFilters ? ` sur ${invitesList.length}` : ''}
                 </p>
-                <div className="flex flex-wrap gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setSortOrder((current) => (current === 'asc' ? 'desc' : 'asc'))}
-                    className={`rounded-lg px-3 py-2 text-sm font-medium ${
-                      sortOrder
-                        ? 'bg-blue-600 text-white hover:bg-blue-700'
-                        : 'border border-gray-300 text-gray-700 hover:bg-gray-50'
-                    }`}
-                  >
-                    {sortOrder === 'desc' ? 'Z → A' : 'A → Z'}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={handleDownloadList}
-                    disabled={sortedInvites.length === 0}
-                    className="rounded-lg bg-blue-600 px-3 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-blue-300"
-                  >
-                    Télécharger la liste
-                  </button>
-                </div>
+                <InviteListActions />
               </div>
             </div>
           </section>
