@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import close from '../assets/icons/close-circle.svg';
 import axios from 'axios';
+import { useI18n } from '../i18n/I18nContext';
 
 function ModifierReunion({ onClose, reunion }) {
+  const { t } = useI18n();
   const [titre, setTitre] = useState('');
   const [lieu, setLieu] = useState('');
   const [date, setDate] = useState('');
@@ -80,7 +82,7 @@ function ModifierReunion({ onClose, reunion }) {
           <img className="w-6 h-6" src={close} alt="close-circle" />
         </button>
         <h2 className="text-black mb-5 font-bold text-lg">
-          Modifier une réunion
+          {t('meeting.edit')}
         </h2>
         {successMessage && (
           <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-2 rounded mb-4">
@@ -113,7 +115,7 @@ function ModifierReunion({ onClose, reunion }) {
             type="submit"
             className="bg-[#0066cc] font-bold text-white px-8 py-2 rounded text-base mt-2"
           >
-            ENREGISTRER
+            {t('common.save').toUpperCase()}
           </button>
         </form>
       </div>

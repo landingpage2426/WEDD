@@ -3,6 +3,9 @@ import { Link, useNavigate } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import { FiChevronDown, FiArrowLeft, FiHelpCircle } from 'react-icons/fi';
 import logo from '../assets/img/logo.png';
+import LanguageSwitch from '../components/LanguageSwitch';
+import { useI18n } from '../i18n/I18nContext';
+import { FAQ_EN } from './helpFaqEn';
 
 const FAQ_SECTIONS = [
   {
@@ -175,47 +178,52 @@ function FaqItem({ question, answer }) {
 
 function HelpPage() {
   const navigate = useNavigate();
+  const { t, language } = useI18n();
   const token = localStorage.getItem('token');
+  const sections = language === 'en' ? FAQ_EN : FAQ_SECTIONS;
 
   return (
     <div className="min-h-screen bg-slate-50">
-      <header className="bg-white border-b border-blue-100 sticky top-0 z-20">
+      <header className="bg-white border-b border-rose-100 sticky top-0 z-20">
         <div className="max-w-3xl mx-auto px-4 py-4 flex items-center justify-between gap-3">
           <div className="flex items-center gap-3">
             <img src={logo} alt="Wedd" className="h-10 w-10 rounded-full object-cover" />
             <div>
-              <p className="font-bold text-blue-700 leading-tight">Wedd</p>
-              <p className="text-xs text-slate-500">Centre d’aide & FAQ</p>
+              <p className="font-bold text-rose-700 leading-tight">Wedd</p>
+              <p className="text-xs text-slate-500">{t('help.kicker')}</p>
             </div>
           </div>
-          <button
-            type="button"
-            onClick={() => (token ? navigate(-1) : navigate('/'))}
-            className="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium text-blue-700 bg-blue-50 hover:bg-blue-100"
-          >
-            <FiArrowLeft size={16} />
-            Retour
-          </button>
+          <div className="flex items-center gap-2">
+            <LanguageSwitch />
+            <button
+              type="button"
+              onClick={() => (token ? navigate(-1) : navigate('/'))}
+              className="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium text-rose-700 bg-rose-50 hover:bg-rose-100"
+            >
+              <FiArrowLeft size={16} />
+              {t('help.back')}
+            </button>
+          </div>
         </div>
       </header>
 
       <main className="max-w-3xl mx-auto px-4 py-8">
         <section className="mb-8 text-center">
-          <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-blue-100 text-blue-600 mb-4">
+          <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-rose-100 text-rose-600 mb-4">
             <FiHelpCircle size={28} />
           </div>
           <h1 className="text-2xl sm:text-3xl font-bold text-slate-800">
-            Comment fonctionne Wedd ?
+            {t('help.title')}
           </h1>
           <p className="mt-2 text-slate-500 text-sm sm:text-base">
-            Toutes les réponses pour utiliser le site : comptes, rôles, invités, salle et réunions.
+            {t('help.text')}
           </p>
         </section>
 
         <div className="space-y-8">
-          {FAQ_SECTIONS.map((section) => (
+          {sections.map((section) => (
             <section key={section.title}>
-              <h2 className="text-lg font-semibold text-blue-700 mb-3">{section.title}</h2>
+              <h2 className="text-lg font-semibold text-rose-700 mb-3">{section.title}</h2>
               <div className="space-y-2">
                 {section.items.map((item) => (
                   <FaqItem key={item.q} question={item.q} answer={item.a} />
@@ -225,32 +233,32 @@ function HelpPage() {
           ))}
         </div>
 
-        <section className="mt-10 p-5 rounded-xl bg-blue-600 text-white text-center">
-          <p className="font-semibold">Besoin d’un accompagnement supplémentaire ?</p>
-          <p className="text-sm text-blue-100 mt-1 mb-4">
-            Connectez-vous à votre espace ou revenez à l’accueil.
+        <section className="mt-10 p-5 rounded-xl bg-rose-600 text-white text-center">
+          <p className="font-semibold">{t('help.more')}</p>
+          <p className="text-sm text-rose-100 mt-1 mb-4">
+            {t('help.moreText')}
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             {token ? (
               <Link
                 to="/dashboard"
-                className="px-4 py-2 rounded-lg bg-white text-blue-700 font-semibold hover:bg-blue-50"
+                className="px-4 py-2 rounded-lg bg-white text-rose-700 font-semibold hover:bg-rose-50"
               >
-                Mon dashboard
+                {t('help.dashboard')}
               </Link>
             ) : (
               <>
                 <Link
                   to="/login-page"
-                  className="px-4 py-2 rounded-lg bg-white text-blue-700 font-semibold hover:bg-blue-50"
+                  className="px-4 py-2 rounded-lg bg-white text-rose-700 font-semibold hover:bg-rose-50"
                 >
-                  Se connecter
+                  {t('help.signIn')}
                 </Link>
                 <Link
                   to="/"
-                  className="px-4 py-2 rounded-lg border border-white/40 text-white font-semibold hover:bg-blue-500"
+                  className="px-4 py-2 rounded-lg border border-white/40 text-white font-semibold hover:bg-rose-500"
                 >
-                  Accueil
+                  {t('help.home')}
                 </Link>
               </>
             )}

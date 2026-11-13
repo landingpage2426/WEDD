@@ -42,6 +42,9 @@ const userSchema = new mongoose.Schema({
   // Rôle de l'utilisateur
   role: { type: String, enum: ROLES, default: 'client' },
 
+  // Absent sur les anciens comptes : ils restent actifs
+  actif: { type: Boolean, default: true },
+
   // Référence au client qui a créé cet utilisateur (manager, protocole, etc.)
   createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
 

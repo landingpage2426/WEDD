@@ -1,5 +1,6 @@
 import bcrypt from "bcryptjs";
 import User from "../../Models/User.js";
+import { writeAudit } from "../../services/audit.js";
 
 export const forgotPassword = async (req, res) => {
   const { email, password, confirmPassword } = req.body;
@@ -28,6 +29,15 @@ export const forgotPassword = async (req, res) => {
 
     // 4. Met à jour dans la base de données
     await User.updateOne({ email }, { password: hashedPassword });
+
+    await writeAudit({
+      action: "password_reset",
+      actorId: user._id,
+      actorEmail: user.email,
+      targetId: user._id,
+      targetEmail: user.email,
+      details: "Mot de passe réinitialisé",
+    });
 
     res.status(200).json({
       message: "Mot de passe modifié avec succès !",

@@ -13,13 +13,24 @@ const Authenticate = async (req, res, next) => {
 
     try {
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
-        const user = await User.findById(decoded.userId).select("-password"); // ✅ on récupère tout sauf le mot de passe
+        if (decoded.type === "refresh") {
+            return res.status(401).json({ message: "Token invalide" });
+        }
+
+        const user = await User.findById(decoded.userId).select("-password");
 
         if (!user) {
             return res.status(404).json({ message: "Utilisateur non trouvé" });
         }
 
-        req.user = user; // ✅ utilisateur complet dans la requête
+        if (user.actif === false) {
+            return res.status(403).json({
+                message: "Ce compte est désactivé",
+                code: "ACCOUNT_DISABLED",
+            });
+        }
+
+        req.user = user;
         next();
     } catch (err) {
         console.error("Erreur de token :", err);

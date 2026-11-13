@@ -1,4 +1,5 @@
 import User from "../../Models/User.js";
+import { writeAudit } from "../../services/audit.js";
 
 const UsersDelete = async (req, res) => {
     const { id } = req.params;
@@ -12,6 +13,15 @@ const UsersDelete = async (req, res) => {
                 type: 'danger',
             });
         }
+
+        await writeAudit({
+            action: 'account_deleted',
+            actorId: req.user?._id,
+            actorEmail: req.user?.email,
+            targetId: deleted._id,
+            targetEmail: deleted.email,
+            details: 'Suppression par un administrateur',
+        });
 
         res.status(200).json({
             message: 'utilisateur supprimé avec succès',

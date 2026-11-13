@@ -9,8 +9,11 @@ import logo from '../assets/img/logo.png';
 import Input from '../components/Input';
 import Image from '../components/Image';
 import Title from '../components/Title';
+import { useI18n } from '../i18n/I18nContext';
+import LanguageSwitch from '../components/LanguageSwitch';
 
 function Inscription() {
+  const { t } = useI18n();
   const navigate = useNavigate();
   const [errorMessage, setErrorMessage] = useState({ text: '', type: '' });
   const [hearts, setHearts] = useState([]);
@@ -63,7 +66,7 @@ function Inscription() {
 
       if (response.status === 200 || response.status === 201) {
         setErrorMessage({
-          text: 'Inscription réussie ! Redirection en cours...',
+          text: t('register.success'),
           type: 'success'
         });
         setTimeout(() => navigate('/login-page'), 2000);
@@ -131,8 +134,8 @@ function Inscription() {
           animate={{ y: 0, opacity: 1 }}
           transition={{ delay: 0.5, duration: 0.8 }}
         >
-          <h2 className="text-4xl font-serif font-bold mb-2">Commencez votre histoire</h2>
-          <p className="text-xl font-light">Créez votre site de mariage unique</p>
+          <h2 className="text-4xl font-serif font-bold mb-2">{t('register.story')}</h2>
+          <p className="text-xl font-light">{t('register.storyText')}</p>
         </motion.div>
       </motion.div>
 
@@ -144,6 +147,9 @@ function Inscription() {
         transition={{ duration: 0.8 }}
       >
         <div className="mx-auto w-full max-w-md text-center">
+          <div className="flex justify-end">
+            <LanguageSwitch />
+          </div>
           <motion.div
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
@@ -165,7 +171,7 @@ function Inscription() {
               fontSize="text-2xl"
               className="mt-4 md:mt-6 text-center md:text-3xl tracking-tight text-rose-800 font-serif"
             >
-              CRÉEZ VOTRE ESPACE MARIAGE
+              {t('register.title')}
             </Title>
             <div className="flex justify-center mt-2">
               <FaHeart className="text-pink-400 mx-1 animate-pulse" />
@@ -203,7 +209,7 @@ function Inscription() {
                     width="w-full"
                     type="text"
                     name="prenom"
-                    placeholder="Prénom"
+                    placeholder={t('register.firstName')}
                     required={true}
                     value={formData.prenom}
                     onChange={handleChange}
@@ -222,7 +228,7 @@ function Inscription() {
                     width="w-full"
                     type="text"
                     name="nom"
-                    placeholder="Nom"
+                    placeholder={t('register.lastName')}
                     required={true}
                     value={formData.nom}
                     onChange={handleChange}
@@ -262,7 +268,7 @@ function Inscription() {
                     width="w-full"
                     type="tel"
                     name="telephone"
-                    placeholder="Téléphone"
+                    placeholder={t('register.phone')}
                     required={true}
                     value={formData.telephone}
                     onChange={handleChange}
@@ -283,7 +289,7 @@ function Inscription() {
                     width="w-full"
                     type={showPassword ? 'text' : 'password'}
                     name="password"
-                    placeholder="Mot de passe"
+                    placeholder={t('auth.password')}
                     required={true}
                     value={formData.password}
                     onChange={handleChange}
@@ -293,7 +299,7 @@ function Inscription() {
                     type="button"
                     onClick={() => setShowPassword((v) => !v)}
                     className="absolute right-3 top-1/2 -translate-y-1/2 text-pink-400 hover:text-rose-600"
-                    aria-label={showPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}
+                    aria-label={showPassword ? t('auth.hidePassword') : t('auth.showPassword')}
                   >
                     {showPassword ? <FaEyeSlash /> : <FaEye />}
                   </button>
@@ -310,7 +316,7 @@ function Inscription() {
                     width="w-full"
                     type={showConfirmPassword ? 'text' : 'password'}
                     name="confirmPassword"
-                    placeholder="Confirmez le mot de passe"
+                    placeholder={t('register.confirm')}
                     required={true}
                     value={formData.confirmPassword}
                     onChange={handleChange}
@@ -320,7 +326,7 @@ function Inscription() {
                     type="button"
                     onClick={() => setShowConfirmPassword((v) => !v)}
                     className="absolute right-3 top-1/2 -translate-y-1/2 text-pink-400 hover:text-rose-600"
-                    aria-label={showConfirmPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}
+                    aria-label={showConfirmPassword ? t('auth.hidePassword') : t('auth.showPassword')}
                   >
                     {showConfirmPassword ? <FaEyeSlash /> : <FaEye />}
                   </button>
@@ -339,7 +345,7 @@ function Inscription() {
                     width="w-full"
                     type="date"
                     name="dateMariage"
-                    placeholder="Date de mariage"
+                    placeholder={t('register.date')}
                     required={true}
                     value={formData.dateMariage}
                     onChange={handleChange}
@@ -358,7 +364,7 @@ function Inscription() {
                     width="w-full"
                     type="text"
                     name="lieuMariage"
-                    placeholder="Lieu de mariage"
+                    placeholder={t('register.place')}
                     required={true}
                     value={formData.lieuMariage}
                     onChange={handleChange}
@@ -376,7 +382,7 @@ function Inscription() {
               >
                 <FaPalette className="text-pink-400" />
                 <div className="flex-1">
-                  <label className="block text-sm text-rose-800 mb-1">Couleur du site</label>
+                  <label className="block text-sm text-rose-800 mb-1">{t('register.color')}</label>
                   <input
                     type="color"
                     name="couleurSite"
@@ -395,7 +401,7 @@ function Inscription() {
                   width="w-full"
                   type="text"
                   name="themeMariage"
-                  placeholder="Thème du mariage"
+                  placeholder={t('register.theme')}
                   required={true}
                   value={formData.themeMariage}
                   onChange={handleChange}
@@ -417,11 +423,11 @@ function Inscription() {
                 {loading ? (
                   <span className="flex items-center">
                     <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
-                    Création en cours...
+                    {t('register.loading')}
                   </span>
                 ) : (
                   <span className="flex items-center">
-                    Créer mon compte <FaArrowRight className="ml-2" />
+                    {t('register.submit')} <FaArrowRight className="ml-2" />
                   </span>
                 )}
               </button>
@@ -434,12 +440,12 @@ function Inscription() {
             animate={{ opacity: 1 }}
             transition={{ delay: 0.6 }}
           >
-            Vous avez déjà un compte ?
+            {t('register.haveAccount')}
             <Link
               to="/login-page"
               className="font-semibold ml-1 text-rose-600 hover:text-rose-800 hover:underline"
             >
-              Connectez-vous
+              {t('register.signIn')}
             </Link>
           </motion.p>
         </div>

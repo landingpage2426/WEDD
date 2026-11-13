@@ -12,7 +12,9 @@ import { AnimatePresence, motion } from 'framer-motion';
 import Countdown from '../components/Countdown';
 import AjouterAuCalendrierIcon from '../components/AjouterAuCalendrierIcon';
 import { formatDate } from '../utils/FormatDate';
+import { useI18n } from '../i18n/I18nContext';
 function MesReunions() {
+  const { t } = useI18n();
   const [reunionsList, setReunionsList] = useState([]);
   const [filteredReunions, setFilteredReunions] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
@@ -178,8 +180,8 @@ const handleLogout = async () => {
     transition={{ duration: 0.5 }}
   >
     <div className="text-center mb-12">
-      <h1 className="text-3xl font-bold text-gray-800 mb-2">Gestion des réunions</h1>
-      <p className="text-gray-600">Planifiez et organisez vos réunions pré-matrimoniales</p>
+      <h1 className="text-3xl font-bold text-gray-800 mb-2">{t('meeting.manage')}</h1>
+      <p className="text-gray-600">{t('meeting.hint')}</p>
     </div>
 
     {/* Search and Filter Section */}
@@ -200,7 +202,7 @@ const handleLogout = async () => {
             className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="Rechercher une réunion..."
+            placeholder={t('meeting.search')}
           />
           <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-400 absolute left-3 top-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -362,7 +364,7 @@ const handleLogout = async () => {
       {showConfirmDelete && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white p-6 rounded shadow-lg w-80 text-center">
-            <h2 className="text-lg font-bold mb-4">Confirmer la suppression</h2>
+            <h2 className="text-lg font-bold mb-4">{t('meeting.confirmDelete')}</h2>
             <p className="mb-6">
               Es-tu sûr de vouloir supprimer cette réunion ?
             </p>

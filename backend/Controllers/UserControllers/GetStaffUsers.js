@@ -18,7 +18,10 @@ const GetStaffUsers = async (req, res) => {
     // S'assurer que plainPassword est inclus dans la réponse
     const usersWithPassword = staffUsers.map(user => {
       const userObj = user.toObject();
-      return userObj;
+      return {
+        ...userObj,
+        actif: user.actif !== false,
+      };
     });
 
     res.status(200).json({

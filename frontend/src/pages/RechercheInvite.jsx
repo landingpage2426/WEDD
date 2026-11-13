@@ -9,6 +9,7 @@ import { Html5Qrcode } from "html5-qrcode";
 import { AnimatePresence, motion } from "framer-motion";
 import Countdown from "../components/Countdown";
 import loadingImage from "../assets/img/load.png";
+import { useI18n } from "../i18n/I18nContext";
 
 const extractInviteId = (decodedText) => {
   try {
@@ -23,6 +24,7 @@ const extractInviteId = (decodedText) => {
 };
 
 const RechercheInvite = () => {
+  const { t } = useI18n();
   const [invitesList, setInvitesList] = useState([]);
   const [inputId, setInputId] = useState("");
   const [error, setError] = useState(null);
@@ -73,6 +75,25 @@ const RechercheInvite = () => {
     };
     fetchInvites();
   }, []);
+
+  useEffect(() => {
+    const timer = window.setInterval(async () => {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+      try {
+        await axios.get(`${apiUrl}/api/profil`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+      } catch (err) {
+        if (err.response?.data?.code !== 'ACCOUNT_DISABLED') return;
+        if (scannerRef.current) {
+          scannerRef.current.stop().catch(() => {});
+          scannerRef.current = null;
+        }
+      }
+    }, 5000);
+    return () => window.clearInterval(timer);
+  }, [apiUrl]);
 
 
 
@@ -143,6 +164,7 @@ const handleSubmit = async (e) => {
     });
   } catch (err) {
     console.error("Erreur présence :", err);
+    if (err.response?.data?.code === 'ACCOUNT_DISABLED') return;
     if (err.response?.data?.isDatePassed) {
       setError({ 
         text: "⛔ Ce billet n'est plus valide. La date du mariage est déjà passée.", 
@@ -253,6 +275,7 @@ useEffect(() => {
       });
     } catch (err) {
       console.error('❌ Erreur lors du scan :', err);
+      if (err.response?.data?.code === 'ACCOUNT_DISABLED') return;
       if (err.response?.status === 403) {
         setError({ text: '⛔ Ce QR Code ne vous appartient pas.', color: 'red' });
       } else if (err.response?.status === 401) {
@@ -335,13 +358,13 @@ useEffect(() => {
             exit={{ opacity: 0, height: 0 }}
             transition={{ duration: 0.3 }}
           >
-            <Link to="/dashboard" onClick={() => setMenuOpen(false)} className="hover:text-blue-200 transition-colors">Dashboard</Link>
-            <Link to="/liste-reunions" onClick={() => setMenuOpen(false)} className="hover:text-blue-200 transition-colors">Réunions</Link>
-            <Link to="/ajout-invite" onClick={() => setMenuOpen(false)} className="hover:text-blue-200 transition-colors">Ajouter un invité</Link>
-            <Link to="/recherche-invite" onClick={() => setMenuOpen(false)} className="hover:text-blue-200 transition-colors">Recherche invité</Link>
-            <Link to="/profil" onClick={() => setMenuOpen(false)} className="hover:text-blue-200 transition-colors">Profil</Link>
+            <Link to="/dashboard" onClick={() => setMenuOpen(false)} className="hover:text-blue-200 transition-colors">{t('nav.dashboard')}</Link>
+            <Link to="/liste-reunions" onClick={() => setMenuOpen(false)} className="hover:text-blue-200 transition-colors">{t('nav.meetings')}</Link>
+            <Link to="/ajout-invite" onClick={() => setMenuOpen(false)} className="hover:text-blue-200 transition-colors">{t('nav.addGuest')}</Link>
+            <Link to="/recherche-invite" onClick={() => setMenuOpen(false)} className="hover:text-blue-200 transition-colors">{t('nav.searchGuest')}</Link>
+            <Link to="/profil" onClick={() => setMenuOpen(false)} className="hover:text-blue-200 transition-colors">{t('nav.profile')}</Link>
             <button onClick={() => { setMenuOpen(false); handleLogout(); }} className="text-red-700 hover:text-red-700 text-left transition-colors">
-              Déconnexion
+              {t('common.logout')}
             </button>
           </motion.nav>
         )}
@@ -350,13 +373,13 @@ useEffect(() => {
       {/* ---- CONTENU PRINCIPAL ---- */}
       <div className="flex-1 bg-[#FAFAFA] flex items-center justify-center p-4">
         <div className="bg-white shadow-lg p-6 md:p-8 rounded-2xl w-full max-w-md flex flex-col items-center text-center">
-          <h2 className="text-xl font-bold mb-6 text-black">Entrer l'identifiant de l'invité</h2>
+          <h2 className="text-xl font-bold mb-6 text-black">{t('guest.enterId')}</h2>
 
           <form className="w-full" onSubmit={handleSubmit}>
             <div className="flex flex-col gap-4 mb-4">
               <input
                 type="text"
-                placeholder="Identifiant de l'invité"
+                placeholder={t('guest.id')}
                 className="w-full p-3 text-base border border-[#C6C6C6] rounded-lg"
                 value={inputId}
                 onChange={(e) => {

@@ -3,7 +3,9 @@ import React, { useState } from 'react';
 import close from '../assets/icons/close-circle.svg';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import { useI18n } from '../i18n/I18nContext';
 function AjoutReunion({ onClose, fetchReunions }) {
+  const { t } = useI18n();
   const [titre, setTitre] = useState('');
   const [dateHeure, setDateHeure] = useState('');
   const [lieu, setLieu] = useState('');  
@@ -55,7 +57,7 @@ const handleSubmit = async (e) => {
         <button onClick={onClose} className="absolute top-4 right-4">
           <img className="w-8 h-8" src={close} alt="close-circle" />
         </button>
-        <h2 className="text-black mb-5 font-bold text-lg">Ajouter une réunion</h2>
+        <h2 className="text-black mb-5 font-bold text-lg">{t('meeting.add')}</h2>
         
            {successMessage && (
           <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-2 rounded mb-4">
@@ -67,7 +69,7 @@ const handleSubmit = async (e) => {
             type="text"
             value={titre}
             onChange={(e) => setTitre(e.target.value)}
-            placeholder="Titre"
+            placeholder={t('meeting.title')}
             required
             className="w-full p-2 text-base border border-[#C6C6C6] rounded-2xl"
           />
@@ -82,12 +84,12 @@ const handleSubmit = async (e) => {
             type="text"
             value={lieu}
             onChange={(e) => setLieu(e.target.value)}
-            placeholder="Lieu"
+            placeholder={t('meeting.place')}
             required
             className="w-full p-2 text-base border border-[#C6C6C6] rounded-2xl"
           />
           <button type="submit" className="bg-[#0066cc] font-bold text-white px-8 py-2 rounded text-base w-full mt-2">
-            ENREGISTRER
+            {t('common.save').toUpperCase()}
           </button>
         </form>
       </div>

@@ -17,7 +17,9 @@ import ShowInvite from './pages/ShowInvite.jsx'
 import Root from './components/Root.jsx'
 import Salle from './components/Salle.jsx';
 import AdminPage from './pages/AdminPage.jsx'
+import AdminUser from './pages/AdminUser.jsx'
 import Administration from './pages/Administration.jsx'
+import { I18nProvider } from './i18n/I18nContext.jsx'
 import EditUser from './pages/EditUser.jsx'
 import ForgotPassword from './pages/ForgotPassword.jsx'
 import HelpPage from './pages/HelpPage.jsx'
@@ -41,6 +43,7 @@ const router = createBrowserRouter (
         <Route path="/forgot-password" element={<ForgotPassword/>} /> 
         <Route path="/help-page" element={<HelpPage />} />
         <Route path="/admin" element={<AdminPage />} />
+        <Route path="/admin/users/:id" element={<AdminUser />} />
         <Route path="/administration" element={<Administration />} /> 
         <Route path="*" element={<PageNotFound/>} />
       </Route>
@@ -50,6 +53,8 @@ const router = createBrowserRouter (
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
-    <RouterProvider router={router} />
+    <I18nProvider>
+      <RouterProvider router={router} />
+    </I18nProvider>
   </React.StrictMode>,
 )

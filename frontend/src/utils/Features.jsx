@@ -12,38 +12,38 @@ import {
 export const features = [
   {
     icon: <FiUserCheck className="w-full h-full" />,
-    title: "Billets numériques personnalisés",
-    description: "Chaque invité reçoit un billet PDF élégant avec son nom, statut et numéro de table, directement envoyé par email.",
+    titleKey: "home.f1Title",
+    descriptionKey: "home.f1Text",
     color: "text-rose-500"
   },
   {
     icon: <FiCheckCircle className="w-full h-full" />,
-    title: "QR Code unique et sécurisé",
-    description: "Système de check-in ultra rapide avec QR code individuel pour une gestion fluide des entrées.",
+    titleKey: "home.f2Title",
+    descriptionKey: "home.f2Text",
     color: "text-blue-500"
   },
   {
     icon: <FiLayout className="w-full h-full" />,
-    title: "Plan de salle intelligent",
-    description: "Générez et modifiez facilement votre plan de table avec notre outil visuel intuitif et dynamique.",
+    titleKey: "home.f3Title",
+    descriptionKey: "home.f3Text",
     color: "text-emerald-500"
   },
   {
     icon: <FiGift className="w-full h-full" />,
-    title: "Gestion de liste de mariage",
-    description: "Plateforme intégrée pour votre liste de cadeaux avec suivi en temps réel des réservations.",
+    titleKey: "home.f4Title",
+    descriptionKey: "home.f4Text",
     color: "text-amber-500"
   },
   {
     icon: <FiMessageSquare className="w-full h-full" />,
-    title: "Messagerie aux invités",
-    description: "Envoyez des rappels et informations importantes via SMS ou email à tous vos invités en un clic.",
+    titleKey: "home.f5Title",
+    descriptionKey: "home.f5Text",
     color: "text-purple-500"
   },
   {
     icon: <FiBarChart2 className="w-full h-full" />,
-    title: "Tableau de bord complet",
-    description: "Suivez en temps réel les confirmations, régimes alimentaires et autres informations cruciales.",
+    titleKey: "home.f6Title",
+    descriptionKey: "home.f6Text",
     color: "text-indigo-500"
   }
 ];

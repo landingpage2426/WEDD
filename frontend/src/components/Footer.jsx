@@ -9,8 +9,10 @@ import {
   FaClock
 } from 'react-icons/fa';
 import logo from "../assets/img/logo.png";
+import { useI18n } from '../i18n/I18nContext';
 
 const Footer = () => {
+  const { t } = useI18n();
   const socialLinks = [
     { icon: <FaFacebookF />, label: "Facebook", url: "#" },
     { icon: <FaInstagram />, label: "Instagram", url: "#" },
@@ -20,22 +22,22 @@ const Footer = () => {
   const contactInfos = [
     { icon: <FaEnvelope />, text: "contact.wedd25@gmail.com", url: "mailto:contact.wedd25@gmail.com" },
     { icon: <FaPhoneAlt />, text: "+237 6 87 96 29 49", url: "tel:+237687962949" },
-    { icon: <FaMapMarkerAlt />, text: "Douala, Cameroun", url: "#" },
-    { icon: <FaClock />, text: "Lun-Ven: 9h-18h", url: "#" }
+    { icon: <FaMapMarkerAlt />, text: t('home.place'), url: "#" },
+    { icon: <FaClock />, text: t('home.hours'), url: "#" }
   ];
 
   const footerLinks = [
-    { title: "Services", links: [
-      { name: "Sites vitrine", url: "#" },
-      { name: "Boutiques e-commerce", url: "#" },
-      { name: "Blogs personnels", url: "#" },
-      { name: "Applications web", url: "#" }
+    { title: t('home.services'), links: [
+      { name: t('home.showcase'), url: "#" },
+      { name: t('home.shops'), url: "#" },
+      { name: t('home.blogs'), url: "#" },
+      { name: t('home.apps'), url: "#" }
     ]},
-    { title: "À propos", links: [
-      { name: "Notre équipe", url: "#" },
-      { name: "Nos réalisations", url: "#" },
-      { name: "Méthodologie", url: "#" },
-      { name: "Témoignages", url: "#" }
+    { title: t('home.about'), links: [
+      { name: t('home.team'), url: "#" },
+      { name: t('home.portfolio'), url: "#" },
+      { name: t('home.method'), url: "#" },
+      { name: t('home.testimonials'), url: "#" }
     ]}
   ];
 
@@ -118,7 +120,7 @@ const Footer = () => {
             transition={{ delay: 0.4 }}
             viewport={{ once: true }}
           >
-            <h3 className="text-lg font-semibold text-gray-900">Contact</h3>
+            <h3 className="text-lg font-semibold text-gray-900">{t('home.contactTitle')}</h3>
             <ul className="space-y-4">
               {contactInfos.map((info, index) => (
                 <li key={index} className="flex items-start gap-3">
@@ -146,14 +148,14 @@ const Footer = () => {
           viewport={{ once: true }}
         >
           <p className="text-sm text-gray-500">
-            © {new Date().getFullYear()} WEDD. Tous droits réservés.
+            © {new Date().getFullYear()} WEDD. {t('home.rights')}
           </p>
           <div className="flex gap-6">
             <a href="#" className="text-sm text-gray-500 hover:text-indigo-600 transition-colors">
-              Conditions d'utilisation
+              {t('home.terms')}
             </a>
             <a href="#" className="text-sm text-gray-500 hover:text-indigo-600 transition-colors">
-              Politique de confidentialité
+              {t('home.privacy')}
             </a>
           </div>
         </motion.div>

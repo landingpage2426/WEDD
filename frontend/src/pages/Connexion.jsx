@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
@@ -11,6 +11,8 @@ import Title from '../components/Title';
 import { FaHeart, FaEnvelope, FaLock, FaArrowRight, FaEye, FaEyeSlash } from 'react-icons/fa';
 import { FiHeart } from 'react-icons/fi';
 import { openRightPanel } from '../components/BlogRight';
+import LanguageSwitch from '../components/LanguageSwitch';
+import { useI18n } from '../i18n/I18nContext';
 
 function Connexion() {
   const [email, setEmail] = useState('');
@@ -20,7 +22,14 @@ function Connexion() {
   const [loading, setLoading] = useState(false);
   const [hearts, setHearts] = useState([]);
   const navigate = useNavigate();
+  const { t } = useI18n();
   const apiUrl = import.meta.env.VITE_API_URL;
+
+  useEffect(() => {
+    if (new URLSearchParams(window.location.search).get('reason') === 'disabled') {
+      setError(t('auth.accountDisabled'));
+    }
+  }, [t]);
 
   // Animation de coeurs flottants
   const createHeart = (e) => {
@@ -56,6 +65,7 @@ function Connexion() {
       const expiration = Date.now() + durationMs;
 
       localStorage.setItem('token', data.token);
+      if (data.refreshToken) localStorage.setItem('refreshToken', data.refreshToken);
       localStorage.setItem('tokenExpiration', expiration.toString());
       localStorage.setItem('user', JSON.stringify(data.user));
       openRightPanel();
@@ -69,10 +79,12 @@ function Connexion() {
       }
 
     } catch (err) {
-      if (err.response?.data?.message) {
+      if (err.response?.data?.code === 'ACCOUNT_DISABLED') {
+        setError(t('auth.accountDisabled'));
+      } else if (err.response?.data?.message) {
         setError(err.response.data.message);
       } else {
-        setError('Une erreur est survenue lors de la connexion');
+        setError(t('auth.error'));
       }
     } finally {
       setLoading(false);
@@ -84,6 +96,9 @@ function Connexion() {
       className="flex flex-col md:flex-row h-screen bg-gradient-to-br from-pink-50 to-rose-50 overflow-hidden"
       onClick={createHeart}
     >
+      <div className="absolute right-4 top-4 z-20">
+        <LanguageSwitch />
+      </div>
       {/* Animation des coeurs */}
       {hearts.map(heart => (
         <motion.div
@@ -131,8 +146,8 @@ function Connexion() {
           animate={{ y: 0, opacity: 1 }}
           transition={{ delay: 0.5, duration: 0.8 }}
         >
-          <h2 className="text-4xl font-serif font-bold mb-2">Bienvenue</h2>
-          <p className="text-xl font-light">Votre histoire commence ici</p>
+          <h2 className="text-4xl font-serif font-bold mb-2">{t('auth.welcome')}</h2>
+          <p className="text-xl font-light">{t('auth.welcomeText')}</p>
         </motion.div>
       </motion.div>
 
@@ -165,7 +180,7 @@ function Connexion() {
               fontSize="text-2xl"
               className="mt-6 md:mt-10 text-center md:text-3xl tracking-tight text-rose-800 font-serif"
             >
-              CONNEXION À VOTRE ESPACE
+              {t('auth.loginTitle')}
             </Title>
             <div className="flex justify-center mt-4">
               <FaHeart className="text-pink-400 mx-1 animate-pulse" />
@@ -198,7 +213,7 @@ function Connexion() {
                   width="w-full"
                   type="email"
                   name="email"
-                  placeholder="Email"
+                  placeholder={t('auth.email')}
                   required={true}
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
@@ -217,7 +232,7 @@ function Connexion() {
                   width="w-full"
                   type={showPassword ? 'text' : 'password'}
                   name="password"
-                  placeholder="Mot de passe"
+                  placeholder={t('auth.password')}
                   required={true}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
@@ -227,7 +242,7 @@ function Connexion() {
                   type="button"
                   onClick={() => setShowPassword((v) => !v)}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-pink-400 hover:text-rose-600"
-                  aria-label={showPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}
+                  aria-label={showPassword ? t('auth.hidePassword') : t('auth.showPassword')}
                 >
                   {showPassword ? <FaEyeSlash /> : <FaEye />}
                 </button>
@@ -239,7 +254,7 @@ function Connexion() {
                     to="/forgot-password"
                     className="font-semibold text-rose-600 hover:text-rose-800 hover:underline underline-offset-8"
                   >
-                    Mot de passe oublié?
+                    {t('auth.forgot')}
                   </Link>
                 </div>
               </div>
@@ -257,11 +272,11 @@ function Connexion() {
                 {loading ? (
                   <span className="flex items-center">
                     <img src={loadingImage} alt="Chargement" className="w-6 h-6 mr-2 animate-spin" />
-                    Connexion...
+                    {t('auth.loading')}
                   </span>
                 ) : (
                   <span className="flex items-center">
-                    Se connecter <FaArrowRight className="ml-2" />
+                    {t('auth.submit')} <FaArrowRight className="ml-2" />
                   </span>
                 )}
               </button>
@@ -274,12 +289,12 @@ function Connexion() {
             animate={{ opacity: 1 }}
             transition={{ delay: 0.6 }}
           >
-            Vous n'avez pas de compte ?
+            {t('auth.noAccount')}
             <Link
               to="/register-page"
               className="font-semibold ml-1 text-rose-600 hover:text-rose-800 hover:underline"
             >
-              Créer un compte
+              {t('auth.create')}
             </Link>
           </motion.p>
         </div>

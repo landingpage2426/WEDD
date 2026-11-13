@@ -3,8 +3,10 @@ import axios from 'axios';
 import { isCouple, getBilletCharsRemaining, limitBilletField, MAX_BILLET_LINE_CHARS, getKnownTableNames } from '../utils/invitePeople';
 import TableOccupancyHint from '../components/TableOccupancyHint';
 import useTableOccupancy from '../hooks/useTableOccupancy';
+import { useI18n } from '../i18n/I18nContext';
 
 function ModifierInvite({ invite, onClose, invites: invitesProp, tables: tablesProp }) {
+  const { t } = useI18n();
   const [titre, setTitre] = useState('');
   const [nom, setNom] = useState('');
   const [prenom, setPrenom] = useState('');
@@ -69,67 +71,66 @@ function ModifierInvite({ invite, onClose, invites: invitesProp, tables: tablesP
     <div className="fixed inset-0 top-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-50 p-4 overflow-x-scroll">
       <div className="bg-white rounded-xl shadow-xl w-full max-w-2xl overflow-hidden mt-64">
         <div className="bg-gradient-to-r from-blue-600 to-blue-500 p-5">
-          <h2 className="text-white text-xl font-bold text-center">Modifier l'invité</h2>
+          <h2 className="text-white text-xl font-bold text-center">{t('guest.editTitle')}</h2>
         </div>
         
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
           <div className="space-y-5">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Civilité</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">{t('guest.civility')}</label>
               <select
                 value={titre}
                 onChange={(e) => setTitre(e.target.value)}
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition"
               >
-                <option value="">Sélectionnez une civilité</option>
+                <option value="">{t('guest.selectCivility')}</option>
                 <option value="M">M.</option>
                 <option value="Mme">Mme</option>
                 <option value="Mlle">Mlle</option>
-                <option value="couple">M. & Mme (2 personnes)</option>
+                <option value="couple">{t('guest.coupleShort')}</option>
               </select>
               {isCouple(titre) && (
                 <p className="mt-2 rounded-lg bg-pink-50 px-3 py-2 text-sm font-medium text-pink-700">
-                  Un couple s’affiche en « M. & Mme » et compte pour 2 personnes dans les statistiques.
+                  {t('guest.coupleHint')}
                 </p>
               )}
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Nom</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">{t('guest.lastName')}</label>
                 <input
                   type="text"
                   value={nom}
                   onChange={(e) => setNom(limitBilletField(prenom, nom, titre, 'nom', e.target.value))}
-                  placeholder="Nom"
+                  placeholder={t('guest.lastName')}
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition"
                 />
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Prénom {isCouple(titre) ? <span className="text-gray-400 font-normal">(optionnel pour un couple)</span> : null}
+                  {t('guest.firstName')} {isCouple(titre) ? <span className="text-gray-400 font-normal">{t('guest.firstOptional')}</span> : null}
                 </label>
                 <input
                   type="text"
                   value={prenom}
                   onChange={(e) => setPrenom(limitBilletField(prenom, nom, titre, 'prenom', e.target.value))}
-                  placeholder="Prénom"
+                  placeholder={t('guest.firstName')}
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition"
                 />
               </div>
             </div>
             <p className={`text-xs font-medium ${billetRemaining <= 5 ? 'text-red-600' : 'text-gray-500'}`}>
-              {billetRemaining} caractère{billetRemaining === 1 ? '' : 's'} restant{billetRemaining === 1 ? '' : 's'} sur le billet
-              {' '}({MAX_BILLET_LINE_CHARS - billetRemaining}/{MAX_BILLET_LINE_CHARS})
+              {t('guest.chars', { count: billetRemaining, used: MAX_BILLET_LINE_CHARS - billetRemaining, max: MAX_BILLET_LINE_CHARS })}
             </p>
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Téléphone</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">{t('guest.phone')}</label>
               <input
                 type="tel"
                 value={telephone}
                 onChange={(e) => setTelephone(e.target.value)}
-                placeholder="Téléphone"
+                placeholder={t('guest.phone')}
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition"
               />
             </div>
@@ -145,13 +146,13 @@ function ModifierInvite({ invite, onClose, invites: invitesProp, tables: tablesP
               </div>
           </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Nom de la table</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">{t('guest.tableName')}</label>
               <input
                 type="text"
                 list="tables-connues-edit"
                 value={nomTable}
                 onChange={(e) => setNomTable(e.target.value.toUpperCase())}
-                placeholder="NOM DE LA TABLE"
+                placeholder={t('guest.tableName')}
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition uppercase"
               />
               <datalist id="tables-connues-edit">

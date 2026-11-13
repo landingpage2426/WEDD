@@ -4,49 +4,64 @@ import { Link, useNavigate } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import { formatDate } from "../utils/FormatDate";
 import { handleDeleteUser } from "../utils/HandleDeleteUser";
+import { clearSession } from "../utils/authSession";
+import LanguageSwitch from "../components/LanguageSwitch";
+import Pagination from "../components/Pagination";
+import { useI18n } from "../i18n/I18nContext";
 import {
   FiEdit2,
   FiTrash2,
   FiSearch,
   FiUsers,
-  FiUserCheck,
-  FiShield,
   FiLogOut,
   FiMenu,
   FiX,
+  FiEye,
+  FiUserX,
+  FiUserCheck,
 } from "react-icons/fi";
 import EditUser from "./EditUser.jsx";
 import logo from "../assets/img/logo.png";
 
 const apiUrl = import.meta.env.VITE_API_URL;
 const api = axios.create({ baseURL: apiUrl });
+const AUDIT_ACTIONS = [
+  "login_success",
+  "login_failure",
+  "account_activated",
+  "account_deactivated",
+  "account_deleted",
+  "password_reset",
+  "password_changed",
+  "presence",
+  "billet_envoye",
+];
 
-const ROLE_LABELS = {
-  admin: "Admin",
-  client: "Client",
-  manager: "Manager",
-  chef_protocole: "Chef protocole",
-  protocole: "Protocole",
-};
-
-const ROLE_STYLES = {
-  admin: "bg-blue-600 text-white",
-  client: "bg-blue-100 text-blue-800",
-  manager: "bg-sky-100 text-sky-800",
-  chef_protocole: "bg-indigo-100 text-indigo-800",
-  protocole: "bg-slate-100 text-slate-700",
-};
+function formatWhen(value, locale) {
+  if (!value) return "—";
+  return new Date(value).toLocaleString(locale, { dateStyle: "medium", timeStyle: "short" });
+}
 
 function AdminPage() {
+  const { t, locale } = useI18n();
   const [myUsers, setMyUsers] = useState([]);
+  const [logs, setLogs] = useState([]);
+  const [searchInput, setSearchInput] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
-  const [roleFilter, setRoleFilter] = useState("all");
+  const [actionFilter, setActionFilter] = useState("all");
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
   const [showPopupUpdateUser, setShowPopupUpdateUser] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
   const [menuOpen, setMenuOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [currentUser, setCurrentUser] = useState(null);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const timer = setTimeout(() => setSearchTerm(searchInput), 300);
+    return () => clearTimeout(timer);
+  }, [searchInput]);
 
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
@@ -66,19 +81,21 @@ function AdminPage() {
     fetchUsers();
   }, [navigate]);
 
+  useEffect(() => {
+    if (currentUser?.role === "admin") fetchAudit();
+  }, [actionFilter, currentUser]);
+
+  const authHeaders = () => ({ Authorization: `Bearer ${localStorage.getItem("token")}` });
+
   const fetchUsers = async () => {
     try {
       setLoading(true);
-      const token = localStorage.getItem("token");
-      const res = await api.get("/api/users", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const res = await api.get("/api/users", { headers: authHeaders() });
       setMyUsers(res.data.users || []);
     } catch (err) {
       console.error("Erreur lors du chargement des utilisateurs", err);
       if (err.response?.status === 401 || err.response?.status === 403) {
-        localStorage.removeItem("user");
-        localStorage.removeItem("token");
+        clearSession();
         navigate("/login-page");
       }
     } finally {
@@ -86,78 +103,68 @@ function AdminPage() {
     }
   };
 
-  const filteredUsers = useMemo(() => {
-    const term = searchTerm.toLowerCase().trim();
-    return myUsers.filter((user) => {
-      const matchesRole = roleFilter === "all" || user.role === roleFilter;
-      const clientName = user.createdBy
-        ? `${user.createdBy.prenom || ""} ${user.createdBy.nom || ""}`.toLowerCase()
-        : "";
-      const clientEmail = user.createdBy?.email?.toLowerCase() || "";
-      const matchesSearch =
-        !term ||
-        user.nom?.toLowerCase().includes(term) ||
-        user.prenom?.toLowerCase().includes(term) ||
-        user.email?.toLowerCase().includes(term) ||
-        user.telephone?.toLowerCase().includes(term) ||
-        user.role?.toLowerCase().includes(term) ||
-        clientName.includes(term) ||
-        clientEmail.includes(term);
-      return matchesRole && matchesSearch;
-    });
-  }, [myUsers, searchTerm, roleFilter]);
-
-  const isStaffRole = (role) =>
-    ["manager", "chef_protocole", "protocole"].includes(role);
-
-  const getClientLabel = (user) => {
-    if (!isStaffRole(user.role)) return null;
-    if (user.createdBy && typeof user.createdBy === "object") {
-      return {
-        name: `${user.createdBy.prenom || ""} ${user.createdBy.nom || ""}`.trim() || "Client",
-        email: user.createdBy.email || "",
-      };
+  const fetchAudit = async () => {
+    try {
+      const query = actionFilter === "all" ? "" : `?action=${actionFilter}`;
+      const res = await api.get(`/api/admin/audit${query}`, { headers: authHeaders() });
+      setLogs(res.data.logs || []);
+    } catch (err) {
+      console.error("Erreur journal", err);
     }
-    return { name: "Client non renseigné", email: "" };
   };
 
-  const stats = useMemo(() => {
-    const clients = myUsers.filter((u) => u.role === "client").length;
-    const staff = myUsers.filter((u) =>
-      ["manager", "chef_protocole", "protocole"].includes(u.role)
-    ).length;
-    const admins = myUsers.filter((u) => u.role === "admin").length;
-    return {
-      total: myUsers.length,
-      clients,
-      staff,
-      admins,
-    };
-  }, [myUsers]);
+  const clients = useMemo(() => myUsers.filter((user) => user.role === "client"), [myUsers]);
+
+  const filteredUsers = useMemo(() => {
+    const term = searchTerm.toLowerCase().trim();
+    return clients.filter((user) => (
+      !term ||
+      user.nom?.toLowerCase().includes(term) ||
+      user.prenom?.toLowerCase().includes(term) ||
+      user.email?.toLowerCase().includes(term) ||
+      user.telephone?.toLowerCase().includes(term) ||
+      user.lieuMariage?.toLowerCase().includes(term)
+    ));
+  }, [clients, searchTerm]);
+
+  const pageCount = Math.max(1, Math.ceil(filteredUsers.length / pageSize));
+  const currentPage = Math.min(page, pageCount);
+  const pagedUsers = filteredUsers.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+
+  useEffect(() => {
+    setPage(1);
+  }, [searchTerm, pageSize]);
 
   const onEditUser = (user) => {
     setSelectedUser(user);
     setShowPopupUpdateUser(true);
   };
 
+  const toggleActive = async (user) => {
+    const next = user.actif === false;
+    try {
+      await api.put(`/api/admin/users/${user._id}/status`, { actif: next }, { headers: authHeaders() });
+      await Promise.all([fetchUsers(), fetchAudit()]);
+    } catch (err) {
+      alert(err.response?.data?.message || t("profile.deleteError"));
+    }
+  };
+
   const handleLogout = async () => {
     try {
-      localStorage.removeItem("token");
-      localStorage.removeItem("user");
-      localStorage.removeItem("tokenExpiration");
-      await axios.post(`${apiUrl}/api/logout`, {}, {
-        headers: { "Content-Type": "application/json" },
-      });
+      clearSession();
+      await axios.post(`${apiUrl}/api/logout`, {}, { headers: { "Content-Type": "application/json" } });
       navigate("/");
     } catch (error) {
-      console.error("Erreur lors de la déconnexion:", error);
+      clearSession();
       navigate("/");
     }
   };
 
+  const isSelf = (user) => String(user._id) === String(currentUser?.id || currentUser?._id);
+
   return (
     <div className="min-h-screen bg-slate-50">
-      {/* Header */}
       <header className="sticky top-0 z-40 bg-white border-b border-blue-100 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
@@ -165,137 +172,68 @@ function AdminPage() {
               <img src={logo} alt="WEDD" className="h-10 w-10 rounded-full object-cover" />
               <div>
                 <p className="text-lg font-bold text-blue-700 leading-tight">WEDD</p>
-                <p className="text-xs text-slate-500">Espace administrateur</p>
+                <p className="text-xs text-slate-500">{t("admin.space")}</p>
               </div>
             </div>
 
             <nav className="hidden md:flex items-center gap-2">
               <span className="px-3 py-2 rounded-lg bg-blue-50 text-blue-700 text-sm font-semibold">
-                Gestion des utilisateurs
+                {t("admin.users")}
               </span>
-              <Link
-                to="/profil"
-                className="px-3 py-2 rounded-lg text-slate-600 hover:bg-blue-50 hover:text-blue-700 text-sm font-medium transition-colors"
-              >
-                Profil
+              <Link to="/profil" className="px-3 py-2 rounded-lg text-slate-600 hover:bg-blue-50 hover:text-blue-700 text-sm font-medium">
+                {t("common.profile")}
               </Link>
-              <button
-                onClick={handleLogout}
-                className="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-red-600 hover:bg-red-50 text-sm font-medium transition-colors"
-              >
+              <LanguageSwitch />
+              <button onClick={handleLogout} className="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-red-600 hover:bg-red-50 text-sm font-medium">
                 <FiLogOut size={16} />
-                Déconnexion
+                {t("common.logout")}
               </button>
             </nav>
 
-            <button
-              className="md:hidden p-2 rounded-lg bg-blue-600 text-white"
-              onClick={() => setMenuOpen((open) => !open)}
-              aria-label="Menu"
-            >
+            <button className="md:hidden p-2 rounded-lg bg-blue-600 text-white" onClick={() => setMenuOpen((open) => !open)} aria-label={t("dashboard.menu")}>
               {menuOpen ? <FiX size={20} /> : <FiMenu size={20} />}
             </button>
           </div>
         </div>
-
         <AnimatePresence>
           {menuOpen && (
-            <motion.nav
-              className="md:hidden border-t border-blue-50 bg-white px-4 py-3 flex flex-col gap-2"
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: "auto" }}
-              exit={{ opacity: 0, height: 0 }}
-            >
-              <span className="px-3 py-2 rounded-lg bg-blue-50 text-blue-700 text-sm font-semibold">
-                Gestion des utilisateurs
-              </span>
-              <Link
-                to="/profil"
-                onClick={() => setMenuOpen(false)}
-                className="px-3 py-2 rounded-lg text-slate-600 hover:bg-blue-50 text-sm font-medium"
-              >
-                Profil
-              </Link>
-              <button
-                onClick={handleLogout}
-                className="px-3 py-2 rounded-lg text-red-600 hover:bg-red-50 text-left text-sm font-medium"
-              >
-                Déconnexion
-              </button>
+            <motion.nav className="md:hidden border-t border-blue-50 bg-white px-4 py-3 flex flex-col gap-2" initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }}>
+              <LanguageSwitch />
+              <Link to="/profil" onClick={() => setMenuOpen(false)} className="px-3 py-2 rounded-lg text-slate-600 text-sm font-medium">{t("common.profile")}</Link>
+              <button onClick={handleLogout} className="px-3 py-2 rounded-lg text-red-600 text-left text-sm font-medium">{t("common.logout")}</button>
             </motion.nav>
           )}
         </AnimatePresence>
       </header>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Intro */}
         <section className="mb-8">
           <h1 className="text-2xl sm:text-3xl font-bold text-slate-800">
-            Bonjour{" "}
-            <span className="text-blue-600">
-              {currentUser?.prenom} {currentUser?.nom}
-            </span>
+            {t("admin.hello")} <span className="text-blue-600">{currentUser?.prenom} {currentUser?.nom}</span>
           </h1>
-          <p className="mt-1 text-slate-500">
-            Gérez les comptes de l&apos;application : clients, staff et administrateurs.
-          </p>
+          <p className="mt-1 text-slate-500">{t("admin.intro")}</p>
         </section>
 
-        {/* Stats */}
-        <section className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-          <div className="bg-white rounded-xl border border-blue-100 p-4 shadow-sm">
-            <div className="flex items-center gap-3">
-              <div className="p-2.5 rounded-full bg-blue-100 text-blue-600">
-                <FiUsers size={20} />
-              </div>
-              <div>
-                <p className="text-xs uppercase tracking-wide text-slate-500">Total</p>
-                <p className="text-2xl font-bold text-slate-800">{stats.total}</p>
-              </div>
+        <section className="mb-8">
+          <div className="bg-white rounded-xl border border-blue-100 p-4 shadow-sm inline-flex items-center gap-3">
+            <div className="p-2.5 rounded-full bg-blue-100 text-blue-600">
+              <FiUsers size={20} />
             </div>
-          </div>
-          <div className="bg-white rounded-xl border border-blue-100 p-4 shadow-sm">
-            <div className="flex items-center gap-3">
-              <div className="p-2.5 rounded-full bg-sky-100 text-sky-600">
-                <FiUserCheck size={20} />
-              </div>
-              <div>
-                <p className="text-xs uppercase tracking-wide text-slate-500">Clients</p>
-                <p className="text-2xl font-bold text-slate-800">{stats.clients}</p>
-              </div>
-            </div>
-          </div>
-          <div className="bg-white rounded-xl border border-blue-100 p-4 shadow-sm">
-            <div className="flex items-center gap-3">
-              <div className="p-2.5 rounded-full bg-indigo-100 text-indigo-600">
-                <FiUsers size={20} />
-              </div>
-              <div>
-                <p className="text-xs uppercase tracking-wide text-slate-500">Staff</p>
-                <p className="text-2xl font-bold text-slate-800">{stats.staff}</p>
-              </div>
-            </div>
-          </div>
-          <div className="bg-white rounded-xl border border-blue-100 p-4 shadow-sm">
-            <div className="flex items-center gap-3">
-              <div className="p-2.5 rounded-full bg-blue-600 text-white">
-                <FiShield size={20} />
-              </div>
-              <div>
-                <p className="text-xs uppercase tracking-wide text-slate-500">Admins</p>
-                <p className="text-2xl font-bold text-slate-800">{stats.admins}</p>
-              </div>
+            <div>
+              <p className="text-xs uppercase tracking-wide text-slate-500">{t("role.client")}</p>
+              <p className="text-2xl font-bold text-slate-800">{clients.length}</p>
             </div>
           </div>
         </section>
 
-        {/* Filters */}
         <section className="bg-white rounded-xl border border-blue-100 shadow-sm mb-6 p-4 sm:p-5">
           <div className="flex flex-col lg:flex-row gap-4 lg:items-center lg:justify-between">
             <div>
-              <h2 className="text-lg font-semibold text-slate-800">Utilisateurs de l&apos;application</h2>
+              <h2 className="text-lg font-semibold text-slate-800">{t("admin.listTitle")}</h2>
               <p className="text-sm text-slate-500">
-                {filteredUsers.length} résultat{filteredUsers.length !== 1 ? "s" : ""}
+                {filteredUsers.length > 1
+                  ? t("admin.resultsPlural", { count: filteredUsers.length })
+                  : t("admin.results", { count: filteredUsers.length })}
               </p>
             </div>
             <div className="flex flex-col sm:flex-row gap-3 w-full lg:w-auto">
@@ -303,133 +241,116 @@ function AdminPage() {
                 <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
                 <input
                   type="text"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  placeholder="Rechercher un utilisateur..."
-                  className="w-full h-11 pl-10 pr-3 border border-slate-200 rounded-lg text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-400"
+                  value={searchInput}
+                  onChange={(e) => setSearchInput(e.target.value)}
+                  placeholder={t("admin.search")}
+                  className="w-full h-11 pl-10 pr-3 border border-slate-200 rounded-lg text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-400"
                 />
               </div>
-              <select
-                value={roleFilter}
-                onChange={(e) => setRoleFilter(e.target.value)}
-                className="h-11 px-3 border border-slate-200 rounded-lg text-slate-700 bg-white focus:outline-none focus:ring-2 focus:ring-blue-400"
-              >
-                <option value="all">Tous les rôles</option>
-                <option value="admin">Admin</option>
-                <option value="client">Client</option>
-                <option value="manager">Manager</option>
-                <option value="chef_protocole">Chef protocole</option>
-                <option value="protocole">Protocole</option>
-              </select>
             </div>
           </div>
         </section>
 
-        {/* Table */}
-        <section className="bg-white rounded-xl border border-blue-100 shadow-sm overflow-hidden">
+        <section className="bg-white rounded-xl border border-blue-100 shadow-sm overflow-hidden mb-8">
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-slate-200">
               <thead className="bg-blue-600">
                 <tr>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-white uppercase tracking-wider">N°</th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-white uppercase tracking-wider">Utilisateur</th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-white uppercase tracking-wider">Contact</th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-white uppercase tracking-wider">Rôle</th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-white uppercase tracking-wider">Client rattaché</th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-white uppercase tracking-wider">Inscription</th>
-                  <th className="px-4 py-3 text-right text-xs font-semibold text-white uppercase tracking-wider">Actions</th>
+                  {[t("admin.guestCount"), t("admin.user"), t("admin.contact"), t("admin.status"), t("admin.joined"), t("admin.lastLogin"), t("common.actions")].map((heading) => (
+                    <th key={heading} className="px-4 py-3 text-left text-xs font-semibold text-white uppercase tracking-wider">{heading}</th>
+                  ))}
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-slate-100">
                 {loading ? (
-                  <tr>
-                    <td colSpan="7" className="px-4 py-12 text-center text-slate-500">
-                      Chargement des utilisateurs...
-                    </td>
-                  </tr>
-                ) : filteredUsers.length > 0 ? (
-                  filteredUsers.map((u, index) => {
-                    const clientInfo = getClientLabel(u);
+                  <tr><td colSpan="7" className="px-4 py-12 text-center text-slate-500">{t("admin.loading")}</td></tr>
+                ) : pagedUsers.length > 0 ? (
+                  pagedUsers.map((user) => {
+                    const active = user.actif !== false;
                     return (
-                    <tr key={u._id} className="hover:bg-blue-50/50 transition-colors">
-                      <td className="px-4 py-4 whitespace-nowrap text-sm font-medium text-slate-700">
-                        {index + 1}
-                      </td>
-                      <td className="px-4 py-4 whitespace-nowrap">
-                        <div className="flex items-center gap-3">
-                          <div className="h-10 w-10 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center text-sm font-bold">
-                            {(u.prenom?.[0] || "?").toUpperCase()}
-                            {(u.nom?.[0] || "").toUpperCase()}
+                      <tr key={user._id} className="hover:bg-blue-50/50">
+                        <td className="px-4 py-4 whitespace-nowrap">
+                          <span className="text-lg font-bold text-rose-700">{user.inviteStats?.total || 0}</span>
+                        </td>
+                        <td className="px-4 py-4 whitespace-nowrap">
+                          <p className="text-sm font-semibold text-slate-800">{user.prenom} {user.nom}</p>
+                          {user.lieuMariage && <p className="text-xs text-slate-500">{user.lieuMariage}</p>}
+                        </td>
+                        <td className="px-4 py-4 whitespace-nowrap">
+                          <p className="text-sm text-slate-700">{user.email}</p>
+                          <p className="text-xs text-slate-500">{user.telephone || "—"}</p>
+                        </td>
+                        <td className="px-4 py-4 whitespace-nowrap">
+                          <span className={`inline-flex px-2.5 py-1 rounded-full text-xs font-semibold ${active ? "bg-emerald-100 text-emerald-800" : "bg-red-100 text-red-700"}`}>
+                            {active ? t("common.active") : t("common.inactive")}
+                          </span>
+                        </td>
+                        <td className="px-4 py-4 whitespace-nowrap text-sm text-slate-500">{formatDate(user.createdAt)}</td>
+                        <td className="px-4 py-4 whitespace-nowrap text-sm text-slate-500">{formatWhen(user.lastLogin, locale)}</td>
+                        <td className="px-4 py-4 whitespace-nowrap text-right">
+                          <div className="inline-flex items-center gap-2">
+                            <Link to={`/admin/users/${user._id}`} className="inline-flex h-9 w-9 items-center justify-center rounded-lg bg-slate-50 text-slate-600 hover:bg-slate-800 hover:text-white" title={t("admin.view")}>
+                              <FiEye size={16} />
+                            </Link>
+                            <button type="button" onClick={() => toggleActive(user)} disabled={isSelf(user) && active} className="inline-flex h-9 w-9 items-center justify-center rounded-lg bg-amber-50 text-amber-700 hover:bg-amber-500 hover:text-white disabled:opacity-30" title={active ? t("admin.deactivate") : t("admin.activate")}>
+                              {active ? <FiUserX size={16} /> : <FiUserCheck size={16} />}
+                            </button>
+                            <button type="button" onClick={() => onEditUser(user)} className="inline-flex h-9 w-9 items-center justify-center rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white" title={t("admin.edit")}>
+                              <FiEdit2 size={16} />
+                            </button>
+                            <button type="button" onClick={(e) => { e.preventDefault(); handleDeleteUser(user._id, navigate, fetchUsers); }} className="inline-flex h-9 w-9 items-center justify-center rounded-lg bg-red-50 text-red-600 hover:bg-red-600 hover:text-white" title={t("admin.delete")}>
+                              <FiTrash2 size={16} />
+                            </button>
                           </div>
-                          <div>
-                            <p className="text-sm font-semibold text-slate-800">
-                              {u.prenom} {u.nom}
-                            </p>
-                            {u.role === "client" && u.lieuMariage && (
-                              <p className="text-xs text-slate-500">{u.lieuMariage}</p>
-                            )}
-                          </div>
-                        </div>
-                      </td>
-                      <td className="px-4 py-4 whitespace-nowrap">
-                        <p className="text-sm text-slate-700">{u.email}</p>
-                        <p className="text-xs text-slate-500">{u.telephone || "—"}</p>
-                      </td>
-                      <td className="px-4 py-4 whitespace-nowrap">
-                        <span
-                          className={`inline-flex px-2.5 py-1 rounded-full text-xs font-semibold ${
-                            ROLE_STYLES[u.role] || "bg-slate-100 text-slate-700"
-                          }`}
-                        >
-                          {ROLE_LABELS[u.role] || u.role}
-                        </span>
-                      </td>
-                      <td className="px-4 py-4 whitespace-nowrap">
-                        {clientInfo ? (
-                          <div>
-                            <p className="text-sm font-medium text-slate-800">{clientInfo.name}</p>
-                            {clientInfo.email && (
-                              <p className="text-xs text-slate-500">{clientInfo.email}</p>
-                            )}
-                          </div>
-                        ) : (
-                          <span className="text-sm text-slate-400">—</span>
-                        )}
-                      </td>
-                      <td className="px-4 py-4 whitespace-nowrap text-sm text-slate-500">
-                        {formatDate(u.createdAt)}
-                      </td>
-                      <td className="px-4 py-4 whitespace-nowrap text-right">
-                        <div className="inline-flex items-center gap-2">
-                          <button
-                            onClick={() => onEditUser(u)}
-                            className="inline-flex items-center justify-center h-9 w-9 rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white transition-colors"
-                            title="Modifier"
-                          >
-                            <FiEdit2 size={16} />
-                          </button>
-                          <button
-                            onClick={(e) => {
-                              e.preventDefault();
-                              handleDeleteUser(u._id, navigate, fetchUsers);
-                            }}
-                            className="inline-flex items-center justify-center h-9 w-9 rounded-lg bg-red-50 text-red-600 hover:bg-red-600 hover:text-white transition-colors"
-                            title="Supprimer"
-                          >
-                            <FiTrash2 size={16} />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
+                        </td>
+                      </tr>
                     );
                   })
                 ) : (
-                  <tr>
-                    <td colSpan="7" className="px-4 py-12 text-center text-slate-500">
-                      Aucun utilisateur trouvé
-                    </td>
-                  </tr>
+                  <tr><td colSpan="7" className="px-4 py-12 text-center text-slate-500">{t("admin.empty")}</td></tr>
                 )}
+              </tbody>
+            </table>
+          </div>
+          <Pagination page={currentPage} pageCount={pageCount} pageSize={pageSize} total={filteredUsers.length} onPageChange={setPage} onPageSizeChange={setPageSize} />
+        </section>
+
+        <section className="bg-white rounded-xl border border-blue-100 shadow-sm overflow-hidden">
+          <div className="flex flex-col gap-3 p-5 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <h2 className="text-lg font-semibold text-slate-800">{t("admin.journal")}</h2>
+              <p className="text-sm text-slate-500">{t("admin.journalHint")}</p>
+            </div>
+            <select value={actionFilter} onChange={(e) => setActionFilter(e.target.value)} className="h-11 rounded-lg border border-slate-200 px-3 text-slate-700">
+              <option value="all">{t("admin.allActions")}</option>
+              {AUDIT_ACTIONS.map((action) => (
+                <option key={action} value={action}>{t(`audit.${action}`)}</option>
+              ))}
+            </select>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="min-w-full text-sm">
+              <thead className="bg-slate-100 text-left text-xs uppercase text-slate-500">
+                <tr>
+                  <th className="px-4 py-3">{t("admin.when")}</th>
+                  <th className="px-4 py-3">{t("admin.action")}</th>
+                  <th className="px-4 py-3">{t("admin.author")}</th>
+                  <th className="px-4 py-3">{t("admin.target")}</th>
+                  <th className="px-4 py-3">{t("admin.details")}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {logs.length === 0 ? (
+                  <tr><td colSpan="5" className="px-4 py-8 text-center text-slate-500">{t("admin.noLogs")}</td></tr>
+                ) : logs.map((log) => (
+                  <tr key={log._id} className="border-t border-slate-100">
+                    <td className="px-4 py-3 whitespace-nowrap text-slate-500">{formatWhen(log.createdAt, locale)}</td>
+                    <td className="px-4 py-3 font-medium text-slate-800">{t(`audit.${log.action}`)}</td>
+                    <td className="px-4 py-3 text-slate-600">{log.actorEmail || "—"}</td>
+                    <td className="px-4 py-3 text-slate-600">{log.targetEmail || "—"}</td>
+                    <td className="px-4 py-3 text-slate-500">{log.details || "—"}</td>
+                  </tr>
+                ))}
               </tbody>
             </table>
           </div>

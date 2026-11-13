@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import calculateTimeLeft from '../utils/CalculateTimeLeft';
+import { useI18n } from '../i18n/I18nContext';
 
 const HeroAccueil = () => {
+  const { t } = useI18n();
   const [timeLeft, setTimeLeft] = useState(calculateTimeLeft('2025-12-20T20:00:00'));
 
   useEffect(() => {
@@ -29,7 +31,7 @@ const HeroAccueil = () => {
         >
           {timeLeft[interval]}
         </motion.span>
-        <span className="text-sm md:text-lg text-white/80 capitalize">{interval}</span>
+        <span className="text-sm md:text-lg text-white/80 capitalize">{t(`time.${interval}`)}</span>
       </div>
     );
   });
@@ -55,7 +57,7 @@ const HeroAccueil = () => {
           className="text-center"
         >
           <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-6 leading-tight">
-            <span className="">Votre Journée</span> <span className="text-rose-200">Inoubliable</span>
+            <span className="">{t('home.heroTitleA')}</span> <span className="text-rose-200">{t('home.heroTitleB')}</span>
           </h1>
           
           <motion.p 
@@ -64,7 +66,7 @@ const HeroAccueil = () => {
             animate={{ opacity: 1 }}
             transition={{ duration: 0.8, delay: 0.5 }}
           >
-            Nous créons des mariages sur mesure qui reflètent votre histoire d'amour et votre personnalité.
+            {t('home.heroText')}
           </motion.p>
           
           {/* Countdown */}
@@ -84,7 +86,7 @@ const HeroAccueil = () => {
               animate={{ opacity: 1 }}
               transition={{ duration: 0.8, delay: 0.8 }}
             >
-              Le grand jour est arrivé !
+              {t('home.heroArrived')}
             </motion.div>
           )}
           
@@ -95,10 +97,10 @@ const HeroAccueil = () => {
             transition={{ duration: 0.8, delay: 1 }}
           >
             <button className="px-8 py-3 bg-rose-500 hover:bg-rose-600 text-white font-medium rounded-full transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-rose-500/30">
-              Découvrez nos prestations
+              {t('home.discover')}
             </button>
             <button className="px-8 py-3 bg-transparent border-2 border-white hover:bg-white/10 text-white font-medium rounded-full transition-all duration-300 transform hover:scale-105">
-              Contactez-nous
+              {t('home.contact')}
             </button>
           </motion.div>
         </motion.div>

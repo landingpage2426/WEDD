@@ -10,9 +10,11 @@ import logo from "../assets/img/logo.png";
 import { AnimatePresence, motion } from 'framer-motion';
 import { nomsTables } from '../utils/NomsTables';
 import { formatInviteDisplayName, getInvitePersonCount, getInvitePhotoUrl, isCouple } from '../utils/invitePeople';
+import { useI18n } from '../i18n/I18nContext';
 
 
 function ShowInvite() {
+  const { t } = useI18n();
   const location = useLocation();
   const state = location.state;
   const message = state?.message || null;
@@ -136,7 +138,7 @@ function ShowInvite() {
             <>
               <div className="mb-8">
                 <h1 className="text-2xl sm:text-3xl font-serif font-bold mb-2 text-transparent bg-clip-text bg-gradient-to-r from-pink-600 to-pink-800">
-                  Bienvenue au Mariage de {nom} {prenom}
+                  {t('guest.welcome', { name: `${nom} ${prenom}` })}
                 </h1>
                 <div className="w-20 h-1 bg-gradient-to-r from-pink-300 to-pink-500 mx-auto mb-4 rounded-full"></div>
                 <p className="text-sm text-gray-500 tracking-wider">INVITATION #{invite.inviteId}</p>
@@ -160,7 +162,7 @@ function ShowInvite() {
                 </h2>
                 {isCouple(invite) && (
                   <p className="text-sm font-semibold text-pink-600">
-                    Invitation pour {getInvitePersonCount(invite)} personnes
+                    {t('guest.invitation', { count: getInvitePersonCount(invite) })}
                   </p>
                 )}
                 <div className="flex items-center justify-center">

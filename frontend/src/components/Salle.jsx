@@ -3,6 +3,7 @@ import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
+import { useI18n } from "../i18n/I18nContext";
 import { planTables } from "../utils/PlanTables";
 
 // Fonction pour créer une étiquette de texte en 3D
@@ -35,6 +36,7 @@ export default function Salle({
   onClignotementFini = () => {},
   editable = false,
 }) {
+  const { t } = useI18n();
   const navigate = useNavigate();
   const mountRef = useRef();
   const tableRefs = useRef({});
@@ -180,7 +182,7 @@ export default function Salle({
       const token = localStorage.getItem('token');
       if (!token) {
         if (showMessage) {
-          setMessage("Vous devez être connecté pour sauvegarder");
+          setMessage(t("room.mustLogin"));
           setTimeout(() => setMessage(""), 3000);
         }
         return;
@@ -206,14 +208,14 @@ export default function Salle({
       );
       
       if (showMessage) {
-        setMessage("Disposition sauvegardée avec succès !");
+        setMessage(t("room.saved"));
         setTimeout(() => setMessage(""), 3000);
       }
       return response.data;
     } catch (error) {
       console.error('Erreur lors de la sauvegarde:', error);
       if (showMessage) {
-        setMessage("Erreur lors de la sauvegarde");
+        setMessage(t("room.saveError"));
         setTimeout(() => setMessage(""), 3000);
       }
       throw error;
@@ -921,20 +923,20 @@ export default function Salle({
     const errors = {};
 
     if (!normalizedName) {
-      errors.nom = "Le nom de la table est obligatoire.";
+      errors.nom = t("room.nameRequired");
     }
 
     const chairs = Number(tableFormData.nbChaises);
     if (!chairs || chairs < 1) {
-      errors.nbChaises = "Indiquez au moins 1 chaise.";
+      errors.nbChaises = t("room.chairsMin");
     } else if (chairs > 20) {
-      errors.nbChaises = "Le maximum est de 20 chaises.";
+      errors.nbChaises = t("room.chairsMax");
     }
 
     if (normalizedName) {
       const isNameTaken = tablesData.some(t => t.nom === normalizedName && t.nom !== editingTable);
       if (isNameTaken) {
-        errors.nom = "Une table avec ce nom existe déjà.";
+        errors.nom = t("room.duplicate");
       }
     }
 
@@ -1173,7 +1175,7 @@ export default function Salle({
                   whiteSpace: "nowrap",
                 }}
               >
-                {saving ? (isMobile ? "..." : "Sauvegarde...") : (isMobile ? "💾" : "Sauvegarder")}
+                {saving ? (isMobile ? "..." : t("room.saving")) : (isMobile ? "💾" : t("room.save"))}
               </button>
             </>
           )}
@@ -1191,7 +1193,7 @@ export default function Salle({
                 whiteSpace: "nowrap",
               }}
             >
-              {isEditing ? (isMobile ? "✕" : "Arrêter l'édition") : (isMobile ? "✏️" : "Éditer la salle")}
+              {isEditing ? (isMobile ? "✕" : t("room.stop")) : (isMobile ? "✏️" : t("room.edit"))}
             </button>
           )}
           {isEditing && (
@@ -1225,7 +1227,7 @@ export default function Salle({
                 whiteSpace: "nowrap",
               }}
             >
-              {showEditInstructions ? "Fermer aide" : (isMobile ? "Aide" : "Aide édition")}
+              {showEditInstructions ? t("room.closeHelp") : (isMobile ? t("room.help") : t("room.help"))}
             </button>
           )}
           {isEditing && isMobile && (
@@ -1269,7 +1271,7 @@ export default function Salle({
             <button
               onClick={() => updateFloorWidth(floorWidth - FLOOR_SIZE_STEP)}
               disabled={floorWidth <= MIN_FLOOR_DIM}
-              title="Réduire la largeur"
+              title={t("room.narrow")}
               style={{
                 width: "30px",
                 height: "30px",
@@ -1301,7 +1303,7 @@ export default function Salle({
             />
             <button
               onClick={() => updateFloorWidth(floorWidth + FLOOR_SIZE_STEP)}
-              title="Augmenter la largeur"
+              title={t("room.widen")}
               style={{
                 width: "30px",
                 height: "30px",
@@ -1326,7 +1328,7 @@ export default function Salle({
             <button
               onClick={() => updateFloorLength(floorLength - FLOOR_SIZE_STEP)}
               disabled={floorLength <= MIN_FLOOR_DIM}
-              title="Réduire la longueur"
+              title={t("room.shorter")}
               style={{
                 width: "30px",
                 height: "30px",
@@ -1358,7 +1360,7 @@ export default function Salle({
             />
             <button
               onClick={() => updateFloorLength(floorLength + FLOOR_SIZE_STEP)}
-              title="Augmenter la longueur"
+              title={t("room.longer")}
               style={{
                 width: "30px",
                 height: "30px",
@@ -1377,7 +1379,7 @@ export default function Salle({
 
           <button
             onClick={handleFloorReset}
-            title="Dimensions par défaut"
+            title={t("room.defaultSize")}
             style={{
               padding: "7px 10px",
               border: "1px solid #93c5fd",
@@ -1390,7 +1392,7 @@ export default function Salle({
               whiteSpace: "nowrap",
             }}
           >
-            Défaut
+            {t("room.default")}
           </button>
         </div>
       </div>
@@ -1403,9 +1405,9 @@ export default function Salle({
           transform: "translateX(-50%)",
           padding: isMobile ? "10px 14px" : "12px 18px",
           fontSize: isMobile ? "13px" : "14px",
-          backgroundColor: message.toLowerCase().includes("succès")
+          backgroundColor: message.toLowerCase().includes("succès") || message.toLowerCase().includes("saved")
             ? "#16a34a"
-            : (message.toLowerCase().includes("erreur") || message.toLowerCase().includes("obligatoire") || message.toLowerCase().includes("requis") || message.toLowerCase().includes("existe") || message.toLowerCase().includes("maximum") || message.toLowerCase().includes("indiquez"))
+            : (message.toLowerCase().includes("erreur") || message.toLowerCase().includes("could not") || message.toLowerCase().includes("already") || message.toLowerCase().includes("obligatoire") || message.toLowerCase().includes("requis") || message.toLowerCase().includes("existe") || message.toLowerCase().includes("maximum") || message.toLowerCase().includes("indiquez"))
               ? "#dc2626"
               : "#2563eb",
           color: "white",
@@ -1562,7 +1564,7 @@ export default function Salle({
               const currentPositions = getCurrentTablePositions();
               await saveRoomLayout(currentPositions, colors);
               setTablesData(currentPositions);
-              setMessage("Couleurs sauvegardées avec succès !");
+              setMessage(t("room.colorsSaved"));
               setTimeout(() => setMessage(""), 3000);
             }}
             style={{
@@ -1667,7 +1669,7 @@ export default function Salle({
             marginBottom: isMobile ? "15px" : "20px",
             fontSize: isMobile ? "18px" : "20px",
           }}>
-            {editingTable ? "Modifier la table" : "Nouvelle table"}
+            {editingTable ? t("room.editTable") : t("room.newTable")}
           </h3>
           <div style={{ marginBottom: isMobile ? "12px" : "15px" }}>
             <label style={{ 
@@ -1676,7 +1678,7 @@ export default function Salle({
               fontWeight: "bold",
               fontSize: isMobile ? "14px" : "16px",
             }}>
-              Nom de la table <span style={{ color: "#dc2626" }}>*</span>
+              {t("room.tableLabel")} <span style={{ color: "#dc2626" }}>*</span>
             </label>
             <input
               type="text"
@@ -1696,7 +1698,7 @@ export default function Salle({
                 textTransform: "uppercase",
                 boxSizing: "border-box",
               }}
-              placeholder="NOM DE LA TABLE"
+              placeholder={t("room.tableName")}
             />
             {tableFormErrors.nom && (
               <p style={{ color: "#dc2626", fontSize: "12px", margin: "6px 0 0", fontWeight: 600 }}>
@@ -1775,7 +1777,7 @@ export default function Salle({
                 cursor: "pointer",
               }}
             >
-              {editingTable ? "Modifier" : "Créer"}
+              {editingTable ? t("room.update") : t("room.create")}
             </button>
             <button
               onClick={() => {
@@ -1934,25 +1936,25 @@ export default function Salle({
               {tablesData
                 .filter((t) => !tableListSearch || String(t.nom).toUpperCase().includes(tableListSearch))
                 .sort((a, b) => String(a.nom).localeCompare(String(b.nom)))
-                .map((t) => (
+                .map((table) => (
                   <button
-                    key={t.nom}
-                    onClick={() => openTableEditor(t.nom)}
+                    key={table.nom}
+                    onClick={() => openTableEditor(table.nom)}
                     style={{
                       textAlign: "left",
                       padding: "12px 14px",
                       borderRadius: "10px",
                       border: "1px solid #e2e8f0",
-                      backgroundColor: mobileSelectedTable === t.nom ? "#dbeafe" : "#f8fafc",
+                      backgroundColor: mobileSelectedTable === table.nom ? "#dbeafe" : "#f8fafc",
                       cursor: "pointer",
                     }}
                   >
-                    <div style={{ fontWeight: 700, color: "#1e293b" }}>{t.nom}</div>
-                    <div style={{ fontSize: "12px", color: "#64748b" }}>{t.nbChaises || 10} chaises</div>
+                    <div style={{ fontWeight: 700, color: "#1e293b" }}>{table.nom}</div>
+                    <div style={{ fontSize: "12px", color: "#64748b" }}>{t("room.chairs", { count: table.nbChaises || 10 })}</div>
                   </button>
                 ))}
               {tablesData.filter((t) => !tableListSearch || String(t.nom).toUpperCase().includes(tableListSearch)).length === 0 && (
-                <p style={{ textAlign: "center", color: "#64748b", margin: "20px 0" }}>Aucune table trouvée</p>
+                <p style={{ textAlign: "center", color: "#64748b", margin: "20px 0" }}>{t("room.none")}</p>
               )}
             </div>
           </div>

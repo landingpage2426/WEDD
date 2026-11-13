@@ -13,11 +13,17 @@ import logo from "../assets/img/logo.png";
 import Countdown from '../components/Countdown';
 import { countTableOccupied, getKnownTableNames, getTableCapacity } from '../utils/invitePeople';
 import InviteListActions, { getInviteSortOrder, setInviteExportList, sortInvites, subscribeInviteSort } from '../components/InviteListActions';
+import Pagination from '../components/Pagination';
+import { useI18n } from '../i18n/I18nContext';
+import { clearSession } from '../utils/authSession';
 function Dashboard() {
   const [invitesList, setInvitesList] = useState([]);
   const [reunionsList, setReunionsList] = useState([]);
   const [roomTables, setRoomTables] = useState([]);
+  const [searchInput, setSearchInput] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
   const [filterBillet, setFilterBillet] = useState('all');
   const [filterStatus, setFilterStatus] = useState('all');
   const [filterTable, setFilterTable] = useState('all');
@@ -33,11 +39,12 @@ function Dashboard() {
   const [showConfirmDelete, setShowConfirmDelete] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
+  const { t } = useI18n();
   const apiUrl = import.meta.env.VITE_API_URL;
 
   const handleLogout = async () => {
     try {
-      localStorage.removeItem('token');
+      clearSession();
       await axios.post(`${apiUrl}/api/logout`, {}, {
         headers: { 'Content-Type': 'application/json' }
       });
@@ -119,6 +126,11 @@ function Dashboard() {
     fetchRoomLayout();
   }, [location.pathname]);
 
+  useEffect(() => {
+    const timer = setTimeout(() => setSearchTerm(searchInput), 300);
+    return () => clearTimeout(timer);
+  }, [searchInput]);
+
   const tableNames = useMemo(
     () => getKnownTableNames(invitesList, roomTables),
     [invitesList, roomTables]
@@ -168,6 +180,14 @@ function Dashboard() {
     return () => setInviteExportList(null);
   }, [sortedInvites]);
 
+  const pageCount = Math.max(1, Math.ceil(sortedInvites.length / pageSize));
+  const currentPage = Math.min(page, pageCount);
+  const pagedInvites = sortedInvites.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+
+  useEffect(() => {
+    setPage(1);
+  }, [searchTerm, filterStatus, filterBillet, filterTable, pageSize]);
+
   const hasActiveFilters =
     searchTerm.trim() !== '' ||
     filterBillet !== 'all' ||
@@ -175,6 +195,7 @@ function Dashboard() {
     filterTable !== 'all';
 
   const resetFilters = () => {
+    setSearchInput('');
     setSearchTerm('');
     setFilterBillet('all');
     setFilterStatus('all');
@@ -189,11 +210,11 @@ function Dashboard() {
         withCredentials: true
       });
       await fetchInvites();
-      setSuccessMessage('Invité supprimé avec succès');
+      setSuccessMessage(t('dashboard.deleted'));
       setTimeout(() => setSuccessMessage(''), 2000);
     } catch (err) {
       console.error(err);
-      alert('Erreur lors de la suppression');
+      alert(t('dashboard.deleteError'));
     }
   };
 
@@ -221,22 +242,22 @@ function Dashboard() {
             exit={{ opacity: 0, height: 0 }}
             transition={{ duration: 0.3 }}
           >
-            <Link to="/dashboard" onClick={() => setMenuOpen(false)} className="hover:text-blue-200 transition-colors">Dashboard</Link>
+            <Link to="/dashboard" onClick={() => setMenuOpen(false)} className="hover:text-blue-200 transition-colors">{t('nav.dashboard')}</Link>
             {user?.role === 'client' || user?.role === 'chef_protocole' ? (
-              <Link to="/liste-reunions" onClick={() => setMenuOpen(false)} className="hover:text-blue-200 transition-colors">Réunions</Link>
+              <Link to="/liste-reunions" onClick={() => setMenuOpen(false)} className="hover:text-blue-200 transition-colors">{t('nav.meetings')}</Link>
             ) : null}
             {user?.role === 'client' || user?.role === 'manager' ? (
-              <Link to="/ajout-invite" onClick={() => setMenuOpen(false)} className="hover:text-blue-200 transition-colors">Ajouter un invité</Link>
+              <Link to="/ajout-invite" onClick={() => setMenuOpen(false)} className="hover:text-blue-200 transition-colors">{t('nav.addGuest')}</Link>
             ) : null}
             {user?.role === 'client' || user?.role === 'manager' || user?.role === 'chef_protocole' || user?.role === 'protocole' ? (
-              <Link to="/recherche-invite" onClick={() => setMenuOpen(false)} className="hover:text-blue-200 transition-colors">Recherche invité</Link>
+              <Link to="/recherche-invite" onClick={() => setMenuOpen(false)} className="hover:text-blue-200 transition-colors">{t('nav.searchGuest')}</Link>
             ) : null}
             {user?.role === 'client' && (
-              <Link to="/administration" onClick={() => setMenuOpen(false)} className="hover:text-blue-200 transition-colors font-bold">Administration</Link>
+              <Link to="/administration" onClick={() => setMenuOpen(false)} className="hover:text-blue-200 transition-colors font-bold">{t('nav.administration')}</Link>
             )}
-            <Link to="/profil" onClick={() => setMenuOpen(false)} className="hover:text-blue-200 transition-colors">Profil</Link>
+            <Link to="/profil" onClick={() => setMenuOpen(false)} className="hover:text-blue-200 transition-colors">{t('nav.profile')}</Link>
             <button onClick={() => { setMenuOpen(false); handleLogout(); }} className="text-red-700 hover:text-red-700 text-left transition-colors">
-              Déconnexion
+              {t('common.logout')}
             </button>
           </motion.nav>
         )}
@@ -254,9 +275,9 @@ function Dashboard() {
           <section className="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
             <div className="text-center md:text-left">
               <h1 className="text-3xl font-semibold text-gray-800">
-                Salut <span className="text-blue-600">{prenom} {nom}</span>
+                {t('dashboard.hello')} <span className="text-blue-600">{prenom} {nom}</span>
               </h1>
-              <p className="text-gray-600">Un mariage inoubliable vous attend 🎉</p>
+              <p className="text-gray-600">{t('dashboard.tagline')}</p>
             </div>
             <div className="flex flex-col  md:flex-row md:w-auto gap-4">
               {user?.role === "admin" && (<Link to={"/admin"} className="flex items-center justify-center  w-full p-6 text-lg font-bold text-gray-700 bg-green-500 border-2 border-gray-600 rounded-lg w-25 h-12  sm:mx-6 cursor-pointer">
@@ -273,7 +294,7 @@ function Dashboard() {
                     rounded="rounded-lg"
                     shadow="shadow hover:shadow-md"
                   >
-                    Disposer la salle
+                    {t('dashboard.arrangeRoom')}
                   </Bouton>
                 </Link>
               )}
@@ -288,7 +309,7 @@ function Dashboard() {
                     rounded="rounded-lg"
                     shadow="shadow hover:shadow-md"
                   >
-                    Voir la salle
+                    {t('dashboard.viewRoom')}
                   </Bouton>
                 </Link>
               )}
@@ -303,7 +324,7 @@ function Dashboard() {
                     rounded="rounded-lg"
                     shadow="shadow hover:shadow-md"
                   >
-                    Ajouter un invité
+                    {t('dashboard.addGuest')}
                   </Bouton>
                 </Link>
               )}
@@ -327,9 +348,9 @@ function Dashboard() {
                 <input
                   type="text"
                   className="border border-gray-300 rounded-lg px-4 py-2 w-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  placeholder="Rechercher un invité, une table, un téléphone..."
+                  value={searchInput}
+                  onChange={(e) => setSearchInput(e.target.value)}
+                  placeholder={t('dashboard.search')}
                 />
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
@@ -338,31 +359,31 @@ function Dashboard() {
                   onChange={(e) => setFilterBillet(e.target.value)}
                   className="border border-gray-300 rounded-lg px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
-                  <option value="all">Tous les billets</option>
-                  <option value="envoye">Billets envoyés</option>
-                  <option value="non-envoye">Billets non envoyés</option>
+                  <option value="all">{t('dashboard.allTickets')}</option>
+                  <option value="envoye">{t('dashboard.sent')}</option>
+                  <option value="non-envoye">{t('dashboard.notSent')}</option>
                 </select>
                 <select
                   value={filterStatus}
                   onChange={(e) => setFilterStatus(e.target.value)}
                   className="border border-gray-300 rounded-lg px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
-                  <option value="all">Tous les statuts</option>
-                  <option value="P">Présents</option>
-                  <option value="A">Absents</option>
+                  <option value="all">{t('dashboard.allStatuses')}</option>
+                  <option value="P">{t('dashboard.present')}</option>
+                  <option value="A">{t('dashboard.absent')}</option>
                 </select>
                 <select
                   value={filterTable}
                   onChange={(e) => setFilterTable(e.target.value)}
                   className="border border-gray-300 rounded-lg px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
-                  <option value="all">Toutes les tables</option>
+                  <option value="all">{t('dashboard.allTables')}</option>
                   {tableNames.map((tableName) => {
                     const occupied = countTableOccupied(invitesList, tableName);
                     const capacity = getTableCapacity(roomTables, tableName);
                     const label = capacity != null
                       ? `${tableName} (${occupied}/${capacity})`
-                      : `${tableName} (${occupied} place${occupied > 1 ? 's' : ''})`;
+                      : `${tableName} (${occupied} ${occupied > 1 ? t('dashboard.seats') : t('dashboard.seat')})`;
                     return (
                       <option key={tableName} value={tableName}>
                         {label}
@@ -376,14 +397,16 @@ function Dashboard() {
                     onClick={resetFilters}
                     className="rounded-lg border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
                   >
-                    Réinitialiser
+                    {t('dashboard.reset')}
                   </button>
                 )}
               </div>
               <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
                 <p className="text-sm text-gray-600">
-                  {sortedInvites.length} invité{sortedInvites.length > 1 ? 's' : ''} affiché{sortedInvites.length > 1 ? 's' : ''}
-                  {hasActiveFilters ? ` sur ${invitesList.length}` : ''}
+                  {sortedInvites.length > 1
+                    ? t('dashboard.shownPlural', { count: sortedInvites.length })
+                    : t('dashboard.shown', { count: sortedInvites.length })}
+                  {hasActiveFilters ? ` ${t('dashboard.ofTotal', { total: invitesList.length })}` : ''}
                 </p>
                 <InviteListActions />
               </div>
@@ -411,7 +434,7 @@ function Dashboard() {
                   setShowConfirmDelete(true);
                 }}
                 apiUrl={apiUrl}
-                invites={sortedInvites}
+                invites={pagedInvites}
                 onEditInvite={(invite) => {
                   setSelectedInvite(invite);
                   setShowPopupUpdateInvite(true);
@@ -424,6 +447,14 @@ function Dashboard() {
                     )
                   );
                 }}
+              />
+              <Pagination
+                page={currentPage}
+                pageCount={pageCount}
+                pageSize={pageSize}
+                total={sortedInvites.length}
+                onPageChange={setPage}
+                onPageSizeChange={setPageSize}
               />
             </div>
           </section>
@@ -441,7 +472,7 @@ function Dashboard() {
                   rounded="rounded-lg"
                   shadow="shadow hover:shadow-md"
                 >
-                  Ajouter un invité
+                  {t('dashboard.addGuest')}
                 </Bouton>
               </Link>
             </section>
@@ -482,14 +513,14 @@ function Dashboard() {
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
             >
-              <h2 className="text-lg font-bold mb-4 text-gray-800">Confirmer la suppression</h2>
-              <p className="mb-6 text-gray-600">Êtes-vous sûr de vouloir supprimer cet invité ?</p>
+              <h2 className="text-lg font-bold mb-4 text-gray-800">{t('dashboard.confirmTitle')}</h2>
+              <p className="mb-6 text-gray-600">{t('dashboard.confirmText')}</p>
               <div className="flex justify-end gap-3">
                 <button
                   onClick={() => setShowConfirmDelete(false)}
                   className="px-4 py-2 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors"
                 >
-                  Annuler
+                  {t('common.cancel')}
                 </button>
                 <button
                   onClick={() => {
@@ -498,7 +529,7 @@ function Dashboard() {
                   }}
                   className="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition-colors"
                 >
-                  Supprimer
+                  {t('common.delete')}
                 </button>
               </div>
             </motion.div>

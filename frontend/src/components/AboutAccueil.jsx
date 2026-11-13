@@ -1,7 +1,9 @@
 import { motion } from 'framer-motion';
 import developerGif from '../assets/img/about.jpg';
+import { useI18n } from '../i18n/I18nContext';
 
 const AboutAccueil = () => {
+  const { t } = useI18n();
   return (
     <section className="py-16 px-4 sm:px-6 bg-gradient-to-r from-indigo-50 to-purple-50 overflow-hidden">
       <div className="max-w-7xl mx-auto">
@@ -21,12 +23,11 @@ const AboutAccueil = () => {
             }}
           >
             <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-6">
-              <span className="text-indigo-600">Notre mission</span>
+              <span className="text-indigo-600">{t('home.mission')}</span>
             </h2>
             
             <p className="text-lg text-gray-600 mb-6"> 
-              Notre mission ? Vous aider à <span className="font-semibold text-indigo-600">marquer votre présence en ligne </span> 
-               avec des sites uniques et performants.
+              {t('home.missionText')}
             </p>
             
             <div className="space-y-6">
@@ -37,10 +38,9 @@ const AboutAccueil = () => {
                   </svg>
                 </div>
                 <div>
-                  <h3 className="text-xl font-semibold text-gray-900 mb-2">Notre expertise</h3>
+                  <h3 className="text-xl font-semibold text-gray-900 mb-2">{t('home.expertise')}</h3>
                   <p className="text-gray-600">
-                    Sites vitrine élégants, blogs performants, boutiques e-commerce clé en main. 
-                    Nous maîtrisons les dernières technologies pour concrétiser vos idées.
+                    {t('home.expertiseText')}
                   </p>
                 </div>
               </div>
@@ -52,10 +52,9 @@ const AboutAccueil = () => {
                   </svg>
                 </div>
                 <div>
-                  <h3 className="text-xl font-semibold text-gray-900 mb-2">Notre approche</h3>
+                  <h3 className="text-xl font-semibold text-gray-900 mb-2">{t('home.approach')}</h3>
                   <p className="text-gray-600">
-                    Chaque projet est unique. Nous prenons le temps de comprendre vos besoins 
-                    pour créer une solution sur mesure qui vous ressemble.
+                    {t('home.approachText')}
                   </p>
                 </div>
               </div>
@@ -72,10 +71,10 @@ const AboutAccueil = () => {
               viewport={{ once: true }}
             >
               <button className="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-full transition-all shadow-lg">
-                Découvrir nos réalisations
+                {t('home.work')}
               </button>
               <button className="px-6 py-3 bg-white hover:bg-gray-100 text-indigo-600 font-medium rounded-full transition-all border border-indigo-600">
-                Contactez-nous
+                {t('home.contact')}
               </button>
             </motion.div>
           </motion.div>
@@ -119,7 +118,7 @@ const AboutAccueil = () => {
                 }}
               >
                 <div className="w-3 h-3 bg-green-400 rounded-full mr-2 animate-pulse"></div>
-                <span className="font-medium text-indigo-600">Disponibles pour votre projet</span>
+                <span className="font-medium text-indigo-600">{t('home.available')}</span>
               </motion.div>
             </div>
           </motion.div>

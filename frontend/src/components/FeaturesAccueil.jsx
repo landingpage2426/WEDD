@@ -1,8 +1,10 @@
 import { motion } from 'framer-motion';
 import { features } from '../utils/Features';
+import { useI18n } from '../i18n/I18nContext';
 
 
 const FeaturesAccueil = () => {
+  const { t } = useI18n();
   const container = {
     hidden: { opacity: 0 },
     visible: {
@@ -34,7 +36,7 @@ const FeaturesAccueil = () => {
           transition={{ duration: 0.6 }}
           viewport={{ once: true }}
         >
-          Tout pour organiser votre mariage de rêve
+          {t('home.featuresTitle')}
         </motion.h2>
         <motion.p
           className="text-lg sm:text-xl text-gray-600 max-w-3xl mx-auto"
@@ -43,7 +45,7 @@ const FeaturesAccueil = () => {
           transition={{ duration: 0.6, delay: 0.2 }}
           viewport={{ once: true }}
         >
-          Notre plateforme complète vous accompagne dans chaque étape de l'organisation
+          {t('home.featuresText')}
         </motion.p>
       </div>
 
@@ -64,11 +66,11 @@ const FeaturesAccueil = () => {
             <div className={`w-16 h-16 mx-auto mb-6 ${feature.color} group-hover:scale-110 transition-transform`}>
               {feature.icon}
             </div>
-            <h3 className="text-xl font-bold text-gray-900 mb-3">{feature.title}</h3>
-            <p className="text-gray-600">{feature.description}</p>
+            <h3 className="text-xl font-bold text-gray-900 mb-3">{t(feature.titleKey)}</h3>
+            <p className="text-gray-600">{t(feature.descriptionKey)}</p>
             <div className="mt-4">
               <button className="text-sm font-medium text-rose-500 hover:text-rose-600 transition-colors">
-                En savoir plus →
+                {t('home.more')}
               </button>
             </div>
           </motion.div>
@@ -83,7 +85,7 @@ const FeaturesAccueil = () => {
         viewport={{ once: true }}
       >
         <button className="px-8 py-3 bg-rose-500 hover:bg-rose-600 text-white font-medium rounded-full transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-rose-500/30">
-          Découvrir toutes les fonctionnalités
+          {t('home.allFeatures')}
         </button>
       </motion.div>
     </section>

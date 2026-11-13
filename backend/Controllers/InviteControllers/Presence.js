@@ -1,5 +1,6 @@
 import Invite from "../../Models/Invite.js";
 import User from "../../Models/User.js";
+import { writeAudit } from "../../services/audit.js";
 
 const Presence = async (req, res) => {
   try {
@@ -46,6 +47,25 @@ const Presence = async (req, res) => {
       });
     }
 
+    if (req.user.actif === false) {
+      return res.status(403).json({
+        message: "Ce compte est désactivé",
+        code: "ACCOUNT_DISABLED",
+        type: "danger",
+      });
+    }
+
+    if (req.user.createdBy) {
+      const owner = await User.findById(req.user.createdBy).select("actif");
+      if (owner?.actif === false) {
+        return res.status(403).json({
+          message: "Le compte client est désactivé",
+          code: "ACCOUNT_DISABLED",
+          type: "danger",
+        });
+      }
+    }
+
     // Vérifier si la date du mariage est passée
     const user = await User.findById(req.user._id);
     const dateMariage = user?.dateMariage || null;
@@ -71,6 +91,13 @@ const Presence = async (req, res) => {
       );
       // Mettre à jour l'objet local pour la réponse
       invite.status = 'P';
+      await writeAudit({
+        action: 'presence',
+        actorId: req.user._id,
+        actorEmail: req.user.email,
+        targetId: invite.userId,
+        details: `${invite.prenom || ''} ${invite.nom || ''}`.trim(),
+      });
     }
 
     return res.status(200).json({

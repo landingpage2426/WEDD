@@ -1,5 +1,6 @@
 import User from "../../Models/User.js";
 import bcrypt from "bcryptjs";
+import { writeAudit } from "../../services/audit.js";
 
 const RegeneratePassword = async (req, res) => {
   try {
@@ -50,8 +51,17 @@ const RegeneratePassword = async (req, res) => {
 
     // Mettre à jour le mot de passe
     user.password = hashedPassword;
-    user.plainPassword = plainPassword; // Stocker le mot de passe en clair
+    user.plainPassword = plainPassword;
     await user.save();
+
+    await writeAudit({
+      action: "password_reset",
+      actorId: req.user._id,
+      actorEmail: req.user.email,
+      targetId: user._id,
+      targetEmail: user.email,
+      details: "Mot de passe régénéré par le client",
+    });
 
     res.status(200).json({
       message: "Mot de passe régénéré avec succès",

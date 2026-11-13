@@ -7,6 +7,8 @@ import { AnimatePresence, motion } from 'framer-motion';
 import axios from 'axios';
 import { Link, useNavigate } from 'react-router-dom';
 import Countdown from '../components/Countdown';
+import { useI18n } from '../i18n/I18nContext';
+import { clearSession } from '../utils/authSession';
 
 function Informations() {
   const [isEditing, setIsEditing] = useState(false);
@@ -16,8 +18,12 @@ function Informations() {
   const [isEditSuccess, setIsEditSuccess] = useState(false);
   const [isPasswordSuccess, setIsPasswordSuccess] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [deletePassword, setDeletePassword] = useState('');
+  const [deleteError, setDeleteError] = useState('');
+  const [deleting, setDeleting] = useState(false);
   const [userRole, setUserRole] = useState('');
   const isAdmin = userRole === 'admin';
+  const { t } = useI18n();
   
 
   const navigate = useNavigate();
@@ -78,12 +84,12 @@ const handleEditPasswordClick = async () => {
     const { newPassword, confirmPassword } = formData;
 
     if (!newPassword || !confirmPassword) {
-      alert('Tous les champs sont requis.');
+      alert(t('profile.required'));
       return;
     }
 
     if (newPassword !== confirmPassword) {
-      alert('Les mots de passe ne correspondent pas.');
+      alert(t('profile.mismatch'));
       return;
     }
 
@@ -190,23 +196,42 @@ const getUser = async () => {
 
 const handleLogout = async () => {
     try {
-      // Supprimer le token (localStorage ou sessionStorage selon ton app)
-      localStorage.removeItem('token');
-
-      // Appel de l'API de déconnexion (pas strictement nécessaire, mais bon pour les logs côté serveur)
+      clearSession();
       await axios.post(`${import.meta.env.VITE_API_URL}/api/logout`, {}, {
         headers: {
           'Content-Type': 'application/json'
         }
       });
-
-      // Redirection vers la page de connexion
       navigate('/');
     } catch (error) {
       console.error('Erreur lors de la déconnexion:', error);
-      alert("Erreur lors de la déconnexion");
+      clearSession();
+      navigate('/');
     }
   }
+
+  const handleDeleteAccount = async () => {
+    if (!deletePassword) {
+      setDeleteError(t('profile.deletePassword'));
+      return;
+    }
+    if (!window.confirm(t('profile.deleteConfirm'))) return;
+
+    setDeleting(true);
+    setDeleteError('');
+    try {
+      const token = localStorage.getItem('token');
+      await axios.post(`${apiUrl}/api/account/delete`, { password: deletePassword }, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      clearSession();
+      navigate('/');
+    } catch (error) {
+      setDeleteError(error.response?.data?.message || t('profile.deleteError'));
+    } finally {
+      setDeleting(false);
+    }
+  };
 
   return (
   <div className="flex flex-col md:flex-row min-h-screen">
@@ -253,7 +278,7 @@ const handleLogout = async () => {
               </>
             )}
             <button onClick={() => { setMenuOpen(false); handleLogout(); }} className="text-red-700 hover:text-red-700 text-left transition-colors">
-              Déconnexion
+              {t('common.logout')}
             </button>
           </motion.nav>
         )}
@@ -263,7 +288,7 @@ const handleLogout = async () => {
       <div className="flex flex-col bg-gray-50 items-center min-h-screen w-full max-w-3xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
   <div className="w-full bg-white rounded-lg shadow-md p-6 sm:p-8">
     <h1 className="text-3xl font-bold text-gray-800 mb-8 text-center">
-      Mes informations personnelles
+      {t('profile.title')}
     </h1>
 
     {isEditSuccess && (
@@ -272,7 +297,7 @@ const handleLogout = async () => {
           <svg className="h-5 w-5 text-green-500 mr-3" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
             <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
           </svg>
-          <span className="text-green-700 font-medium">Profil modifié avec succès!</span>
+          <span className="text-green-700 font-medium">{t('profile.updated')}</span>
         </div>
       </div>
     )}
@@ -280,7 +305,7 @@ const handleLogout = async () => {
     <div className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Nom</label>
+          <label className="block text-sm font-medium text-gray-700 mb-1">{t('profile.lastName')}</label>
           <Input
             width="w-full"
             type="text"
@@ -294,7 +319,7 @@ const handleLogout = async () => {
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Prénom</label>
+          <label className="block text-sm font-medium text-gray-700 mb-1">{t('profile.firstName')}</label>
           <Input
             width="w-full"
             type="text"
@@ -311,7 +336,7 @@ const handleLogout = async () => {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+          <label className="block text-sm font-medium text-gray-700 mb-1">{t('profile.email')}</label>
           <Input
             width="w-full"
             type="email"
@@ -325,7 +350,7 @@ const handleLogout = async () => {
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Numéro de téléphone</label>
+          <label className="block text-sm font-medium text-gray-700 mb-1">{t('profile.phone')}</label>
           <Input
             width="w-full"
             type="tel"
@@ -344,7 +369,7 @@ const handleLogout = async () => {
         <>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Date de mariage</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">{t('profile.weddingDate')}</label>
               <Input
                 width="w-full"
                 type="date"
@@ -361,7 +386,7 @@ const handleLogout = async () => {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Lieu de mariage</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">{t('profile.place')}</label>
               <Input
                 width="w-full"
                 type="text"
@@ -378,7 +403,7 @@ const handleLogout = async () => {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Couleur du site</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">{t('profile.color')}</label>
               <div className="flex items-center space-x-4">
                 <Input
                   width="w-16"
@@ -394,7 +419,7 @@ const handleLogout = async () => {
               </div>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Thème du mariage</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">{t('profile.theme')}</label>
               <Input
                 width="w-full"
                 type="text"
@@ -417,7 +442,7 @@ const handleLogout = async () => {
             onClick={handleEditClick}
             className={`${isEditing ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-blue-600 hover:bg-blue-700'} text-white font-medium py-2.5 px-6 rounded-lg transition-colors duration-200 w-full sm:w-64`}
           >
-            {isEditing ? 'Enregistrer les modifications' : 'Modifier mon profil'}
+            {isEditing ? t('profile.save') : t('profile.edit')}
           </button>
         </div>
       </div>
@@ -429,16 +454,16 @@ const handleLogout = async () => {
               <svg className="h-5 w-5 text-green-500 mr-3" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
                 <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
               </svg>
-              <span className="text-green-700 font-medium">Mot de passe modifié avec succès!</span>
+              <span className="text-green-700 font-medium">{t('profile.passwordUpdated')}</span>
             </div>
           </div>
         )}
 
-        <h2 className="text-xl font-semibold text-gray-800 mb-6">Changer le mot de passe</h2>
+        <h2 className="text-xl font-semibold text-gray-800 mb-6">{t('profile.passwordTitle')}</h2>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Nouveau mot de passe</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">{t('profile.newPassword')}</label>
             <div className="relative">
               <Input
                 width="w-full"
@@ -470,7 +495,7 @@ const handleLogout = async () => {
             </div>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Confirmer le mot de passe</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">{t('profile.confirmPassword')}</label>
             <div className="relative">
               <Input
                 width="w-full"
@@ -508,9 +533,32 @@ const handleLogout = async () => {
             onClick={handleEditPasswordClick}
             className={`${isEditingPassword ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-blue-600 hover:bg-blue-700'} text-white font-medium py-2.5 px-6 rounded-lg transition-colors duration-200 w-full sm:w-64`}
           >
-            {isEditingPassword ? 'Enregistrer le mot de passe' : 'Modifier mon mot de passe'}
+            {isEditingPassword ? t('profile.savePassword') : t('profile.editPassword')}
           </button>
         </div>
+      </div>
+
+      <div className="pt-8 border-t border-red-100">
+        <h2 className="text-xl font-semibold text-red-700 mb-2">{t('profile.deleteTitle')}</h2>
+        <p className="text-sm text-gray-600 mb-4">{t('profile.deleteText')}</p>
+        {deleteError && <p className="mb-3 text-sm text-red-600">{deleteError}</p>}
+        <Input
+          width="w-full"
+          type="password"
+          name="deletePassword"
+          placeholder={t('profile.deletePassword')}
+          required={false}
+          value={deletePassword}
+          onChange={(event) => setDeletePassword(event.target.value)}
+        />
+        <button
+          type="button"
+          onClick={handleDeleteAccount}
+          disabled={deleting}
+          className="mt-4 bg-red-600 hover:bg-red-700 text-white font-medium py-2.5 px-6 rounded-lg w-full sm:w-64 disabled:opacity-60"
+        >
+          {deleting ? t('common.loading') : t('profile.deleteButton')}
+        </button>
       </div>
     </div>
   </div>

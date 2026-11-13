@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import axios from 'axios'
 import { downloadInviteListPdf } from '../utils/GenerateInviteListPdf'
+import { useI18n } from '../i18n/I18nContext'
 
 let sortOrder = null
 let exportList = null
@@ -37,6 +38,7 @@ export function sortInvites(invites, order = sortOrder) {
 function InviteListActions() {
   const [order, setOrder] = useState(sortOrder)
   const [downloading, setDownloading] = useState(false)
+  const { language, t } = useI18n()
   const apiUrl = import.meta.env.VITE_API_URL
 
   useEffect(() => subscribeInviteSort(setOrder), [])
@@ -72,10 +74,10 @@ function InviteListActions() {
         /* le profil local suffit */
       }
 
-      downloadInviteListPdf(list, wedding)
+      downloadInviteListPdf(list, wedding, language)
     } catch (error) {
       console.error(error)
-      alert('Impossible de télécharger la liste')
+      alert(t('pdf.downloadError'))
     } finally {
       setDownloading(false)
     }

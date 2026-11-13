@@ -5,9 +5,9 @@
  import search from '../assets/icons/search.png';
  
  export const navItems = [
-    { id: 'dashboard', icon: home, label: 'Dashboard', path: '/dashboard' },
-    { id: 'liste-reunions', icon: reunion, label: 'Réunions', path: '/liste-reunions' },
-    { id: 'ajout-invite', icon: invite, label: 'Ajouter un invité', path: '/ajout-invite' },
-    { id: 'profil', icon: edit, label: 'Profil', path: '/profil' },
-    { id: 'recherche-invite', icon: search, label: 'Recherche invité', path: '/recherche-invite' }
+    { id: 'dashboard', icon: home, labelKey: 'nav.dashboard', path: '/dashboard' },
+    { id: 'liste-reunions', icon: reunion, labelKey: 'nav.meetings', path: '/liste-reunions' },
+    { id: 'ajout-invite', icon: invite, labelKey: 'nav.addGuest', path: '/ajout-invite' },
+    { id: 'profil', icon: edit, labelKey: 'nav.profile', path: '/profil' },
+    { id: 'recherche-invite', icon: search, labelKey: 'nav.searchGuest', path: '/recherche-invite' }
   ];

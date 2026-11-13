@@ -1,4 +1,5 @@
 import Invite from "../../Models/Invite.js";
+import { writeAudit } from "../../services/audit.js";
 
 const ToggleBilletEnvoye = async (req, res) => {
   try {
@@ -39,6 +40,14 @@ const ToggleBilletEnvoye = async (req, res) => {
       { _id: invite._id },
       { $set: { billetEnvoye: nextValue } }
     );
+
+    await writeAudit({
+      action: 'billet_envoye',
+      actorId: req.user._id,
+      actorEmail: req.user.email,
+      targetId: invite.userId,
+      details: `${nextValue ? 'Envoyé' : 'Non envoyé'} — ${invite.prenom || ''} ${invite.nom || ''}`.trim(),
+    });
 
     return res.status(200).json({
       message: nextValue ? "Billet marqué comme envoyé" : "Billet marqué comme non envoyé",

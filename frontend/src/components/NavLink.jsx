@@ -6,12 +6,15 @@ import logo from '../assets/img/logo.png';
 import Image from './Image';
 import { navItems } from '../utils/NavItems';
 import { handleLogout } from '../services/HandleLogout';
+import LanguageSwitch from './LanguageSwitch';
+import { useI18n } from '../i18n/I18nContext';
 function NavLink() {
   const [activeLink, setActiveLink] = useState('dashboard');
   const [isHovered, setIsHovered] = useState(null);
   const [userRole, setUserRole] = useState(null);
   const location = useLocation();
   const navigate = useNavigate();
+  const { t } = useI18n();
   const isAdmin = userRole === 'admin';
   
   // Synchronisation de l'état actif avec l'URL
@@ -39,9 +42,10 @@ function NavLink() {
         <div>
           <h1 className="text-xl font-bold text-blue-700 leading-tight">WEDD</h1>
           {isAdmin && (
-            <p className="text-xs text-slate-500">Administrateur</p>
+            <p className="text-xs text-slate-500">{t('nav.adminBadge')}</p>
           )}
         </div>
+        <LanguageSwitch />
       </div>
 
       <div className="flex-1 flex flex-col justify-between overflow-y-auto">
@@ -87,11 +91,11 @@ function NavLink() {
                 >
                   <img 
                     src={item.icon} 
-                    alt={item.label} 
+                    alt={t(item.labelKey)} 
                     className="w-5 h-5" 
                   />
                 </motion.span>
-                <span className="font-medium">{item.label}</span>
+                <span className="font-medium">{t(item.labelKey)}</span>
                 {activeLink === item.id && (
                   <motion.div 
                     className="ml-auto w-2 h-2 bg-blue-500 rounded-full"
@@ -128,7 +132,7 @@ function NavLink() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
                   </svg>
                 </motion.span>
-                <span className="font-medium">Utilisateurs</span>
+                <span className="font-medium">{t('nav.users')}</span>
                 {activeLink === 'admin' && (
                   <motion.div 
                     className="ml-auto w-2 h-2 bg-blue-500 rounded-full"
@@ -166,7 +170,7 @@ function NavLink() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                   </svg>
                 </motion.span>
-                <span className="font-medium">Administration</span>
+                <span className="font-medium">{t('nav.administration')}</span>
                 {activeLink === 'administration' && (
                   <motion.div 
                     className="ml-auto w-2 h-2 bg-blue-500 rounded-full"
@@ -187,7 +191,7 @@ function NavLink() {
                 to="/help-page" 
                 className="text-sm text-blue-600 hover:text-blue-800 hover:underline underline-offset-4"
               >
-                Avez-vous besoin d&apos;aide ?
+                {t('nav.help')}
               </Link>
             </div>
           )}
@@ -201,7 +205,7 @@ function NavLink() {
             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
             </svg>
-            <span>Déconnexion</span>
+            <span>{t('common.logout')}</span>
           </motion.button>
         </div>
       </div>

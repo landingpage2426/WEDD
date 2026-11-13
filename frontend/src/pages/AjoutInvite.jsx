@@ -9,8 +9,10 @@ import Countdown from '../components/Countdown';
 import { isCouple, getBilletCharsRemaining, limitBilletField, MAX_BILLET_LINE_CHARS, getKnownTableNames } from '../utils/invitePeople';
 import TableOccupancyHint from '../components/TableOccupancyHint';
 import useTableOccupancy from '../hooks/useTableOccupancy';
+import { useI18n } from '../i18n/I18nContext';
 
 function AjoutInvite({ onClose }) {
+  const { t } = useI18n();
   const [nom, setNom] = useState('');
   const [prenom, setPrenom] = useState('');
   const [telephone, setTelephone] = useState('');
@@ -166,8 +168,8 @@ const handleLogout = async () => {
     transition={{ duration: 0.3 }}
   >
     <div className="text-center mb-8">
-      <h2 className="text-2xl font-bold text-gray-800 mb-2">Ajouter un invité</h2>
-      <p className="text-gray-600">Renseignez les informations de votre invité</p>
+      <h2 className="text-2xl font-bold text-gray-800 mb-2">{t('guest.addTitle')}</h2>
+      <p className="text-gray-600">{t('guest.addHint')}</p>
     </div>
 
     {submitError && (
@@ -178,7 +180,7 @@ const handleLogout = async () => {
 
     <div className="space-y-5">
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">Civilité <span className="text-red-600">*</span></label>
+        <label className="block text-sm font-medium text-gray-700 mb-1">{t('guest.civility')} <span className="text-red-600">*</span></label>
         <select
           value={titre}
           onChange={(e) => {
@@ -187,23 +189,23 @@ const handleLogout = async () => {
           }}
           className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${errors.titre ? 'border-red-500' : 'border-gray-300'}`}
         >
-          <option value="">Sélectionnez une civilité</option>
-          <option value="M">Monsieur</option>
-          <option value="Mme">Madame</option>
-          <option value="Mlle">Mademoiselle</option>
-          <option value="couple">Couple (2 personnes)</option>
+          <option value="">{t('guest.selectCivility')}</option>
+          <option value="M">{t('guest.mr')}</option>
+          <option value="Mme">{t('guest.mrs')}</option>
+          <option value="Mlle">{t('guest.miss')}</option>
+          <option value="couple">{t('guest.couple')}</option>
         </select>
         {errors.titre && <p className="mt-1 text-xs font-semibold text-red-600">{errors.titre}</p>}
         {isCouple(titre) && (
           <p className="mt-2 rounded-lg bg-pink-50 px-3 py-2 text-sm font-medium text-pink-700">
-            Un couple s’affiche en « M. & Mme » et compte pour 2 personnes dans les statistiques.
+            {t('guest.coupleHint')}
           </p>
         )}
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Nom <span className="text-red-600">*</span></label>
+          <label className="block text-sm font-medium text-gray-700 mb-1">{t('guest.lastName')} <span className="text-red-600">*</span></label>
           <input
             type="text"
             placeholder="Dupont"
@@ -219,7 +221,7 @@ const handleLogout = async () => {
 
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
-            Prénom {isCouple(titre) ? <span className="text-gray-400 font-normal">(optionnel pour un couple)</span> : <span className="text-red-600">*</span>}
+            {t('guest.firstName')} {isCouple(titre) ? <span className="text-gray-400 font-normal">{t('guest.firstOptional')}</span> : <span className="text-red-600">*</span>}
           </label>
           <input
             type="text"
@@ -235,12 +237,11 @@ const handleLogout = async () => {
         </div>
       </div>
       <p className={`-mt-2 text-xs font-medium ${billetRemaining <= 5 ? 'text-red-600' : 'text-gray-500'}`}>
-        {billetRemaining} caractère{billetRemaining === 1 ? '' : 's'} restant{billetRemaining === 1 ? '' : 's'} sur le billet
-        {' '}({MAX_BILLET_LINE_CHARS - billetRemaining}/{MAX_BILLET_LINE_CHARS})
+        {t('guest.chars', { count: billetRemaining, used: MAX_BILLET_LINE_CHARS - billetRemaining, max: MAX_BILLET_LINE_CHARS })}
       </p>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Téléphone <span className="text-gray-400 font-normal">(optionnel)</span></label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">{t('guest.phone')} <span className="text-gray-400 font-normal">{t('guest.optional')}</span></label>
             <div className="relative">
               <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
                 <span className="text-gray-500">+237</span>
@@ -259,7 +260,7 @@ const handleLogout = async () => {
             {errors.telephone && <p className="mt-1 text-xs font-semibold text-red-600">{errors.telephone}</p>}
           </div>
        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Email <span className="text-gray-400 font-normal">(optionnel)</span></label>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Email <span className="text-gray-400 font-normal">{t('guest.optional')}</span></label>
           <input
             type="email"
             placeholder="contact@exemple.com"
@@ -275,7 +276,7 @@ const handleLogout = async () => {
       
       </div>
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">Table attribuée</label>
+        <label className="block text-sm font-medium text-gray-700 mb-1">{t('guest.table')}</label>
         <input
           type="text"
           list="tables-connues"
@@ -298,7 +299,7 @@ const handleLogout = async () => {
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">Statut</label>
+        <label className="block text-sm font-medium text-gray-700 mb-1">{t('guest.status')}</label>
         <div className="flex gap-4">
           <label className="inline-flex items-center">
             <input
@@ -309,7 +310,7 @@ const handleLogout = async () => {
               checked={status === "P"}
               onChange={(e) => setStatus(e.target.value)}
             />
-            <span className="ml-2">Présent</span>
+            <span className="ml-2">{t('guest.present')}</span>
           </label>
           <label className="inline-flex items-center">
             <input
@@ -320,14 +321,14 @@ const handleLogout = async () => {
               checked={status === "A"}
               onChange={(e) => setStatus(e.target.value)}
             />
-            <span className="ml-2">Absent</span>
+            <span className="ml-2">{t('guest.absent')}</span>
           </label>
         </div>
-        <p className="mt-1 text-xs text-gray-500">Par défaut : Absent</p>
+        <p className="mt-1 text-xs text-gray-500">{t('guest.defaultAbsent')}</p>
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">Photo (optionnel)</label>
+        <label className="block text-sm font-medium text-gray-700 mb-1">{t('guest.photo')}</label>
         <div className="flex items-center gap-4">
           <label className="flex flex-col items-center justify-center w-full p-6 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer hover:bg-gray-50">
             <div className="flex flex-col items-center justify-center pt-5 pb-6">
@@ -335,9 +336,9 @@ const handleLogout = async () => {
                 <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 13h3a3 3 0 0 0 0-6h-.025A5.56 5.56 0 0 0 16 6.5 5.5 5.5 0 0 0 5.207 5.021C5.137 5.017 5.071 5 5 5a4 4 0 0 0 0 8h2.167M10 15V6m0 0L8 8m2-2 2 2"/>
               </svg>
               <p className="mb-2 text-sm text-gray-500">
-                <span className="font-semibold">Cliquez pour uploader</span> ou glissez-déposez
+                <span className="font-semibold">{t('guest.upload')}</span> {t('guest.drop')}
               </p>
-              <p className="text-xs text-gray-500">{image?.name || "Aucun fichier sélectionné 'PNG, JPG (MAX. 2MB)'"}</p>
+              <p className="text-xs text-gray-500">{image?.name || t('guest.noFile')}</p>
             </div>
             <input 
               type="file" 
@@ -358,7 +359,7 @@ const handleLogout = async () => {
         <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
           <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
         </svg>
-        Sauvegarder l'invité
+        {t('guest.save')}
       </motion.button>
     </div>
   </motion.form>

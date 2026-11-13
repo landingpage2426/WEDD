@@ -6,9 +6,12 @@ import BlogRight from '../components/BlogRight';
 import logo from "../assets/img/logo.png";
 import { AnimatePresence, motion } from 'framer-motion';
 import Countdown from '../components/Countdown';
+import { useI18n } from '../i18n/I18nContext';
 
 function Administration() {
+  const { t, locale } = useI18n();
   const [staffUsers, setStaffUsers] = useState([]);
+  const [loginLogs, setLoginLogs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [menuOpen, setMenuOpen] = useState(false);
   const [showCreateForm, setShowCreateForm] = useState(false);
@@ -66,6 +69,13 @@ function Administration() {
         },
       });
       setStaffUsers(response.data.users || []);
+      const history = await axios.get(`${apiUrl}/api/login-history`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+      setLoginLogs(history.data.logs || []);
     } catch (error) {
       console.error('Erreur lors de la récupération des utilisateurs:', error);
       if (error.response?.status === 403) {
@@ -73,6 +83,23 @@ function Administration() {
       }
     } finally {
       setLoading(false);
+    }
+  };
+
+  const toggleStaff = async (user) => {
+    try {
+      const token = localStorage.getItem('token');
+      await axios.put(`${apiUrl}/api/staff-user/${user._id}/status`, {
+        actif: user.actif === false,
+      }, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+      fetchStaffUsers();
+    } catch (err) {
+      setError(err.response?.data?.message || t('staff.history'));
     }
   };
 
@@ -276,14 +303,14 @@ function Administration() {
             exit={{ opacity: 0, height: 0 }}
             transition={{ duration: 0.3 }}
           >
-            <Link to="/dashboard" onClick={() => setMenuOpen(false)} className="hover:text-blue-200 transition-colors">Dashboard</Link>
-            <Link to="/liste-reunions" onClick={() => setMenuOpen(false)} className="hover:text-blue-200 transition-colors">Réunions</Link>
-            <Link to="/ajout-invite" onClick={() => setMenuOpen(false)} className="hover:text-blue-200 transition-colors">Ajouter un invité</Link>
-            <Link to="/recherche-invite" onClick={() => setMenuOpen(false)} className="hover:text-blue-200 transition-colors">Recherche invité</Link>
-            <Link to="/administration" onClick={() => setMenuOpen(false)} className="hover:text-blue-200 transition-colors font-bold">Administration</Link>
-            <Link to="/profil" onClick={() => setMenuOpen(false)} className="hover:text-blue-200 transition-colors">Profil</Link>
+            <Link to="/dashboard" onClick={() => setMenuOpen(false)} className="hover:text-blue-200 transition-colors">{t('nav.dashboard')}</Link>
+            <Link to="/liste-reunions" onClick={() => setMenuOpen(false)} className="hover:text-blue-200 transition-colors">{t('nav.meetings')}</Link>
+            <Link to="/ajout-invite" onClick={() => setMenuOpen(false)} className="hover:text-blue-200 transition-colors">{t('nav.addGuest')}</Link>
+            <Link to="/recherche-invite" onClick={() => setMenuOpen(false)} className="hover:text-blue-200 transition-colors">{t('nav.searchGuest')}</Link>
+            <Link to="/administration" onClick={() => setMenuOpen(false)} className="hover:text-blue-200 transition-colors font-bold">{t('staff.title')}</Link>
+            <Link to="/profil" onClick={() => setMenuOpen(false)} className="hover:text-blue-200 transition-colors">{t('nav.profile')}</Link>
             <button onClick={() => { setMenuOpen(false); handleLogout(); }} className="text-red-700 hover:text-red-700 text-left transition-colors">
-              Déconnexion
+              {t('common.logout')}
             </button>
           </motion.nav>
         )}
@@ -293,12 +320,12 @@ function Administration() {
       <div className="flex-1 p-3 md:p-6 lg:p-8 bg-gray-50 overflow-x-auto min-h-screen">
         <div className="max-w-7xl mx-auto w-full">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-            <h1 className="text-2xl md:text-3xl font-bold text-gray-800">Administration</h1>
+            <h1 className="text-2xl md:text-3xl font-bold text-gray-800">{t('staff.title')}</h1>
             <button
               onClick={() => setShowCreateForm(!showCreateForm)}
               className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white px-4 md:px-6 py-2 rounded-lg font-medium transition-colors text-sm md:text-base"
             >
-              {showCreateForm ? 'Annuler' : '+ Créer un utilisateur'}
+              {showCreateForm ? t('common.cancel') : t('staff.create')}
             </button>
           </div>
 
@@ -321,7 +348,7 @@ function Administration() {
               animate={{ opacity: 1, y: 0 }}
               className="mb-6 bg-white p-4 md:p-6 rounded-lg shadow-md"
             >
-              <h2 className="text-lg md:text-xl font-semibold mb-4">Créer un nouvel utilisateur</h2>
+              <h2 className="text-lg md:text-xl font-semibold mb-4">{t('staff.createTitle')}</h2>
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
@@ -413,7 +440,7 @@ function Administration() {
               animate={{ opacity: 1, y: 0 }}
               className="mb-6 bg-white p-4 md:p-6 rounded-lg shadow-md"
             >
-              <h2 className="text-lg md:text-xl font-semibold mb-4">Modifier l'utilisateur</h2>
+              <h2 className="text-lg md:text-xl font-semibold mb-4">{t('staff.editTitle')}</h2>
               <form onSubmit={handleEditSubmit} className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
@@ -544,7 +571,7 @@ function Administration() {
                     }}
                     className="flex-1 bg-gray-400 hover:bg-gray-500 text-white px-4 md:px-6 py-2 md:py-3 rounded-lg font-medium transition-colors text-sm md:text-base"
                   >
-                    Annuler
+                    {t('common.cancel')}
                   </button>
                 </div>
               </form>
@@ -554,16 +581,16 @@ function Administration() {
           {/* Liste des utilisateurs */}
           <div className="bg-white rounded-lg shadow-md overflow-hidden">
             <div className="p-4 md:p-6 border-b border-gray-200">
-              <h2 className="text-lg md:text-xl font-semibold">Utilisateurs créés</h2>
+              <h2 className="text-lg md:text-xl font-semibold">{t('staff.created')}</h2>
             </div>
             {loading ? (
               <div className="p-8 text-center">
                 <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500 mx-auto"></div>
-                <p className="mt-4 text-gray-600">Chargement...</p>
+                <p className="mt-4 text-gray-600">{t('common.loading')}</p>
               </div>
             ) : staffUsers.length === 0 ? (
               <div className="p-8 text-center text-gray-500">
-                <p>Aucun utilisateur créé pour le moment.</p>
+                <p>{t('staff.empty')}</p>
               </div>
             ) : (
               <>
@@ -572,13 +599,14 @@ function Administration() {
                   <table className="w-full min-w-[800px]">
                     <thead className="bg-gray-50">
                       <tr>
-                        <th className="px-4 md:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nom</th>
-                        <th className="px-4 md:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
-                        <th className="px-4 md:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Téléphone</th>
-                        <th className="px-4 md:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Rôle</th>
-                        <th className="px-4 md:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Mot de passe</th>
-                        <th className="px-4 md:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date de création</th>
-                        <th className="px-4 md:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                        <th className="px-4 md:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('admin.user')}</th>
+                        <th className="px-4 md:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('admin.contact')}</th>
+                        <th className="px-4 md:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('register.phone')}</th>
+                        <th className="px-4 md:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('admin.role')}</th>
+                        <th className="px-4 md:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('admin.status')}</th>
+                        <th className="px-4 md:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('staff.password')}</th>
+                        <th className="px-4 md:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('staff.createdOn')}</th>
+                        <th className="px-4 md:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('common.actions')}</th>
                       </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
@@ -599,9 +627,12 @@ function Administration() {
                               user.role === 'chef_protocole' ? 'bg-purple-100 text-purple-800' :
                               'bg-green-100 text-green-800'
                             }`}>
-                              {user.role === 'manager' ? 'Manager' :
-                               user.role === 'chef_protocole' ? 'Chef Protocole' :
-                               'Protocole'}
+                              {t(`role.${user.role}`)}
+                            </span>
+                          </td>
+                          <td className="px-4 md:px-6 py-4 whitespace-nowrap">
+                            <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${user.actif === false ? 'bg-red-100 text-red-700' : 'bg-emerald-100 text-emerald-800'}`}>
+                              {user.actif === false ? t('common.inactive') : t('common.active')}
                             </span>
                           </td>
                           <td className="px-4 md:px-6 py-4">
@@ -648,6 +679,13 @@ function Administration() {
                           </td>
                           <td className="px-4 md:px-6 py-4 text-sm font-medium">
                             <div className="flex gap-2 flex-wrap">
+                              <button
+                                type="button"
+                                onClick={() => toggleStaff(user)}
+                                className="text-rose-700 hover:text-white px-3 py-1 rounded border border-rose-300 hover:bg-rose-500 whitespace-nowrap"
+                              >
+                                {user.actif === false ? t('admin.activate') : t('admin.deactivate')}
+                              </button>
                               <button
                                 onClick={() => handleEdit(user)}
                                 className="text-blue-600 hover:text-blue-900 px-3 py-1 rounded border border-blue-300 hover:bg-blue-50 whitespace-nowrap"
@@ -738,6 +776,13 @@ function Administration() {
 
                       <div className="flex gap-2">
                         <button
+                          type="button"
+                          onClick={() => toggleStaff(user)}
+                          className="flex-1 text-rose-700 hover:text-white px-3 py-2 rounded border border-rose-300 hover:bg-rose-500 text-sm font-medium"
+                        >
+                          {user.actif === false ? t('admin.activate') : t('admin.deactivate')}
+                        </button>
+                        <button
                           onClick={() => handleEdit(user)}
                           className="flex-1 text-blue-600 hover:text-blue-900 px-3 py-2 rounded border border-blue-300 hover:bg-blue-50 text-sm font-medium"
                         >
@@ -754,6 +799,37 @@ function Administration() {
                   ))}
                 </div>
               </>
+            )}
+          </div>
+
+          <div className="bg-white rounded-lg shadow-md overflow-hidden mt-6">
+            <div className="p-4 md:p-6 border-b border-gray-200">
+              <h2 className="text-lg md:text-xl font-semibold">{t('staff.history')}</h2>
+              <p className="text-sm text-gray-500">{t('staff.historyHint')}</p>
+            </div>
+            {loginLogs.length === 0 ? (
+              <p className="p-6 text-sm text-gray-500">{t('staff.noHistory')}</p>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead className="bg-rose-500 text-white">
+                    <tr>
+                      <th className="px-4 py-3 text-left">{t('admin.when')}</th>
+                      <th className="px-4 py-3 text-left">{t('admin.author')}</th>
+                      <th className="px-4 py-3 text-left">{t('admin.action')}</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {loginLogs.map((log) => (
+                      <tr key={log._id} className="border-t border-gray-100">
+                        <td className="px-4 py-3">{new Date(log.createdAt).toLocaleString(locale)}</td>
+                        <td className="px-4 py-3">{log.actorEmail || '—'}</td>
+                        <td className="px-4 py-3">{t(`audit.${log.action}`)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             )}
           </div>
         </div>
@@ -841,7 +917,7 @@ function Administration() {
                 }}
                 className="flex-1 bg-gray-400 hover:bg-gray-500 text-white px-4 md:px-6 py-2 md:py-3 rounded-lg font-medium transition-colors text-sm md:text-base"
               >
-                Annuler
+                {t('common.cancel')}
               </button>
             </div>
           </motion.div>

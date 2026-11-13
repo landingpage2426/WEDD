@@ -34,7 +34,16 @@ import GetRoomLayout from "../Controllers/RoomLayoutControllers/GetRoomLayout.js
 import SaveRoomLayout from "../Controllers/RoomLayoutControllers/SaveRoomLayout.js";
 
 import authenticate from "./AuthMiddleware.js";
+import { requireRole } from "./RoleMiddleware.js";
 import { forgotPassword } from '../Controllers/UserControllers/ForgotPassword.js';
+import RefreshToken from "../Controllers/UserControllers/RefreshToken.js";
+import DeleteOwnAccount from "../Controllers/UserControllers/DeleteOwnAccount.js";
+import LoginHistory from "../Controllers/UserControllers/LoginHistory.js";
+import SetStaffActive from "../Controllers/UserControllers/SetStaffActive.js";
+import Overview from "../Controllers/AdminControllers/Overview.js";
+import UserDetail from "../Controllers/AdminControllers/UserDetail.js";
+import SetUserActive from "../Controllers/AdminControllers/SetUserActive.js";
+import ListAudit from "../Controllers/AdminControllers/ListAudit.js";
 
 router.use(express.json());
 
@@ -42,9 +51,10 @@ router.use(express.json());
 
 router.post("/register", Register);
 router.post("/login", Login);
+router.post("/refresh", RefreshToken);
 
-// Route pour récupérer les informations de les utilisateurs 
-router.get("/users",UsersGet)
+// Liste des comptes : administrateur uniquement
+router.get("/users", authenticate, requireRole('admin'), UsersGet);
 router.delete("/delete-user/:id", authenticate, UsersDelete);
 router.put("/edit-user/:id", authenticate, UsersEdit);
 
@@ -54,6 +64,15 @@ router.get("/staff-users", authenticate, GetStaffUsers);
 router.put("/staff-user/:userId", authenticate, EditStaffUser);
 router.delete("/staff-user/:userId", authenticate, DeleteStaffUser);
 router.post("/staff-user/:userId/regenerate-password", authenticate, RegeneratePassword);
+router.put("/staff-user/:userId/status", authenticate, SetStaffActive);
+router.get("/login-history", authenticate, LoginHistory);
+
+router.get("/admin/overview", authenticate, requireRole('admin'), Overview);
+router.get("/admin/users/:id", authenticate, requireRole('admin'), UserDetail);
+router.put("/admin/users/:id/status", authenticate, requireRole('admin'), SetUserActive);
+router.get("/admin/audit", authenticate, requireRole('admin'), ListAudit);
+
+router.post("/account/delete", authenticate, DeleteOwnAccount);
 
 // mot de passe oublié et réinitialisation
 router.post("/forgot-password", forgotPassword);

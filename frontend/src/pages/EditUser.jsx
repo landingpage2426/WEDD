@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import { useI18n } from '../i18n/I18nContext';
 
-function EditUser({ user, onClose,fetchUsers }) { 
+function EditUser({ user, onClose,fetchUsers }) {
+  const { t } = useI18n(); 
   const [nom, setNom] = useState('');
   const [prenom, setPrenom] = useState('');
   const [email, setEmail] = useState('');
@@ -68,28 +70,28 @@ function EditUser({ user, onClose,fetchUsers }) {
     <div className="fixed inset-0 top-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-50 p-4 overflow-auto">
       <div className="bg-white rounded-xl shadow-xl w-full max-w-3xl overflow-hidden max-h-[90vh]">
         <div className="bg-gradient-to-r from-blue-600 to-blue-500 p-5">
-          <h2 className="text-white text-xl font-bold text-center">Modifier l'utilisateur</h2>
+          <h2 className="text-white text-xl font-bold text-center">{t('staff.editTitle')}</h2>
         </div>
         <form onSubmit={handleSubmit} className="p-6 space-y-6 overflow-y-auto max-h-[75vh]">
           <div className="grid grid-cols-2 gap-6">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Nom</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">{t('guest.lastName')}</label>
               <input
                 type="text"
                 value={nom}
                 onChange={(e) => setNom(e.target.value)}
-                placeholder="Nom"
+                placeholder={t('guest.lastName')}
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
                 required
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Prénom</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">{t('guest.firstName')}</label>
               <input
                 type="text"
                 value={prenom}
                 onChange={(e) => setPrenom(e.target.value)}
-                placeholder="Prénom"
+                placeholder={t('guest.firstName')}
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
                 required
               />
@@ -106,18 +108,18 @@ function EditUser({ user, onClose,fetchUsers }) {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Téléphone</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">{t('guest.phone')}</label>
               <input
                 type="tel"
                 value={telephone}
                 onChange={(e) => setTelephone(e.target.value)}
-                placeholder="Téléphone"
+                placeholder={t('guest.phone')}
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
               />
             </div>
             
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Date Mariage</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">{t('register.date')}</label>
               <input
                 type="date"
                 value={dateMariage}
@@ -126,17 +128,17 @@ function EditUser({ user, onClose,fetchUsers }) {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Lieu Mariage</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">{t('register.place')}</label>
               <input
                 type="text"
                 value={lieuMariage}
                 onChange={(e) => setLieuMariage(e.target.value)}
-                placeholder="Lieu Mariage"
+                placeholder={t('register.place')}
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Couleur du site</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">{t('register.color')}</label>
               <input
                 type="color"
                 value={couleurSite}
@@ -146,17 +148,17 @@ function EditUser({ user, onClose,fetchUsers }) {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Thème Mariage</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">{t('register.theme')}</label>
               <input
                 type="text"
                 value={themeMariage}
                 onChange={(e) => setThemeMariage(e.target.value)}
-                placeholder="Thème Mariage"
+                placeholder={t('register.theme')}
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Rôle</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">{t('admin.role')}</label>
               <select
                 value={role}
                 onChange={(e) => setRole(e.target.value)}
@@ -166,8 +168,8 @@ function EditUser({ user, onClose,fetchUsers }) {
                 <option value="admin">Admin</option>
                 <option value="client">Client</option>
                 <option value="manager">Manager</option>
-                <option value="chef_protocole">Chef protocole</option>
-                <option value="protocole">Protocole</option>
+                <option value="chef_protocole">{t('role.chef_protocole')}</option>
+                <option value="protocole">{t('role.protocole')}</option>
               </select>
             </div>
           </div>

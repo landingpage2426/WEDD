@@ -1,5 +1,6 @@
 import User from "../../Models/User.js";
 import bcrypt from "bcryptjs";
+import { writeAudit } from "../../services/audit.js";
 
 
 const EditPassword = async (req, res) => {
@@ -36,6 +37,15 @@ const EditPassword = async (req, res) => {
     const hashedNewPassword = await bcrypt.hash(newPassword, salt);
     user.password = hashedNewPassword;
     await user.save();
+
+    await writeAudit({
+      action: "password_changed",
+      actorId: user._id,
+      actorEmail: user.email,
+      targetId: user._id,
+      targetEmail: user.email,
+      details: "Mot de passe modifié par le titulaire",
+    });
 
     return res.status(200).json({
       message: "Mot de passe mis à jour avec succès!",
