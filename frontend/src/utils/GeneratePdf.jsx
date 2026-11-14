@@ -3,11 +3,13 @@ import QRCode from 'qrcode';
 import { getBilletCivility, getBilletLineText, MAX_BILLET_LINE_CHARS } from './invitePeople';
 import billetImg from '../assets/img/billet.jpg';
 
-const IMG_W = 1024;
-const IMG_H = 768;
+const SRC_W = 1446;
+const SRC_H = 1087;
 const PAGE_W = 280;
 const PAGE_H = 210;
 const API_URL_FRONTEND = 'https://wedd-i8ls.onrender.com';
+const PAPER = 'rgb(247, 226, 208)';
+const INK = 'rgb(92, 51, 23)';
 
 const loadImage = (url) =>
   new Promise((resolve, reject) => {
@@ -42,42 +44,47 @@ const drawBilletCanvas = async (invite) => {
       await QRCode.toDataURL(`${API_URL_FRONTEND}/invites/${invite.inviteId}`, {
         margin: 1,
         width: 512,
-        color: { dark: '#3b1d12', light: '#f3e8d6' },
+        color: { dark: '#3b1d12', light: '#f7e2d0' },
       })
     ),
   ]);
 
   const canvas = document.createElement('canvas');
-  canvas.width = IMG_W;
-  canvas.height = IMG_H;
+  canvas.width = background.naturalWidth || SRC_W;
+  canvas.height = background.naturalHeight || SRC_H;
   const ctx = canvas.getContext('2d');
+  const sx = canvas.width / SRC_W;
+  const sy = canvas.height / SRC_H;
+  const X = (value) => value * sx;
+  const Y = (value) => value * sy;
 
-  ctx.drawImage(background, 0, 0, IMG_W, IMG_H);
+  ctx.drawImage(background, 0, 0);
 
-  ctx.fillStyle = 'rgb(243, 232, 214)';
-  ctx.fillRect(138, 414, 128, 148);
-  ctx.drawImage(qrImage, 142, 420, 120, 120);
+  ctx.fillStyle = PAPER;
+  ctx.fillRect(X(196), Y(455), X(192), Y(330));
 
-  ctx.fillStyle = 'rgb(243, 232, 214)';
-  ctx.fillRect(138, 388, 128, 26);
+  const cardCenter = X(292);
+  ctx.fillStyle = INK;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.font = `bold ${Math.round(16 * sy)}px "Times New Roman", Times, serif`;
+  ctx.fillText('SCANNEZ ICI', cardCenter, Y(488));
+
   const inviteIdText = String(invite.inviteId || '').trim();
   if (inviteIdText) {
-    ctx.fillStyle = 'rgb(92, 51, 23)';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.font = 'bold 13px "Times New Roman", Times, serif';
-    ctx.fillText(inviteIdText, 202, 400);
-    ctx.textAlign = 'left';
-    ctx.textBaseline = 'alphabetic';
+    ctx.font = `bold ${Math.round(15 * sy)}px "Times New Roman", Times, serif`;
+    ctx.fillText(inviteIdText, cardCenter, Y(512));
   }
 
-  ctx.fillStyle = 'rgb(229, 214, 201)';
-  ctx.fillRect(318, 342, 478, 18);
+  const qrSize = X(180);
+  ctx.drawImage(qrImage, cardCenter - qrSize / 2, Y(536), qrSize, qrSize);
 
-  ctx.fillStyle = 'rgb(130, 95, 70)';
-  for (let x = 322; x <= 790; x += 7) {
+  ctx.fillStyle = PAPER;
+  ctx.fillRect(X(398), Y(456), X(248), Y(42));
+  ctx.fillStyle = 'rgb(55, 28, 16)';
+  for (let dot = 412; dot <= 640; dot += 8) {
     ctx.beginPath();
-    ctx.arc(x + 1.5, 355.5, 1.5, 0, Math.PI * 2);
+    ctx.arc(X(dot), Y(490), Math.max(1.2, 1.5 * sx), 0, Math.PI * 2);
     ctx.fill();
   }
 
@@ -87,10 +94,11 @@ const drawBilletCanvas = async (invite) => {
   const fullLine = [civility, nameOnLine].filter(Boolean).join(' ');
 
   if (fullLine) {
-    ctx.fillStyle = 'rgb(92, 51, 23)';
+    ctx.fillStyle = INK;
+    ctx.textAlign = 'left';
     ctx.textBaseline = 'alphabetic';
-    const fitted = fitCanvasText(ctx, fullLine, 460);
-    ctx.fillText(fitted, 322, 351);
+    const fitted = fitCanvasText(ctx, fullLine, X(690), Math.round(26 * sy), Math.round(16 * sy));
+    ctx.fillText(fitted, X(414), Y(485));
   }
 
   return canvas;
