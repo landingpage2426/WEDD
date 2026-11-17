@@ -193,6 +193,55 @@ describe('invités', () => {
 
     const logs = await AuditLog.find({ action: 'presence' });
     expect(logs.length).toBe(1);
+
+    const again = await request(app)
+      .post(`/api/invites/${created.body.invite.inviteId}/presence`)
+      .set('Authorization', `Bearer ${session.body.token}`);
+
+    expect(again.status).toBe(200);
+    expect(again.body.dejaPresent).toBe(true);
+    expect(again.body.invite.status).toBe('P');
+
+    const exit = await request(app)
+      .post(`/api/invites/${created.body.invite.inviteId}/presence`)
+      .set('Authorization', `Bearer ${session.body.token}`)
+      .send({ markAbsent: true });
+
+    expect(exit.status).toBe(200);
+    expect(exit.body.markedAbsent).toBe(true);
+    expect(exit.body.invite.status).toBe('A');
+    const absences = await AuditLog.find({ action: 'absence' });
+    expect(absences.length).toBe(1);
+  });
+
+  it('permet au protocole et au manager de faire entrer puis sortir un invité', async () => {
+    await registerClient();
+    const client = await User.findOne({ email: 'client@wedd.test' });
+    await createUser({ email: 'manager@wedd.test', role: 'manager', createdBy: client._id });
+    await createUser({ email: 'chef@wedd.test', role: 'chef_protocole', createdBy: client._id });
+    await createUser({ email: 'proto@wedd.test', role: 'protocole', createdBy: client._id });
+    const clientSession = await login('client@wedd.test');
+    const created = await request(app)
+      .post('/api/invite')
+      .set('Authorization', `Bearer ${clientSession.body.token}`)
+      .send({ titre: 'Mme', nom: 'Kamga', prenom: 'Paul', telephone: '699000000', status: 'A' });
+    const inviteId = created.body.invite.inviteId;
+
+    for (const email of ['manager@wedd.test', 'chef@wedd.test', 'proto@wedd.test']) {
+      const session = await login(email);
+      const entry = await request(app)
+        .post(`/api/invites/${inviteId}/presence`)
+        .set('Authorization', `Bearer ${session.body.token}`);
+      expect(entry.status).toBe(200);
+      expect(entry.body.invite.status).toBe('P');
+
+      const exit = await request(app)
+        .post(`/api/invites/${inviteId}/presence`)
+        .set('Authorization', `Bearer ${session.body.token}`)
+        .send({ markAbsent: true });
+      expect(exit.status).toBe(200);
+      expect(exit.body.invite.status).toBe('A');
+    }
   });
 
   it('refuse le scan d\'un compte déjà connecté puis désactivé', async () => {

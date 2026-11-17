@@ -34,6 +34,7 @@ const AUDIT_ACTIONS = [
   "password_reset",
   "password_changed",
   "presence",
+  "absence",
   "billet_envoye",
 ];
 

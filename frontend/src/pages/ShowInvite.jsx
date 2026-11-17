@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useNavigate, useParams, Link } from 'react-router-dom';
 import axios from 'axios';
 import NavLink from '../components/NavLink';
@@ -12,6 +13,107 @@ import { nomsTables } from '../utils/NomsTables';
 import { formatInviteDisplayName, getInvitePersonCount, getInvitePhotoUrl, isCouple } from '../utils/invitePeople';
 import { useI18n } from '../i18n/I18nContext';
 
+const noticeFromScan = (scanState) => {
+  if (!scanState?.message) return null;
+  if (scanState.dejaPresent) return 'already';
+  return null;
+};
+
+function PresencePopup({ kind, invite, confirming, leaving, onClose, onScanNext, onAskAbsent, onCancelConfirm, onConfirmAbsent, t }) {
+  const name = formatInviteDisplayName(invite) || '—';
+  const tones = {
+    present: {
+      badge: 'bg-emerald-50 text-emerald-700',
+      title: t('guest.popupPresent'),
+      text: t('guest.popupPresentText', { name }),
+    },
+    already: {
+      badge: 'bg-rose-50 text-rose-700',
+      title: t('guest.popupAlready'),
+      text: t('guest.popupAlreadyText', { name }),
+    },
+    absent: {
+      badge: 'bg-rose-50 text-rose-700',
+      title: t('guest.popupAbsent'),
+      text: t('guest.popupAbsentText', { name }),
+    },
+  };
+  const tone = tones[kind] || tones.present;
+
+  return createPortal(
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/45 p-4" role="dialog" aria-modal="true" aria-labelledby="presence-popup-title">
+      <motion.div
+        initial={{ opacity: 0, scale: 0.96, y: 10 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        transition={{ duration: 0.2 }}
+        className="relative w-full max-w-md max-h-[92dvh] overflow-auto rounded-3xl border border-rose-100 bg-white px-6 py-8 text-center shadow-2xl"
+      >
+        <button
+          type="button"
+          onClick={onClose}
+          aria-label={t('guest.close')}
+          className="absolute right-3 top-3 flex h-9 w-9 items-center justify-center rounded-full text-rose-700 hover:bg-rose-50"
+        >
+          <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+        <div className={`mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-full ${tone.badge}`}>
+          {kind === 'absent' ? (
+            <svg className="h-8 w-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.8" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+            </svg>
+          ) : (
+            <svg className="h-8 w-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.8" d="M5 13l4 4L19 7" />
+            </svg>
+          )}
+        </div>
+        <h2 id="presence-popup-title" className="text-2xl font-semibold text-slate-900">{tone.title}</h2>
+        <p className="mt-2 text-base text-slate-600">{tone.text}</p>
+        {invite?.nomTable && (
+          <p className="mt-3 text-sm font-medium tracking-wide text-slate-500">Table {invite.nomTable}</p>
+        )}
+
+        {kind === 'already' && confirming && (
+          <p className="mt-5 rounded-2xl bg-rose-50 px-4 py-3 text-sm text-rose-950">{t('guest.confirmLeave')}</p>
+        )}
+
+        <div className="mt-6 flex flex-col gap-2">
+          {kind === 'already' && confirming ? (
+            <>
+              <button type="button" onClick={onConfirmAbsent} disabled={leaving} className="rounded-xl bg-rose-600 px-4 py-3 text-sm font-medium text-white hover:bg-rose-700 disabled:opacity-60">
+                {t('guest.markAbsent')}
+              </button>
+              <button type="button" onClick={onCancelConfirm} disabled={leaving} className="rounded-xl border border-rose-200 px-4 py-3 text-sm font-medium text-rose-700 hover:bg-rose-50">
+                {t('common.cancel')}
+              </button>
+            </>
+          ) : kind === 'already' ? (
+            <>
+              <button type="button" onClick={onAskAbsent} className="rounded-xl bg-rose-600 px-4 py-3 text-sm font-medium text-white hover:bg-rose-700">
+                {t('guest.markAbsent')}
+              </button>
+              <button type="button" onClick={onClose} className="rounded-xl border border-rose-200 px-4 py-3 text-sm font-medium text-rose-700 hover:bg-rose-50">
+                {t('guest.seeCard')}
+              </button>
+            </>
+          ) : (
+            <>
+              <button type="button" onClick={onScanNext} className="rounded-xl bg-rose-600 px-4 py-3 text-sm font-medium text-white hover:bg-rose-700">
+                {t('guest.scanNext')}
+              </button>
+              <button type="button" onClick={onClose} className="rounded-xl border border-rose-200 px-4 py-3 text-sm font-medium text-rose-700 hover:bg-rose-50">
+                {t('guest.seeCard')}
+              </button>
+            </>
+          )}
+        </div>
+      </motion.div>
+    </div>,
+    document.body
+  );
+}
 
 function ShowInvite() {
   const { t } = useI18n();
@@ -20,6 +122,12 @@ function ShowInvite() {
   const message = state?.message || null;
   const color = state?.color || "green";
   const [invite, setInvite] = useState(state?.invite || null);
+  const [dejaPresent, setDejaPresent] = useState(Boolean(state?.dejaPresent));
+  const [notice, setNotice] = useState(() => noticeFromScan(state));
+  const [banner, setBanner] = useState(message);
+  const [bannerColor, setBannerColor] = useState(color);
+  const [confirmingExit, setConfirmingExit] = useState(false);
+  const [leaving, setLeaving] = useState(false);
   const [error, setError] = useState('');
   const [isDatePassed, setIsDatePassed] = useState(false);
   const { inviteId } = useParams();
@@ -56,8 +164,13 @@ function ShowInvite() {
   };
 
   useEffect(() => {
+    setDejaPresent(Boolean(state?.dejaPresent));
+    setNotice(noticeFromScan(state));
+    setBanner(state?.message || null);
+    setBannerColor(state?.color || 'green');
+    setConfirmingExit(false);
     getInvite();
-  }, [inviteId]);
+  }, [inviteId, location.key]);
 
   useEffect(() => {
     const userString = localStorage.getItem('user');
@@ -70,6 +183,37 @@ function ShowInvite() {
 
   const handleRetour = () => {
     navigate('/recherche-invite');
+  };
+
+  const handleMarkAbsent = async () => {
+    if (leaving) return;
+    setLeaving(true);
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.post(
+        `${apiUrl}/api/invites/${inviteId}/presence`,
+        { markAbsent: true },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+          withCredentials: true,
+        }
+      );
+      if (response.data.invite) setInvite(response.data.invite);
+      setBanner(response.data.message);
+      setBannerColor('red');
+      setDejaPresent(false);
+      setConfirmingExit(false);
+      if (response.data.markedAbsent) setNotice('absent');
+    } catch (err) {
+      if (err.response?.data?.code === 'ACCOUNT_DISABLED') return;
+      setBanner(err.response?.data?.message || "Impossible de modifier la présence.");
+      setBannerColor('red');
+    } finally {
+      setLeaving(false);
+    }
   };
 
   const [clignoter, setClignoter] = useState(false);
@@ -86,6 +230,21 @@ function ShowInvite() {
 
   return (
     <div className="flex flex-col md:flex-row min-h-screen w-full bg-gradient-to-br from-pink-50 to-white">
+      {notice && (
+        <PresencePopup
+          key={notice}
+          kind={notice}
+          invite={invite}
+          confirming={confirmingExit}
+          leaving={leaving}
+          onClose={() => setNotice(null)}
+          onScanNext={handleRetour}
+          onAskAbsent={() => setConfirmingExit(true)}
+          onCancelConfirm={() => setConfirmingExit(false)}
+          onConfirmAbsent={handleMarkAbsent}
+          t={t}
+        />
+      )}
       {/* Menu gauche */}
       <div className="hidden md:block w-1/5 bg-white shadow-lg">
         <NavLink />
@@ -191,19 +350,32 @@ function ShowInvite() {
                 </div>
               )}
 
-              {message && (
-                <div className={`p-3 rounded-lg mb-6 ${color === "red" ? 'bg-red-50 border border-red-200' : 'bg-green-50 border border-green-200'}`}>
-                  <p className={`text-sm ${color === "red" ? "text-red-700" : "text-green-700"}`}>
-                    {message}
+              {banner && !notice && (
+                <div className={`p-3 rounded-lg mb-6 ${bannerColor === "red" ? 'bg-red-50 border border-red-200' : 'bg-green-50 border border-green-200'}`}>
+                  <p className={`text-sm ${bannerColor === "red" ? "text-red-700" : "text-green-700"}`}>
+                    {banner}
                   </p>
                 </div>
+              )}
+
+              {dejaPresent && !isDatePassed && !notice && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setNotice('already');
+                    setConfirmingExit(false);
+                  }}
+                  className="mb-6 w-full rounded-lg bg-rose-600 px-6 py-3 font-medium text-white shadow-md transition-all hover:bg-rose-700"
+                >
+                  {t('guest.markAbsent')}
+                </button>
               )}
 
               <div className="space-y-4">
                 { invite?.nomTable &&(
                   <button
                     onClick={handleVoirTable}
-                    className="w-full py-3 px-6 text-white font-medium rounded-lg bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 transition-all shadow-md flex items-center justify-center"
+                    className="w-full py-3 px-6 font-medium rounded-lg border border-rose-200 bg-white text-rose-700 transition-all shadow-sm flex items-center justify-center hover:bg-rose-50"
                   >
                     <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
@@ -220,12 +392,13 @@ function ShowInvite() {
                     tableAClignoter={invite?.nomTable}
                     clignoter={clignoter}
                     onClignotementFini={handleClignotementFini}
+                    onClose={() => setShowSalle(false)}
                   />
                 )}
 
                 <button
                   onClick={handleRetour}
-                  className="w-full py-3 px-6 text-white font-medium rounded-lg bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 transition-all shadow-md flex items-center justify-center"
+                  className="w-full py-3 px-6 text-white font-medium rounded-lg bg-rose-600 hover:bg-rose-700 transition-all shadow-md flex items-center justify-center"
                 >
                   <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />

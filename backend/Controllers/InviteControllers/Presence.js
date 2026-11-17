@@ -81,27 +81,62 @@ const Presence = async (req, res) => {
       });
     }
 
+    const guestName = `${invite.prenom || ''} ${invite.nom || ''}`.trim();
+    const markAbsent = req.body?.markAbsent === true;
+
+    if (markAbsent) {
+      if (invite.status !== 'P') {
+        return res.status(200).json({
+          dejaPresent: false,
+          markedAbsent: false,
+          message: "Cet invité n'est pas marqué présent",
+          invite,
+          type: "warning",
+        });
+      }
+
+      await Invite.updateOne(
+        { _id: invite._id },
+        { $set: { status: 'A' } }
+      );
+      invite.status = 'A';
+      await writeAudit({
+        action: 'absence',
+        actorId: req.user._id,
+        actorEmail: req.user.email,
+        targetId: invite.userId,
+        details: guestName,
+      });
+
+      return res.status(200).json({
+        dejaPresent: false,
+        markedAbsent: true,
+        message: "Invité marqué comme absent",
+        invite,
+        type: "success",
+      });
+    }
+
     const dejaPresent = invite.status === 'P';
 
     if (!dejaPresent) {
-      // Utiliser updateOne pour ne mettre à jour que le statut sans re-valider tous les champs
       await Invite.updateOne(
         { _id: invite._id },
         { $set: { status: 'P' } }
       );
-      // Mettre à jour l'objet local pour la réponse
       invite.status = 'P';
       await writeAudit({
         action: 'presence',
         actorId: req.user._id,
         actorEmail: req.user.email,
         targetId: invite.userId,
-        details: `${invite.prenom || ''} ${invite.nom || ''}`.trim(),
+        details: guestName,
       });
     }
 
     return res.status(200).json({
       dejaPresent,
+      markedAbsent: false,
       message: dejaPresent
         ? "❗ Cet invité était déjà présent"
         : "✅ Présence enregistrée avec succès",

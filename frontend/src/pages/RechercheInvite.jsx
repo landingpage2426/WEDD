@@ -159,6 +159,7 @@ const handleSubmit = async (e) => {
       state: {
         invite,
         message,
+        dejaPresent,
         color: dejaPresent ? "red" : "green",
       },
     });
@@ -270,6 +271,7 @@ useEffect(() => {
         state: {
           invite,
           message,
+          dejaPresent,
           color: dejaPresent ? 'red' : 'green',
         },
       });

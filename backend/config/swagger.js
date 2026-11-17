@@ -129,7 +129,7 @@ const swaggerSpec = {
           in: 'query',
           schema: {
             type: 'string',
-            enum: ['login_success', 'login_failure', 'account_activated', 'account_deactivated', 'account_deleted', 'password_reset', 'password_changed', 'presence', 'billet_envoye'],
+            enum: ['login_success', 'login_failure', 'account_activated', 'account_deactivated', 'account_deleted', 'password_reset', 'password_changed', 'presence', 'absence', 'billet_envoye'],
           },
         }],
         responses: { 200: { description: 'Dernières entrées du journal' } },
@@ -155,10 +155,11 @@ const swaggerSpec = {
     '/invites/{inviteId}/presence': {
       post: {
         tags: ['Invités'],
-        summary: 'Enregistrer une présence',
+        summary: 'Enregistrer une entrée ou une sortie',
+        description: 'Sans corps, le premier scan marque présent. Un second scan laisse le statut inchangé. Avec { "markAbsent": true }, un invité présent passe absent.',
         security: [{ bearerAuth: [] }],
         parameters: [{ name: 'inviteId', in: 'path', required: true, schema: { type: 'string' } }],
-        responses: { 200: { description: 'Présence enregistrée' } },
+        responses: { 200: { description: 'Présence ou sortie enregistrée' } },
       },
     },
   },
