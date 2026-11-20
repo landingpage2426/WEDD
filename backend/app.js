@@ -14,15 +14,20 @@ dotenv.config();
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const allowedOrigins = [
-  'https://wedd-i8ls.onrender.com',
-  'https://wedd-2.onrender.com',
-  'http://localhost:5173',
-];
+const extraOrigins = (process.env.ALLOWED_ORIGINS || '')
+  .split(',')
+  .map((origin) => origin.trim().replace(/\/$/, ''))
+  .filter(Boolean);
+
+const weddRenderOrigin = /^https:\/\/wedd(?:-[a-z0-9]+)*\.onrender\.com$/i;
+const localOrigin = /^http:\/\/localhost(?::\d+)?$/;
+
+const isAllowedOrigin = (origin) =>
+  extraOrigins.includes(origin) || weddRenderOrigin.test(origin) || localOrigin.test(origin);
 
 const corsOptions = {
   origin(origin, callback) {
-    if (!origin || allowedOrigins.includes(origin)) {
+    if (!origin || isAllowedOrigin(origin)) {
       callback(null, true);
     } else {
       console.log("CORS bloqué pour l'origine :", origin);
